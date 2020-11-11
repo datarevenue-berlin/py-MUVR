@@ -1,15 +1,16 @@
 import logging
-from typing import Union, Callable, List, Dict, Tuple, TypeVar
+from typing import Callable, Dict, List, Tuple, TypeVar, Union
+
+import dask
 import numpy as np
 import pandas as pd
+import sklearn.metrics
+from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 from scipy.stats import gmean, rankdata
 from sklearn.base import BaseEstimator, clone
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GroupKFold
-import sklearn.metrics
-import dask
-from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
 
 NumpyArray = np.ndarray
 MetricFunction = Callable[[NumpyArray, NumpyArray], float]
@@ -60,6 +61,39 @@ class FeatureSelector:
         self._selected_features = None
 
     def select_features(self) -> Dict[str, set]:
+        """This method implement the MUVR method from:
+        https://academic.oup.com/bioinformatics/article/35/6/972/5085367
+        
+        Perform recursive feature selection using nested cross validation to select
+        the optimal number of features that explain the relationship between 
+        `self.X` and `self.y`. 
+        The alforithm return three sets of features:
+        1. `self.MIN`: is the minimum number of feature that gives good predictive power
+        2. `self.MAX`: is the maximum number of feature that gives good predictive power
+        3. `self.MID`: is the set of features to build a model using a number of feature 
+            that is the geometric mean of the minimum and the maximum number of features
+         
+        The structure of the nested CV loops is the following:
+        - Repetitions
+            - Outer CV Loops
+                - Iterative Feature removal
+                    - Inner CV loops
+        The inner loop are used to understand which feature to drop at each 
+        iteration removal.
+        For each outer loop element, we have a curve linking the fitness to the 
+        number of features and average ranks for each variable.
+        From the average of these curves the number of variables for each "best" model 
+        are extracted and the feature rank of the best models are computed.
+
+        Averaging the resuñts and the feature importances across repetition we select 
+        the final set of features. 
+
+        For additional informations about the algorithm, please check the original 
+        paper linked above.
+
+        Returns:
+            Dict[str, set]: The 2 sets of selected features, "min", "mid", "max".
+        """
         results_futures = []
         for j in range(self.repetitions):
             splits = self._make_splits()
@@ -68,17 +102,30 @@ class FeatureSelector:
             )
         results = dask.compute(
             results_futures,
-            # scheduler="single-threaded"
+            # scheduler="single-threaded"  #TODO: put single thread if env.DEBUG=True
         )[0]
         self._results = results
         self._selected_features = self._process_results(results)
         return self._selected_features
 
     def _process_results(self, results: List) -> Dict[str, set]:
+        """Process the input list of outer loop results and returns the three sets
+        of selected features.
+        The input list is composed by outputs of `self._perform_outer_loop_cv`, 
+        which means that each of the self.n_repetitions elements is the result of all 
+        train-test cycle on outer segments fold of the data.
+        """
         outer_loop_aggregation = [self._process_outer_loop(ol) for ol in results]
         return self._select_best_features(outer_loop_aggregation)
 
     def _process_outer_loop(self, outer_loop_results: List) -> Dict:
+        """Process the self.n_outer elements of the input list to extract the condensed
+        resuñts for the repetition. It return a dictionary containing
+        1. the average rank of the three sets of features
+        2. the length of the three sets of feature
+        3. The average value of the fitness score vs number of variables across the 
+           n_outer elements
+        """
         avg_feature_rank = self._compute_avg_feature_rank(outer_loop_results)
         scores = [r["scores"] for r in outer_loop_results]
         n_feats = self._compute_number_of_features(scores)
@@ -90,6 +137,18 @@ class FeatureSelector:
 
     @dask.delayed
     def _perform_outer_loop_cv(self, i: int, splits: Dict[tuple, Split]) -> Dict:
+        """Perform an outer loop cross validation on all the splits linked to the
+        outer fold `i`. It returns a dictionary containing the fitness score of the 
+        loop and the results of the prediction using the selected best features on 
+        the outer test fold
+
+        Args:
+            i (int): index of the loop
+            splits (Dict[tuple, Split]): outer and inner splits
+
+        Returns:
+            Dict: Results of the outer loop training and testing
+        """
         outer_train_results = self._perform_inner_loop_cv(i, splits)
         res = self._select_best_features_and_score(outer_train_results)
         scores = res.pop("score")
@@ -105,6 +164,9 @@ class FeatureSelector:
     def _compute_avg_feature_rank(
         self, outer_loop_results: List
     ) -> Dict[str, pd.DataFrame]:
+        """Compute the average feature rank from a list of outputs of 
+        `_perform_outer_loop_cv`.
+        """
         outer_test_results = [r["test_results"] for r in outer_loop_results]
         avg_feature_rank = {}
         for key in {self.MIN, self.MAX, self.MID}:
@@ -117,10 +179,19 @@ class FeatureSelector:
     def _compute_number_of_features(
         self, scores: List[Dict[int, float]]
     ) -> Dict[str, int]:
+        """Compute the min, max and mid number of features from a list of fitness 
+        scores. The scores are averaged, and normalized between 0 (minimum) and 1 
+        (maximum). Then all the number of features having scores smaller than 
+        self.robust_minimum are considered. The three values are the minum and the 
+        maximum of this list and their geometrical mean.
+        """
         avg_score = self._average_scores(scores)
         norm_score = self._normalize_score(avg_score)
-        max_feats = max(n for n, s in norm_score.items() if s <= self.robust_minimum)
-        min_feats = min(n for n, s in norm_score.items() if s <= self.robust_minimum)
+        n_feats_close_to_minumum = [
+            n for n, s in norm_score.items() if s <= self.robust_minimum
+        ]
+        max_feats = max(n_feats_close_to_minumum)
+        min_feats = min(n_feats_close_to_minumum)
         mid_feats = int(round(gmean([max_feats, min_feats])))
         return {
             self.MIN: min_feats,
