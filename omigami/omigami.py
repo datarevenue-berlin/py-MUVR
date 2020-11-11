@@ -8,6 +8,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GroupKFold
 import sklearn.metrics
 import dask
+from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 
 NumpyArray = np.ndarray
 MetricFunction = Callable[[NumpyArray, NumpyArray], float]
@@ -54,6 +56,8 @@ class FeatureSelector:
             groups = np.arange(self.X.shape[0])
         self.n_features = self.X.shape[1]
         self.groups = groups
+        self._results = None
+        self._selected_features = None
 
     def select_features(self) -> Dict[str, set]:
         results_futures = []
@@ -62,8 +66,13 @@ class FeatureSelector:
             results_futures.append(
                 [self._perform_outer_loop_cv(i, splits) for i in range(self.n_outer)]
             )
-        results = dask.compute(results_futures, scheduler="single-threaded")[0]
-        return self._process_results(results)
+        results = dask.compute(
+            results_futures,
+            # scheduler="single-threaded"
+        )[0]
+        self._results = results
+        self._selected_features = self._process_results(results)
+        return self._selected_features
 
     def _process_results(self, results: List) -> Dict[str, set]:
         outer_loop_aggregation = [self._process_outer_loop(ol) for ol in results]
@@ -268,6 +277,35 @@ class FeatureSelector:
             return sklearn.metrics.get_scorer(metric_string)._score_func
         else:
             raise ValueError("Input metric is not a valid string")
+
+    def plot_validation_curves(self) -> Axes:
+        if self._results is None or self._selected_features is None:
+            logging.warning(
+                "Validation curves have not been generated. To be able to plot call `select_features` method first"
+            )
+        outer_loop_aggregation = [self._process_outer_loop(ol) for ol in self._results]
+        for res in outer_loop_aggregation:
+            for i, score in enumerate(res["scores"]):
+                label = "Outer loop average" if i == 0 else None
+                sorted_score_items = sorted(score.items())
+                n_feats, score_values = zip(*sorted_score_items)
+                plt.semilogx(n_feats, score_values, c="#deebf7", label=label)
+        repetition_averages = []
+        for i, r in enumerate(outer_loop_aggregation):
+            label = "Repetition average" if i == 0 else None
+            avg_scores = self._average_scores(r["scores"])
+            sorted_score_items = sorted(avg_scores.items())
+            n_feats, score_values = zip(*sorted_score_items)
+            plt.semilogx(n_feats, score_values, c="#3182bd", label=label)
+            repetition_averages.append(avg_scores)
+        final_avg = self._average_scores(repetition_averages)
+        sorted_score_items = sorted(avg_scores.items())
+        n_feats, score_values = zip(*sorted_score_items)
+        plt.semilogx(n_feats, score_values, c="k", lw=3, label="Final average")
+        plt.xlabel("# features")
+        plt.ylabel("Fitness score")
+        plt.grid(ls=":")
+        return plt.gca()
 
 
 def miss_score(y_true, y_pred):

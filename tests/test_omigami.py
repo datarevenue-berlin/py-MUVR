@@ -439,3 +439,10 @@ def test_make_metric_from_string(feature_selector_mosquito):
     feature_selector_mosquito._make_metric_from_string("MISS") is miss_score
     with pytest.raises(ValueError):
         feature_selector_mosquito._make_metric_from_string("yo")
+
+
+def test_plot_validation_curves(feature_selector, results):
+    feature_selector._results = results
+    feature_selector._selected_features = feature_selector._process_results(results)
+    ax = feature_selector.plot_validation_curves()
+    assert ax
