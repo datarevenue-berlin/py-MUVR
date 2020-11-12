@@ -37,6 +37,7 @@ class FeatureSelector:
         n_inner: int = None,
         groups: NumpyArray = None,
         repetitions: int = 8,
+        random_state=None,
     ):
         self.X = X
         self.y = y
@@ -312,15 +313,17 @@ class FeatureSelector:
 
     def _make_estimator(self, estimator: Union[str, Estimator]) -> Estimator:
         if estimator == self.RFC:
-            return RandomForestClassifier(n_estimators=150)
+            return RandomForestClassifier(
+                n_estimators=150, n_jobs=-1, random_state=self.random_state
+            )
         elif isinstance(estimator, BaseEstimator):
             return estimator
         else:
             raise ValueError("Unknown type of estimator")
 
     def _make_splits(self) -> Dict[tuple, Split]:
-        outer_splitter = GroupKFold(self.n_outer)
-        inner_splitter = GroupKFold(self.n_inner)
+        outer_splitter = GroupKFold(self.n_outer, random_state=self.random_state)
+        inner_splitter = GroupKFold(self.n_inner, random_state=self.random_state)
         outer_splits = outer_splitter.split(self.X, self.y, self.groups)
         splits = {}
         for i, (out_train, out_test) in enumerate(outer_splits):
@@ -352,7 +355,8 @@ class FeatureSelector:
     def plot_validation_curves(self) -> Axes:
         if self._results is None or self._selected_features is None:
             logging.warning(
-                "Validation curves have not been generated. To be able to plot call `select_features` method first"
+                "Validation curves have not been generated. To be able to plot"
+                + " call `select_features` method first"
             )
         outer_loop_aggregation = [self._process_outer_loop(ol) for ol in self._results]
         for res in outer_loop_aggregation:
