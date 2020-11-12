@@ -37,10 +37,11 @@ class FeatureSelector:
         n_inner: int = None,
         groups: NumpyArray = None,
         repetitions: int = 8,
-        random_state=None,
+        random_state: int = None,
     ):
         self.X = X
         self.y = y
+        self.random_state = random_state
         self.n_outer = n_outer
         self.metric = self._make_metric(metric)
         self.estimator = self._make_estimator(estimator)
@@ -322,8 +323,8 @@ class FeatureSelector:
             raise ValueError("Unknown type of estimator")
 
     def _make_splits(self) -> Dict[tuple, Split]:
-        outer_splitter = GroupKFold(self.n_outer, random_state=self.random_state)
-        inner_splitter = GroupKFold(self.n_inner, random_state=self.random_state)
+        outer_splitter = GroupKFold(self.n_outer)
+        inner_splitter = GroupKFold(self.n_inner)
         outer_splits = outer_splitter.split(self.X, self.y, self.groups)
         splits = {}
         for i, (out_train, out_test) in enumerate(outer_splits):
@@ -359,12 +360,16 @@ class FeatureSelector:
                 + " call `select_features` method first"
             )
         outer_loop_aggregation = [self._process_outer_loop(ol) for ol in self._results]
-        for res in outer_loop_aggregation:
+        all_scores = []
+        for j, res in enumerate(outer_loop_aggregation):
             for i, score in enumerate(res["scores"]):
-                label = "Outer loop average" if i == 0 else None
+                label = "Outer loop average" if i + j == 0 else None
                 sorted_score_items = sorted(score.items())
                 n_feats, score_values = zip(*sorted_score_items)
+                all_scores += score_values
                 plt.semilogx(n_feats, score_values, c="#deebf7", label=label)
+        max_score = max(all_scores)
+        min_score = min(all_scores)
         repetition_averages = []
         for i, r in enumerate(outer_loop_aggregation):
             label = "Repetition average" if i == 0 else None
@@ -374,12 +379,24 @@ class FeatureSelector:
             plt.semilogx(n_feats, score_values, c="#3182bd", label=label)
             repetition_averages.append(avg_scores)
         final_avg = self._average_scores(repetition_averages)
-        sorted_score_items = sorted(avg_scores.items())
+        sorted_score_items = sorted(final_avg.items())
         n_feats, score_values = zip(*sorted_score_items)
         plt.semilogx(n_feats, score_values, c="k", lw=3, label="Final average")
+        for key in (self.MIN, self.MAX, self.MID):
+            n_feats = len(self._selected_features[key])
+            plt.vlines(
+                n_feats,
+                min_score,
+                max_score,
+                linestyle="--",
+                colors="grey",
+                lw=2,
+                label=key,
+            )
         plt.xlabel("# features")
         plt.ylabel("Fitness score")
         plt.grid(ls=":")
+        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
         return plt.gca()
 
 
