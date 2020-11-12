@@ -208,6 +208,7 @@ class FeatureSelector:
 
     @staticmethod
     def _normalize_score(score: Dict[int, float]) -> Dict[int, float]:
+        """Normalize input score between min (=0) and max (=1)"""
         max_s = max(score.values())
         min_s = min(score.values())
         delta = max_s - min_s if max_s != min_s else 1
@@ -216,6 +217,21 @@ class FeatureSelector:
     def _perform_inner_loop_cv(
         self, i: int, splits: Dict[tuple, Split]
     ) -> Dict[Tuple[int], List]:
+        """Perform inner loop cross validation using all the inner loop splits derived 
+        from the outer split i. The inner loop performs iteratve variable removal.
+        At each step a fraction `self.feature_dropout_rate`  of the features is removed.
+        To choose the features to remove a CV based on the `self.n_inner`splits is 
+        performed. It return a dectionary containing the results of every train-test
+        CV at each step of the iterative variable removal. Each key corresponds to the 
+        set of features used at that removal iteration.
+
+        Args:
+            i (int): outer loop index
+            splits (Dict[tuple, Split]): all train-validation splits
+
+        Returns:
+            Dict[Tuple[int], List]: variable removal train-test results. 
+        """
         final_results = {}
         features = list(range(self.n_features))
         while len(features) > 1:
@@ -232,6 +248,9 @@ class FeatureSelector:
     def _train_and_evaluate_on_segments(
         self, split: Split, features: List[int]
     ) -> Dict:
+        """Train and test a clone of self.evaluator over the input split using the
+        input features only. It outputs the fitness score over the test split and
+        the feature rank of the variables"""
         inner_train_idx, inner_test_idx = split
         X_train = self.X[inner_train_idx, :][:, features]
         X_test = self.X[inner_test_idx, :][:, features]
@@ -248,6 +267,7 @@ class FeatureSelector:
     def _keep_best_features(
         self, inner_results: List, features: List[int]
     ) -> List[int]:
+        """Keep the best features based on their average rank"""
         feature_ranks = [r["feature_ranks"] for r in inner_results]
         avg_ranks = pd.DataFrame(feature_ranks).fillna(self.n_features).mean().to_dict()
         for f in features:
@@ -263,6 +283,9 @@ class FeatureSelector:
     def _extract_feature_rank(
         self, estimator: Estimator, features: List[int]
     ) -> Dict[int, float]:
+        """Extract the feature rank from the input estimator. So far it can only handle 
+        estimators as scikit.learn ones, so either having `the feature_importances_` or
+        the `coef_` attribute."""
         if hasattr(estimator, "feature_importances_"):
             ranks = rankdata(-estimator.feature_importances_)
         elif hasattr(estimator, "coef_"):
@@ -272,8 +295,28 @@ class FeatureSelector:
         return dict(zip(features, ranks))
 
     def _select_best_features_and_score(
-        self, outer_train_results: Dict[Tuple[int], Dict]
+        self, outer_train_results: Dict[Tuple[int], List]
     ) -> Dict:
+        """Select the best features analysing the train results across the feature
+        removal cycle. Each step of the cycle is an entry in the input dictionary
+
+            {features_used: [res_fold_1, ..., res_fold_n_inner]}
+        
+        First, an overall score is obtained summing all the scores (for consistency 
+        with the original R package, MUVR. Averaging would not change the result.)
+        Next, the appropriate number of features is extracted from this condensed score.
+        Then, the feature set is established using the steps in the feature elimination
+        having the number of features computed in the previous step.
+
+        The score and the features are returned as dict.
+
+        Args:
+            outer_train_results (Dict[Tuple[int], List]): Result of the feature 
+            elimination
+
+        Returns:
+            Dict: The best feature for each of the three sets and the condensed score
+        """
         features_kept = {}
         score = {}
         for features, res in outer_train_results.items():
@@ -294,6 +337,8 @@ class FeatureSelector:
         }
 
     def _select_best_features(self, results: List) -> Dict[str, set]:
+        """Select the best features set from the outer loop aggregated results.
+        The input is a list with n_repetitions elements."""
         final_feature_ranks = self._compute_final_ranks(results)
         avg_scores = [self._average_scores(r["scores"]) for r in results]
         n_feats = self._compute_number_of_features(avg_scores)
@@ -304,6 +349,7 @@ class FeatureSelector:
         return feature_sets
 
     def _compute_final_ranks(self, results: List) -> pd.DataFrame:
+        """Average the ranks for the three sets to abaine a definitive feature rank"""
         final_ranks = {}
         for key in (self.MIN, self.MAX, self.MID):
             avg_ranks = [r["avg_feature_ranks"][key] for r in results]
@@ -313,6 +359,12 @@ class FeatureSelector:
         return pd.DataFrame.from_dict(final_ranks).fillna(self.n_features)
 
     def _make_estimator(self, estimator: Union[str, Estimator]) -> Estimator:
+        """Make an estimator from the input `estimator`.
+        If the estimator is a scikit-learn estimator, then it is simply returned.
+        If the estimator is a string then an appropriate estimator corresponding to 
+        the string is returned. Supported strings are:
+            - RFC: Random Forest Classifier
+        """
         if estimator == self.RFC:
             return RandomForestClassifier(
                 n_estimators=150, n_jobs=-1, random_state=self.random_state
@@ -323,6 +375,13 @@ class FeatureSelector:
             raise ValueError("Unknown type of estimator")
 
     def _make_splits(self) -> Dict[tuple, Split]:
+        """Create a dictionary of split indexes for self.X and self.y,
+         according to self.n_outer and self.n_inner and self.groups.
+        The groups are split first in n_outer test and train segments. Then each
+        train segment is split in n_inner smaller test and train sub-segments.
+        The splits are keyed (outer_index_split, n_inner_split).
+        Outer splits are simply keyed (outer_index_split,).
+        """
         outer_splitter = GroupKFold(self.n_outer)
         inner_splitter = GroupKFold(self.n_inner)
         outer_splits = outer_splitter.split(self.X, self.y, self.groups)
@@ -337,6 +396,9 @@ class FeatureSelector:
         return splits
 
     def _make_metric(self, metric: Union[str, MetricFunction]):
+        """Build metric function using the input `metric`. If a metric is a string
+        then is interpreted as a scikit-learn metric score, such as "accuracy".
+        Else, if should be a callable accepting two input arrays."""
         if isinstance(metric, str):
             return self._make_metric_from_string(metric)
         elif hasattr(metric, "__call__"):
@@ -354,6 +416,13 @@ class FeatureSelector:
             raise ValueError("Input metric is not a valid string")
 
     def plot_validation_curves(self) -> Axes:
+        """Plot validation curved using feature elimination results. The function
+        will plot the relationship between finess score and number of variables
+        for each outer loop iteration, their average aggregation (which gives the
+        values for the single repetitions) and the average across repetitions.
+        The size of the "min", "max" and "mid" sets are plotted as vertical dashed 
+        lines.
+        """
         if self._results is None or self._selected_features is None:
             logging.warning(
                 "Validation curves have not been generated. To be able to plot"
@@ -396,9 +465,11 @@ class FeatureSelector:
         plt.xlabel("# features")
         plt.ylabel("Fitness score")
         plt.grid(ls=":")
-        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
+        plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
         return plt.gca()
 
 
 def miss_score(y_true, y_pred):
+    """MISS score: number of wrong classifications preceded by - so that the higher
+    this score the better the model"""
     return -(y_true != y_pred).sum()
