@@ -10,7 +10,6 @@ from matplotlib.axes import Axes
 from scipy.stats import gmean, rankdata
 from sklearn.base import BaseEstimator, clone
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GroupKFold
 
 NumpyArray = np.ndarray
 MetricFunction = Callable[[NumpyArray, NumpyArray], float]
@@ -65,32 +64,32 @@ class FeatureSelector:
     def select_features(self) -> Dict[str, set]:
         """This method implement the MUVR method from:
         https://academic.oup.com/bioinformatics/article/35/6/972/5085367
-        
+
         Perform recursive feature selection using nested cross validation to select
-        the optimal number of features that explain the relationship between 
-        `self.X` and `self.y`. 
+        the optimal number of features that explain the relationship between
+        `self.X` and `self.y`.
         The alforithm return three sets of features:
         1. `self.MIN`: is the minimum number of feature that gives good predictive power
         2. `self.MAX`: is the maximum number of feature that gives good predictive power
-        3. `self.MID`: is the set of features to build a model using a number of feature 
+        3. `self.MID`: is the set of features to build a model using a number of feature
             that is the geometric mean of the minimum and the maximum number of features
-         
+
         The structure of the nested CV loops is the following:
         - Repetitions
             - Outer CV Loops
                 - Iterative Feature removal
                     - Inner CV loops
-        The inner loop are used to understand which feature to drop at each 
+        The inner loop are used to understand which feature to drop at each
         iteration removal.
-        For each outer loop element, we have a curve linking the fitness to the 
+        For each outer loop element, we have a curve linking the fitness to the
         number of features and average ranks for each variable.
-        From the average of these curves the number of variables for each "best" model 
+        From the average of these curves the number of variables for each "best" model
         are extracted and the feature rank of the best models are computed.
 
-        Averaging the resuñts and the feature importances across repetition we select 
-        the final set of features. 
+        Averaging the resuñts and the feature importances across repetition we select
+        the final set of features.
 
-        For additional informations about the algorithm, please check the original 
+        For additional informations about the algorithm, please check the original
         paper linked above.
 
         Returns:
@@ -113,8 +112,8 @@ class FeatureSelector:
     def _process_results(self, results: List) -> Dict[str, set]:
         """Process the input list of outer loop results and returns the three sets
         of selected features.
-        The input list is composed by outputs of `self._perform_outer_loop_cv`, 
-        which means that each of the self.n_repetitions elements is the result of all 
+        The input list is composed by outputs of `self._perform_outer_loop_cv`,
+        which means that each of the self.n_repetitions elements is the result of all
         train-test cycle on outer segments fold of the data.
         """
         outer_loop_aggregation = [self._process_outer_loop(ol) for ol in results]
@@ -125,7 +124,7 @@ class FeatureSelector:
         resuñts for the repetition. It return a dictionary containing
         1. the average rank of the three sets of features
         2. the length of the three sets of feature
-        3. The average value of the fitness score vs number of variables across the 
+        3. The average value of the fitness score vs number of variables across the
            n_outer elements
         """
         avg_feature_rank = self._compute_avg_feature_rank(outer_loop_results)
@@ -137,36 +136,10 @@ class FeatureSelector:
             "n_feats": n_feats,
         }
 
-    @dask.delayed
-    def _perform_outer_loop_cv(self, i: int, splits: Dict[tuple, Split]) -> Dict:
-        """Perform an outer loop cross validation on all the splits linked to the
-        outer fold `i`. It returns a dictionary containing the fitness score of the 
-        loop and the results of the prediction using the selected best features on 
-        the outer test fold
-
-        Args:
-            i (int): index of the loop
-            splits (Dict[tuple, Split]): outer and inner splits
-
-        Returns:
-            Dict: Results of the outer loop training and testing
-        """
-        outer_train_results = self._perform_inner_loop_cv(i, splits)
-        res = self._select_best_features_and_score(outer_train_results)
-        scores = res.pop("score")
-        outer_test_results = {
-            key: self._train_and_evaluate_on_segments(splits[(i,)], features)
-            for key, features in res.items()
-        }
-        return {
-            "test_results": outer_test_results,
-            "scores": scores,
-        }
-
     def _compute_avg_feature_rank(
         self, outer_loop_results: List
     ) -> Dict[str, pd.DataFrame]:
-        """Compute the average feature rank from a list of outputs of 
+        """Compute the average feature rank from a list of outputs of
         `_perform_outer_loop_cv`.
         """
         outer_test_results = [r["test_results"] for r in outer_loop_results]
@@ -181,10 +154,10 @@ class FeatureSelector:
     def _compute_number_of_features(
         self, scores: List[Dict[int, float]]
     ) -> Dict[str, int]:
-        """Compute the min, max and mid number of features from a list of fitness 
-        scores. The scores are averaged, and normalized between 0 (minimum) and 1 
-        (maximum). Then all the number of features having scores smaller than 
-        self.robust_minimum are considered. The three values are the minum and the 
+        """Compute the min, max and mid number of features from a list of fitness
+        scores. The scores are averaged, and normalized between 0 (minimum) and 1
+        (maximum). Then all the number of features having scores smaller than
+        self.robust_minimum are considered. The three values are the minum and the
         maximum of this list and their geometrical mean.
         """
         avg_score = self._average_scores(scores)
@@ -214,56 +187,6 @@ class FeatureSelector:
         delta = max_s - min_s if max_s != min_s else 1
         return {key: (val - min_s) / delta for key, val in score.items()}
 
-    def _perform_inner_loop_cv(
-        self, i: int, splits: Dict[tuple, Split]
-    ) -> Dict[Tuple[int], List]:
-        """Perform inner loop cross validation using all the inner loop splits derived 
-        from the outer split i. The inner loop performs iteratve variable removal.
-        At each step a fraction `self.feature_dropout_rate`  of the features is removed.
-        To choose the features to remove a CV based on the `self.n_inner`splits is 
-        performed. It return a dectionary containing the results of every train-test
-        CV at each step of the iterative variable removal. Each key corresponds to the 
-        set of features used at that removal iteration.
-
-        Args:
-            i (int): outer loop index
-            splits (Dict[tuple, Split]): all train-validation splits
-
-        Returns:
-            Dict[Tuple[int], List]: variable removal train-test results. 
-        """
-        final_results = {}
-        features = list(range(self.n_features))
-        while len(features) > 1:
-            inner_results = []
-            for j in range(self.n_inner):
-                split_id = (i, j)
-                split = splits[split_id]
-                results = self._train_and_evaluate_on_segments(split, features)
-                inner_results.append(results)
-            final_results[tuple(features)] = inner_results
-            features = self._keep_best_features(inner_results, features)
-        return final_results
-
-    def _train_and_evaluate_on_segments(
-        self, split: Split, features: List[int]
-    ) -> Dict:
-        """Train and test a clone of self.evaluator over the input split using the
-        input features only. It outputs the fitness score over the test split and
-        the feature rank of the variables"""
-        inner_train_idx, inner_test_idx = split
-        X_train = self.X[inner_train_idx, :][:, features]
-        X_test = self.X[inner_test_idx, :][:, features]
-        y_train = self.y[inner_train_idx]
-        y_test = self.y[inner_test_idx]
-        model = clone(self.estimator)
-        y_pred = model.fit(X_train, y_train).predict(X_test)
-        feature_ranks = self._extract_feature_rank(model, features)
-        return {
-            "score": -self.metric(y_pred, y_test),
-            "feature_ranks": feature_ranks,
-        }
-
     def _keep_best_features(
         self, inner_results: List, features: List[int]
     ) -> List[int]:
@@ -283,7 +206,7 @@ class FeatureSelector:
     def _extract_feature_rank(
         self, estimator: Estimator, features: List[int]
     ) -> Dict[int, float]:
-        """Extract the feature rank from the input estimator. So far it can only handle 
+        """Extract the feature rank from the input estimator. So far it can only handle
         estimators as scikit.learn ones, so either having `the feature_importances_` or
         the `coef_` attribute."""
         if hasattr(estimator, "feature_importances_"):
@@ -293,48 +216,6 @@ class FeatureSelector:
         else:
             raise ValueError("The estimator provided has no feature importances")
         return dict(zip(features, ranks))
-
-    def _select_best_features_and_score(
-        self, outer_train_results: Dict[Tuple[int], List]
-    ) -> Dict:
-        """Select the best features analysing the train results across the feature
-        removal cycle. Each step of the cycle is an entry in the input dictionary
-
-            {features_used: [res_fold_1, ..., res_fold_n_inner]}
-        
-        First, an overall score is obtained summing all the scores (for consistency 
-        with the original R package, MUVR. Averaging would not change the result.)
-        Next, the appropriate number of features is extracted from this condensed score.
-        Then, the feature set is established using the steps in the feature elimination
-        having the number of features computed in the previous step.
-
-        The score and the features are returned as dict.
-
-        Args:
-            outer_train_results (Dict[Tuple[int], List]): Result of the feature 
-            elimination
-
-        Returns:
-            Dict: The best feature for each of the three sets and the condensed score
-        """
-        features_kept = {}
-        score = {}
-        for features, res in outer_train_results.items():
-            n_feats = len(features)
-            features_kept[n_feats] = features
-            score[n_feats] = np.sum([r["score"] for r in res])
-
-        n_feats = self._compute_number_of_features([score])
-        max_feats = n_feats[self.MAX]
-        min_feats = n_feats[self.MIN]
-        mid_feats = n_feats[self.MID]
-        mid_feats = min(score.keys(), key=lambda x: abs(x - mid_feats))
-        return {
-            "min": features_kept[min_feats],
-            "max": features_kept[max_feats],
-            "mid": features_kept[mid_feats],
-            "score": score,
-        }
 
     def _select_best_features(self, results: List) -> Dict[str, set]:
         """Select the best features set from the outer loop aggregated results.
@@ -361,7 +242,7 @@ class FeatureSelector:
     def _make_estimator(self, estimator: Union[str, Estimator]) -> Estimator:
         """Make an estimator from the input `estimator`.
         If the estimator is a scikit-learn estimator, then it is simply returned.
-        If the estimator is a string then an appropriate estimator corresponding to 
+        If the estimator is a string then an appropriate estimator corresponding to
         the string is returned. Supported strings are:
             - RFC: Random Forest Classifier
         """
@@ -373,27 +254,6 @@ class FeatureSelector:
             return estimator
         else:
             raise ValueError("Unknown type of estimator")
-
-    def _make_splits(self) -> Dict[tuple, Split]:
-        """Create a dictionary of split indexes for self.X and self.y,
-         according to self.n_outer and self.n_inner and self.groups.
-        The groups are split first in n_outer test and train segments. Then each
-        train segment is split in n_inner smaller test and train sub-segments.
-        The splits are keyed (outer_index_split, n_inner_split).
-        Outer splits are simply keyed (outer_index_split,).
-        """
-        outer_splitter = GroupKFold(self.n_outer)
-        inner_splitter = GroupKFold(self.n_inner)
-        outer_splits = outer_splitter.split(self.X, self.y, self.groups)
-        splits = {}
-        for i, (out_train, out_test) in enumerate(outer_splits):
-            splits[(i,)] = out_train, out_test
-            inner_splits = inner_splitter.split(
-                self.X[out_train, :], self.y[out_train], self.groups[out_train]
-            )
-            for j, (inner_train, inner_valid) in enumerate(inner_splits):
-                splits[(i, j)] = out_train[inner_train], out_train[inner_valid]
-        return splits
 
     def _make_metric(self, metric: Union[str, MetricFunction]):
         """Build metric function using the input `metric`. If a metric is a string
@@ -420,7 +280,7 @@ class FeatureSelector:
         will plot the relationship between finess score and number of variables
         for each outer loop iteration, their average aggregation (which gives the
         values for the single repetitions) and the average across repetitions.
-        The size of the "min", "max" and "mid" sets are plotted as vertical dashed 
+        The size of the "min", "max" and "mid" sets are plotted as vertical dashed
         lines.
         """
         if self._results is None or self._selected_features is None:
