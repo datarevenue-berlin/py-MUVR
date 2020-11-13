@@ -23,10 +23,9 @@ def model_trainer(dataset):
     )
 
 
-def test_train_and_evaluate_on_segments(model_trainer):
-    split = [0, 1, 2, 6, 7, 8, 9, 10, 11, 12, 13, 45, 36, 24, 36, 78], [3, 4, 5, 22, 33]
+def test_run(model_trainer):
     features = [0, 4]
-    res = model_trainer._train_and_evaluate_on_segments(split, features)
+    res = model_trainer.run((1, 1), features)
     assert res["score"] is not None
     assert res["feature_ranks"]
     assert res["feature_ranks"][0] < res["feature_ranks"][4]

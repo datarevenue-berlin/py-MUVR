@@ -259,47 +259,7 @@ def test_train_and_evaluate_on_segments(feature_selector):
     assert res["feature_ranks"][0] < res["feature_ranks"][4]
 
 
-def test_keep_best_features(feature_selector_mosquito, inner_results):
-    features = [0, 1, 2, 3, 4, 5]
-    kept = feature_selector_mosquito._keep_best_features(inner_results, features)
-    kept = tuple(sorted(kept))
-    assert kept == (0, 1, 2, 3, 4)
 
-
-def test_extract_feature_rank(feature_selector_mosquito):
-    class DummyEstimatorFI:
-        feature_importances_ = None
-
-    class DummyEstimatorCoeff:
-        coef_ = None
-
-    estimator = DummyEstimatorFI()
-    feature_importances = np.array([0.05, 0.4, 0, 0, 0.15, 0.4])
-    estimator.feature_importances_ = feature_importances
-    features = [7, 8, 9, 10, 11, 12]
-    ranks = feature_selector_mosquito._extract_feature_rank(estimator, features)
-
-    assert len(ranks) == len(estimator.feature_importances_)
-    assert ranks[7] == 4
-    assert ranks[8] == 1.5
-    assert ranks[9] == 5.5
-    assert ranks[10] == 5.5
-    assert ranks[11] == 3
-    assert ranks[12] == 1.5
-
-    estimator = DummyEstimatorCoeff()
-    coef = np.array([-0.05, 0.4, 0, 0, 0.15, -0.4])
-    estimator.coef_ = [coef]
-
-    ranks = feature_selector_mosquito._extract_feature_rank(estimator, features)
-
-    assert len(ranks) == len(coef)
-    assert ranks[7] == 4
-    assert ranks[8] == 1.5
-    assert ranks[9] == 5.5
-    assert ranks[10] == 5.5
-    assert ranks[11] == 3
-    assert ranks[12] == 1.5
 
 
 def _select_best_features_and_score(feature_selector, outer_train_results):
@@ -380,65 +340,6 @@ def test_make_estimator(feature_selector_mosquito):
     assert isinstance(random_forest, RandomForestClassifier)
     random_forest_2 = feature_selector_mosquito._make_estimator(random_forest)
     assert random_forest is random_forest_2
-
-
-def test_make_splits(feature_selector_mosquito):
-    splits = feature_selector_mosquito._make_splits()
-    n_outer_splits = feature_selector_mosquito.n_outer
-    n_inner_splits = (
-        feature_selector_mosquito.n_outer * feature_selector_mosquito.n_inner
-    )
-    assert splits
-    assert len(splits) == n_inner_splits + n_outer_splits
-
-    # check test size and train size are as expected
-    possible_test_size = {
-        np.floor(
-            feature_selector_mosquito.X.shape[0] / feature_selector_mosquito.n_outer
-        ),
-        np.ceil(
-            feature_selector_mosquito.X.shape[0] / feature_selector_mosquito.n_outer
-        ),
-    }
-    possible_train_size = {
-        feature_selector_mosquito.X.shape[0] - i for i in possible_test_size
-    }
-    for i in range(feature_selector_mosquito.n_outer):
-        train_idx, test_idx = splits[(i,)]
-        assert len(train_idx) in possible_train_size
-        assert len(test_idx) in possible_test_size
-
-    # check there is no ntersection among the groups
-    for i in range(feature_selector_mosquito.n_outer):
-        train_idx, test_idx = splits[(i,)]
-        for j in range(feature_selector_mosquito.n_inner):
-            inner_train, valid_idx = splits[(i, j)]
-            assert not set(inner_train).intersection(valid_idx)
-            assert not set(test_idx).intersection(valid_idx)
-            assert not set(inner_train).intersection(test_idx)
-
-
-def test_make_metric(feature_selector_mosquito):
-    assert feature_selector_mosquito.metric
-    assert feature_selector_mosquito.metric is miss_score
-
-
-def test_miss_score():
-    y_pred = np.array([1, 0, 0, 1])
-    y_true = np.array([0, 1, 1, 0])
-    assert miss_score(y_pred, y_true) == -4
-    y_true = np.array([1, 0, 0, 1])
-    assert miss_score(y_pred, y_true) == 0
-    y_true = np.array([1, 0, 1, 0])
-    assert miss_score(y_pred, y_true) == -2
-
-
-def test_make_metric_from_string(feature_selector_mosquito):
-    for metric_id in metrics.SCORERS:
-        assert feature_selector_mosquito._make_metric_from_string(metric_id)
-    feature_selector_mosquito._make_metric_from_string("MISS") is miss_score
-    with pytest.raises(ValueError):
-        feature_selector_mosquito._make_metric_from_string("yo")
 
 
 def test_plot_validation_curves(feature_selector, results):

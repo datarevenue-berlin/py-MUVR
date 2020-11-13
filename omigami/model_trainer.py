@@ -22,6 +22,7 @@ class ModelTrainer:
     ):
         self.random_state = random_state
         self.X = X
+        self.n_features = X.shape[1]
         self.y = y
         self.groups = groups
         self.n_inner = n_inner
@@ -51,13 +52,11 @@ class ModelTrainer:
                 splits[(i, j)] = out_train[inner_train], out_train[inner_valid]
         return splits
 
-    def _train_and_evaluate_on_segments(
-        self, split: Split, features: List[int]
-    ) -> Dict:
+    def run(self, split_id, features: List[int]) -> Dict:
         """Train and test a clone of self.evaluator over the input split using the
         input features only. It outputs the fitness score over the test split and
         the feature rank of the variables"""
-        inner_train_idx, inner_test_idx = split
+        inner_train_idx, inner_test_idx = self.splits[tuple(split_id)]
         X_train = self.X[inner_train_idx, :][:, features]
         X_test = self.X[inner_test_idx, :][:, features]
         y_train = self.y[inner_train_idx]

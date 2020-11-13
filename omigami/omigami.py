@@ -239,42 +239,6 @@ class FeatureSelector:
             )
         return pd.DataFrame.from_dict(final_ranks).fillna(self.n_features)
 
-    def _make_estimator(self, estimator: Union[str, Estimator]) -> Estimator:
-        """Make an estimator from the input `estimator`.
-        If the estimator is a scikit-learn estimator, then it is simply returned.
-        If the estimator is a string then an appropriate estimator corresponding to
-        the string is returned. Supported strings are:
-            - RFC: Random Forest Classifier
-        """
-        if estimator == self.RFC:
-            return RandomForestClassifier(
-                n_estimators=150, n_jobs=-1, random_state=self.random_state
-            )
-        elif isinstance(estimator, BaseEstimator):
-            return estimator
-        else:
-            raise ValueError("Unknown type of estimator")
-
-    def _make_metric(self, metric: Union[str, MetricFunction]):
-        """Build metric function using the input `metric`. If a metric is a string
-        then is interpreted as a scikit-learn metric score, such as "accuracy".
-        Else, if should be a callable accepting two input arrays."""
-        if isinstance(metric, str):
-            return self._make_metric_from_string(metric)
-        elif hasattr(metric, "__call__"):
-            return metric
-        else:
-            raise ValueError("Input metric is not valid")
-
-    @staticmethod
-    def _make_metric_from_string(metric_string: str) -> MetricFunction:
-        if metric_string == "MISS":
-            return miss_score
-        elif metric_string in sklearn.metrics.SCORERS:
-            return sklearn.metrics.get_scorer(metric_string)._score_func
-        else:
-            raise ValueError("Input metric is not a valid string")
-
     def plot_validation_curves(self) -> Axes:
         """Plot validation curved using feature elimination results. The function
         will plot the relationship between finess score and number of variables
@@ -328,8 +292,3 @@ class FeatureSelector:
         plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
         return plt.gca()
 
-
-def miss_score(y_true, y_pred):
-    """MISS score: number of wrong classifications preceded by - so that the higher
-    this score the better the model"""
-    return -(y_true != y_pred).sum()
