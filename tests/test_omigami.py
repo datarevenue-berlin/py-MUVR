@@ -176,11 +176,6 @@ def outer_train_results():
     }
 
 
-@pytest.fixture
-def scores():
-    return [{5: 5, 4: 4, 3: 4, 2: 4}, {5: 10, 4: 9, 3: 10, 2: 11}]
-
-
 def test_feature_selector_creation(feature_selector_mosquito):
     assert feature_selector_mosquito
     assert feature_selector_mosquito.n_inner == 4
@@ -259,9 +254,6 @@ def test_train_and_evaluate_on_segments(feature_selector):
     assert res["feature_ranks"][0] < res["feature_ranks"][4]
 
 
-
-
-
 def _select_best_features_and_score(feature_selector, outer_train_results):
     res = feature_selector._select_best_features_and_score(outer_train_results)
     for key in ("min", "max", "mid", "score"):
@@ -283,35 +275,6 @@ def test_compute_avg_feature_rank(feature_selector_mosquito, outer_loop_results)
     assert avg_rks[2] == 2.5
     assert avg_rks[3] == 4.5
     assert avg_rks[4] == 5
-
-
-def test_compute_number_of_features(feature_selector_mosquito, scores):
-    n_feats = feature_selector_mosquito._compute_number_of_features(scores)
-    assert isinstance(n_feats, dict)
-    assert feature_selector_mosquito.MIN in n_feats
-    assert feature_selector_mosquito.MAX in n_feats
-    assert feature_selector_mosquito.MID in n_feats
-    assert n_feats[feature_selector_mosquito.MIN] == 4
-    assert n_feats[feature_selector_mosquito.MAX] == 4
-    assert n_feats[feature_selector_mosquito.MID] == 4
-
-
-def test_average_scores(feature_selector_mosquito, scores):
-    avg_score = feature_selector_mosquito._average_scores(scores)
-    assert avg_score
-    assert avg_score[5] == 7.5
-    assert avg_score[4] == 6.5
-    assert avg_score[3] == 7
-    assert avg_score[2] == 7.5
-
-
-def test_normalize_score(feature_selector_mosquito):
-    avg_score = {1: 11, 2: 6, 3: 1, 4: 6, 5: 11}
-    norm_score = feature_selector_mosquito._normalize_score(avg_score)
-    assert norm_score
-    assert norm_score[1] == 1
-    assert norm_score[3] == 0
-    assert norm_score[2] == 0.5
 
 
 def test_select_best_features(feature_selector_mosquito, outer_loop_aggregation):
