@@ -19,7 +19,7 @@ def test_compute_number_of_features(scores):
 
 
 def test_average_scores(scores):
-    avg_score = utils._average_scores(scores)
+    avg_score = utils.average_scores(scores)
     assert avg_score
     assert avg_score[5] == 7.5
     assert avg_score[4] == 6.5

@@ -1,7 +1,6 @@
 from typing import Dict, List, Tuple
 import dask
 import numpy as np
-from omigami.model_trainer import ModelTrainer
 from omigami.inner_looper import InnerLooper
 import omigami.utils as utils
 
@@ -13,30 +12,13 @@ class OuterLooper:
     MID = utils.MID
 
     def __init__(
-        self,
-        X,
-        y,
-        groups,
-        n_inner,
-        n_outer,
-        features_dropout_rate,
-        estimator,
-        metric,
-        robust_minimum,
+        self, n_inner, n_outer, features_dropout_rate, robust_minimum, model_trainer,
     ):
         self.n_inner = n_inner
         self.n_outer = n_outer
         self.features_dropout_rate = features_dropout_rate
         self.robust_minimum = robust_minimum
-        self.model_trainer = ModelTrainer(
-            X=X,
-            y=y,
-            groups=groups,
-            n_inner=n_inner,
-            n_outer=n_outer,
-            estimator=estimator,
-            metric=metric,
-        )
+        self.model_trainer = model_trainer
 
     def run(self) -> List:
         return [self._perform_outer_loop_cv(i) for i in range(self.n_outer)]

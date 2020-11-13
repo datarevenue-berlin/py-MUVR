@@ -4,12 +4,13 @@ from typing import Callable, Dict, List, Tuple, TypeVar, Union
 import dask
 import numpy as np
 import pandas as pd
-import sklearn.metrics
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
-from scipy.stats import gmean, rankdata
-from sklearn.base import BaseEstimator, clone
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.base import BaseEstimator
+from omigami.outer_looper import OuterLooper
+from omigami.model_trainer import ModelTrainer
+from omigami.utils import compute_number_of_features, average_scores
+
 
 NumpyArray = np.ndarray
 MetricFunction = Callable[[NumpyArray, NumpyArray], float]
@@ -42,8 +43,8 @@ class FeatureSelector:
         self.y = y
         self.random_state = random_state
         self.n_outer = n_outer
-        self.metric = self._make_metric(metric)
-        self.estimator = self._make_estimator(estimator)
+        self.metric = metric
+        self.estimator = estimator
         self.features_dropout_rate = features_dropout_rate
         self.robust_minimum = robust_minimum
         self.repetitions = repetitions
@@ -96,11 +97,25 @@ class FeatureSelector:
             Dict[str, set]: The 2 sets of selected features, "min", "mid", "max".
         """
         results_futures = []
-        for j in range(self.repetitions):
-            splits = self._make_splits()
-            results_futures.append(
-                [self._perform_outer_loop_cv(i, splits) for i in range(self.n_outer)]
+        for _ in range(self.repetitions):
+            model_trainer = ModelTrainer(
+                X=self.X,
+                y=self.y,
+                groups=self.groups,
+                n_inner=self.n_inner,
+                n_outer=self.n_outer,
+                estimator=self.estimator,
+                metric=self.metric,
             )
+            ol = OuterLooper(
+                n_inner=self.n_inner,
+                n_outer=self.n_outer,
+                features_dropout_rate=self.features_dropout_rate,
+                robust_minimum=self.robust_minimum,
+                model_trainer=model_trainer,
+            )
+            repetition_futures = ol.run()
+            results_futures.append(repetition_futures)
         results = dask.compute(
             results_futures,
             # scheduler="single-threaded"  #TODO: put single thread if env.DEBUG=True
@@ -129,7 +144,7 @@ class FeatureSelector:
         """
         avg_feature_rank = self._compute_avg_feature_rank(outer_loop_results)
         scores = [r["scores"] for r in outer_loop_results]
-        n_feats = self._compute_number_of_features(scores)
+        n_feats = compute_number_of_features(scores, self.robust_minimum)
         return {
             "avg_feature_ranks": avg_feature_rank,
             "scores": scores,
@@ -151,78 +166,12 @@ class FeatureSelector:
             )
         return avg_feature_rank
 
-    def _compute_number_of_features(
-        self, scores: List[Dict[int, float]]
-    ) -> Dict[str, int]:
-        """Compute the min, max and mid number of features from a list of fitness
-        scores. The scores are averaged, and normalized between 0 (minimum) and 1
-        (maximum). Then all the number of features having scores smaller than
-        self.robust_minimum are considered. The three values are the minum and the
-        maximum of this list and their geometrical mean.
-        """
-        avg_score = self._average_scores(scores)
-        norm_score = self._normalize_score(avg_score)
-        n_feats_close_to_minumum = [
-            n for n, s in norm_score.items() if s <= self.robust_minimum
-        ]
-        max_feats = max(n_feats_close_to_minumum)
-        min_feats = min(n_feats_close_to_minumum)
-        mid_feats = int(round(gmean([max_feats, min_feats])))
-        return {
-            self.MIN: min_feats,
-            self.MAX: max_feats,
-            self.MID: mid_feats,
-        }
-
-    @staticmethod
-    def _average_scores(scores: List[Dict]) -> Dict[int, float]:
-        avg_score = pd.DataFrame(scores).fillna(0).mean().to_dict()
-        return avg_score
-
-    @staticmethod
-    def _normalize_score(score: Dict[int, float]) -> Dict[int, float]:
-        """Normalize input score between min (=0) and max (=1)"""
-        max_s = max(score.values())
-        min_s = min(score.values())
-        delta = max_s - min_s if max_s != min_s else 1
-        return {key: (val - min_s) / delta for key, val in score.items()}
-
-    def _keep_best_features(
-        self, inner_results: List, features: List[int]
-    ) -> List[int]:
-        """Keep the best features based on their average rank"""
-        feature_ranks = [r["feature_ranks"] for r in inner_results]
-        avg_ranks = pd.DataFrame(feature_ranks).fillna(self.n_features).mean().to_dict()
-        for f in features:
-            if f not in avg_ranks:
-                avg_ranks[f] = self.n_features
-        sorted_averages = sorted(avg_ranks.items(), key=lambda x: x[1])
-        n_features_to_drop = round(self.features_dropout_rate * len(features))
-        if not n_features_to_drop:
-            n_features_to_drop = 1
-        sorted_averages = sorted_averages[:-n_features_to_drop]
-        return [feature for feature, _ in sorted_averages]
-
-    def _extract_feature_rank(
-        self, estimator: Estimator, features: List[int]
-    ) -> Dict[int, float]:
-        """Extract the feature rank from the input estimator. So far it can only handle
-        estimators as scikit.learn ones, so either having `the feature_importances_` or
-        the `coef_` attribute."""
-        if hasattr(estimator, "feature_importances_"):
-            ranks = rankdata(-estimator.feature_importances_)
-        elif hasattr(estimator, "coef_"):
-            ranks = rankdata(-np.abs(estimator.coef_[0]))
-        else:
-            raise ValueError("The estimator provided has no feature importances")
-        return dict(zip(features, ranks))
-
     def _select_best_features(self, results: List) -> Dict[str, set]:
         """Select the best features set from the outer loop aggregated results.
         The input is a list with n_repetitions elements."""
         final_feature_ranks = self._compute_final_ranks(results)
-        avg_scores = [self._average_scores(r["scores"]) for r in results]
-        n_feats = self._compute_number_of_features(avg_scores)
+        avg_scores = [average_scores(r["scores"]) for r in results]
+        n_feats = compute_number_of_features(avg_scores, self.robust_minimum)
         feature_sets = {}
         for key in (self.MIN, self.MAX, self.MID):
             feats = final_feature_ranks.sort_values(by=key).head(n_feats[key])
@@ -266,12 +215,12 @@ class FeatureSelector:
         repetition_averages = []
         for i, r in enumerate(outer_loop_aggregation):
             label = "Repetition average" if i == 0 else None
-            avg_scores = self._average_scores(r["scores"])
+            avg_scores = average_scores(r["scores"])
             sorted_score_items = sorted(avg_scores.items())
             n_feats, score_values = zip(*sorted_score_items)
             plt.semilogx(n_feats, score_values, c="#3182bd", label=label)
             repetition_averages.append(avg_scores)
-        final_avg = self._average_scores(repetition_averages)
+        final_avg = average_scores(repetition_averages)
         sorted_score_items = sorted(final_avg.items())
         n_feats, score_values = zip(*sorted_score_items)
         plt.semilogx(n_feats, score_values, c="k", lw=3, label="Final average")
@@ -291,4 +240,3 @@ class FeatureSelector:
         plt.grid(ls=":")
         plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
         return plt.gca()
-

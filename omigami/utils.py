@@ -16,7 +16,7 @@ def compute_number_of_features(
     self.robust_minimum are considered. The three values are the minum and the
     maximum of this list and their geometrical mean.
     """
-    avg_score = _average_scores(scores)
+    avg_score = average_scores(scores)
     norm_score = _normalize_score(avg_score)
     n_feats_close_to_minumum = [n for n, s in norm_score.items() if s <= robust_minimum]
     max_feats = max(n_feats_close_to_minumum)
@@ -29,7 +29,7 @@ def compute_number_of_features(
     }
 
 
-def _average_scores(scores: List[Dict]) -> Dict[int, float]:
+def average_scores(scores: List[Dict]) -> Dict[int, float]:
     avg_score = pd.DataFrame(scores).fillna(0).mean().to_dict()
     return avg_score
 

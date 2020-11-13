@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 from sklearn import datasets
 from omigami.outer_looper import OuterLooper
+from omigami.model_trainer import ModelTrainer
 
 
 @pytest.fixture
@@ -10,9 +11,9 @@ def dataset():
 
 
 @pytest.fixture
-def outer_looper(dataset):
+def model_trainer(dataset):
     X, y = dataset
-    return OuterLooper(
+    return ModelTrainer(
         X=X,
         y=y,
         groups=np.arange(len(y)),
@@ -20,8 +21,17 @@ def outer_looper(dataset):
         n_outer=2,
         estimator="RFC",
         metric="MISS",
+    )
+
+
+@pytest.fixture
+def outer_looper(model_trainer):
+    return OuterLooper(
+        n_inner=2,
+        n_outer=2,
         robust_minimum=0.05,
         features_dropout_rate=0.2,
+        model_trainer=model_trainer,
     )
 
 

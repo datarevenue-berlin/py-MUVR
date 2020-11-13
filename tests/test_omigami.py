@@ -1,10 +1,8 @@
 import collections
 import pytest
 import pandas as pd
-import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from sklearn import metrics, datasets
-from omigami.omigami import FeatureSelector, miss_score
+from sklearn import datasets
+from omigami.omigami import FeatureSelector
 
 
 Dataset = collections.namedtuple("Dataset", "X y groups")
@@ -136,44 +134,13 @@ def outer_loop_results():
         },
         {
             "test_results": {
-                "min": {"score": 7, "feature_ranks": {0: 4, 1: 3, 2: 2, 3: 5, 4: 5,}},
+                "min": {"score": 7, "feature_ranks": {0: 4, 1: 3, 2: 2, 3: 5, 4: 5}},
                 "max": {"score": 6, "feature_ranks": {0: 1, 1: 2, 2: 3, 3: 5, 4: 5}},
                 "mid": {"score": 7, "feature_ranks": {0: 3, 1: 2, 2: 2, 3: 5, 4: 5}},
             },
             "scores": {5: -7, 4: -5, 3: -7, 2: -11},
         },
     ]
-
-
-@pytest.fixture
-def inner_results():
-    return [
-        {"feature_ranks": {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6}},
-        {"feature_ranks": {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6}},
-        {"feature_ranks": {0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6}},
-    ]
-
-
-@pytest.fixture
-def outer_train_results():
-    return {
-        (0, 1, 2, 3, 4): [
-            {"score": 1, "feature_ranks": {0: 2.0, 1: 1.0, 2: 4.0, 3: 5.0, 4: 3.0}},
-            {"score": 2, "feature_ranks": {0: 1.0, 1: 2.0, 2: 5.0, 3: 4.0, 4: 3.0}},
-        ],
-        (0, 1, 4, 2): [
-            {"score": 1, "feature_ranks": {0: 1.0, 1: 2.0, 4: 3.0, 2: 4.0}},
-            {"score": 2, "feature_ranks": {0: 1.0, 1: 2.0, 4: 3.0, 2: 4.0}},
-        ],
-        (0, 1, 4): [
-            {"score": 3, "feature_ranks": {0: 2.0, 1: 1.0, 4: 3.0}},
-            {"score": 2, "feature_ranks": {0: 1.0, 1: 2.0, 4: 3.0}},
-        ],
-        (0, 1): [
-            {"score": 1, "feature_ranks": {0: 1.0, 1: 2.0}},
-            {"score": 2, "feature_ranks": {0: 1.0, 1: 2.0}},
-        ],
-    }
 
 
 def test_feature_selector_creation(feature_selector_mosquito):
@@ -205,63 +172,6 @@ def test_process_outer_loop(feature_selector, outer_loop_results):
     assert processed["n_feats"]["min"] == 2
     assert processed["n_feats"]["max"] == 2
     assert processed["n_feats"]["mid"] == 2
-
-
-def test_perform_outer_loop_cv(feature_selector):
-    splits = feature_selector._make_splits()
-    i = 0
-    olcv = feature_selector._perform_outer_loop_cv(i, splits).compute()
-    assert olcv["test_results"]
-    assert olcv["scores"] is not None
-    assert olcv["test_results"]["min"]
-    assert olcv["test_results"]["max"]
-    assert olcv["test_results"]["mid"]
-    assert olcv["test_results"]["mid"]["feature_ranks"]
-    assert olcv["test_results"]["mid"]["feature_ranks"]
-    assert olcv["test_results"]["mid"]["score"] is not None
-
-
-def test_select_best_features(feature_selector_mosquito, outer_loop_aggregation):
-    selected_features = feature_selector_mosquito._select_best_features(
-        outer_loop_aggregation
-    )
-    assert selected_features
-    assert "min" in selected_features
-    assert "mid" in selected_features
-    assert "max" in selected_features
-
-
-def test_perform_inner_loop_cv(feature_selector):
-    splits = feature_selector._make_splits()
-    i = 0
-    res = feature_selector._perform_inner_loop_cv(i, splits)
-    assert len(res) == 4
-    lengths = tuple(sorted(len(feats) for feats in res))
-    assert lengths == (2, 3, 4, 5)
-    inner_results = list(res.values())[0]
-    assert isinstance(inner_results, list)
-    assert len(inner_results) == feature_selector.n_inner
-    assert "score" in inner_results[0]
-    assert "feature_ranks" in inner_results[0]
-
-
-def test_train_and_evaluate_on_segments(feature_selector):
-    split = [0, 1, 2, 6, 7, 8, 9, 10, 11, 12, 13], [3, 4, 5]
-    features = [0, 4]
-    res = feature_selector._train_and_evaluate_on_segments(split, features)
-    assert res["score"] is not None
-    assert res["feature_ranks"]
-    assert res["feature_ranks"][0] < res["feature_ranks"][4]
-
-
-def _select_best_features_and_score(feature_selector, outer_train_results):
-    res = feature_selector._select_best_features_and_score(outer_train_results)
-    for key in ("min", "max", "mid", "score"):
-        assert key in res
-    assert sorted(res["min"]) == (0, 1)
-    assert len(res["score"]) == 4
-    assert res["score"][2] == 3
-    assert res["score"][5] == 3
 
 
 def test_compute_avg_feature_rank(feature_selector_mosquito, outer_loop_results):
@@ -296,13 +206,6 @@ def test_compute_final_ranks(feature_selector_mosquito, outer_loop_aggregation):
     assert len(ranks) == 5
     assert ranks.loc[0, "min"] == 2
     assert ranks.loc[4, "mid"] == 3
-
-
-def test_make_estimator(feature_selector_mosquito):
-    random_forest = feature_selector_mosquito._make_estimator("RFC")
-    assert isinstance(random_forest, RandomForestClassifier)
-    random_forest_2 = feature_selector_mosquito._make_estimator(random_forest)
-    assert random_forest is random_forest_2
 
 
 def test_plot_validation_curves(feature_selector, results):
