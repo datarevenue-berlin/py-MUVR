@@ -19,7 +19,11 @@ GenericEstimator = TypeVar("GenericEstimator")
 Estimator = Union[BaseEstimator, GenericEstimator]
 
 
+# TODO: create data classes
+
+
 class FeatureSelector:
+    # TODO: docstring
     RFC = "RFC"
     MIN = "min"
     MAX = "max"
@@ -27,7 +31,7 @@ class FeatureSelector:
 
     def __init__(
         self,
-        X: NumpyArray,
+        X: NumpyArray,  # TODO: move this as fit method param
         y: NumpyArray,
         n_outer: int,
         metric: Union[str, MetricFunction],
@@ -188,7 +192,7 @@ class FeatureSelector:
             )
         return pd.DataFrame.from_dict(final_ranks).fillna(self.n_features)
 
-    def plot_validation_curves(self) -> Axes:
+    def plot_validation_curves(self) -> Axes:  # TODO: move plotting out
         """Plot validation curved using feature elimination results. The function
         will plot the relationship between finess score and number of variables
         for each outer loop iteration, their average aggregation (which gives the

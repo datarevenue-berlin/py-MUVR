@@ -6,6 +6,7 @@ import omigami.utils as utils
 
 
 class OuterLooper:
+    # TODO: docstring
 
     MIN = utils.MIN
     MAX = utils.MAX
@@ -23,7 +24,7 @@ class OuterLooper:
     def run(self) -> List:
         return [self._perform_outer_loop_cv(i) for i in range(self.n_outer)]
 
-    @dask.delayed
+    @dask.delayed  # TODO: keep it generalizable
     def _perform_outer_loop_cv(self, outer_index: int) -> Dict:
         """Perform an outer loop cross validation on all the splits linked to the
         outer fold `i`. It returns a dictionary containing the fitness score of the

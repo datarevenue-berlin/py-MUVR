@@ -10,6 +10,8 @@ Split = Tuple[NumpyArray, NumpyArray]
 
 
 class InnerLooper:
+    # TODO: docstring
+
     def __init__(self, outer_index, features_dropout_rate, model_trainer):
         self.n_inner = model_trainer.n_inner
         self.splits = [(outer_index, j) for j in range(self.n_inner)]

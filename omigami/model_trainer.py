@@ -14,6 +14,7 @@ Estimator = Union[BaseEstimator, GenericEstimator]
 
 
 class ModelTrainer:
+    # TODO: docstring
 
     RFC = "RFC"
 
