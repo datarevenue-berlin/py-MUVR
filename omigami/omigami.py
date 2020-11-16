@@ -5,8 +5,6 @@ from typing import Callable, Dict, List, Tuple, TypeVar, Union
 import dask
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
 from sklearn.base import BaseEstimator
 from omigami.outer_looper import OuterLooper, OuterLoopResults
 from omigami.model_trainer import ModelTrainer
@@ -50,6 +48,7 @@ class FeatureSelector:
         repetitions: int = 8,
         random_state: int = None,
     ):
+        self.is_fit = False
         self.random_state = random_state
         self.n_outer = n_outer
         self.metric = metric
@@ -64,8 +63,9 @@ class FeatureSelector:
         self.n_inner = n_inner
 
         self.n_features = None
+        self.selected_features = None
+        self.outer_loop_aggregation = None
         self._results = None
-        self._selected_features = None
 
     def fit(
         self, X: NumpyArray, y: NumpyArray, groups: NumpyArray = None
@@ -122,8 +122,9 @@ class FeatureSelector:
             # scheduler="single-threaded"  #TODO: put single thread if env.DEBUG=True
         )[0]
         self._results = results
-        self._selected_features = self._process_results(results)
-        return self._selected_features
+        self.selected_features = self._process_results(results)
+        self.is_fit = True
+        return self.selected_features
 
     def _build_model_trainer(
         self, repetition_idx: int, X: NumpyArray, y: NumpyArray, groups: NumpyArray
@@ -161,6 +162,7 @@ class FeatureSelector:
         train-test cycle on outer segments fold of the data.
         """
         outer_loop_aggregation = [self._process_outer_loop(ol) for ol in results]
+        self.outer_loop_aggregation = outer_loop_aggregation
         return self._select_best_features(outer_loop_aggregation)
 
     def _process_outer_loop(self, outer_loop_results: List[OuterLoopResults]) -> Dict:
@@ -220,56 +222,3 @@ class FeatureSelector:
                 pd.DataFrame(avg_ranks).fillna(self.n_features).mean().to_dict()
             )
         return pd.DataFrame.from_dict(final_ranks).fillna(self.n_features)
-
-    def plot_validation_curves(self) -> Axes:  # TODO: move plotting out
-        """Plot validation curved using feature elimination results. The function
-        will plot the relationship between finess score and number of variables
-        for each outer loop iteration, their average aggregation (which gives the
-        values for the single repetitions) and the average across repetitions.
-        The size of the "min", "max" and "mid" sets are plotted as vertical dashed
-        lines.
-        """
-        if self._results is None or self._selected_features is None:
-            logging.warning(  # pylint: disable=logging-not-lazy
-                "Validation curves have not been generated. To be able to plot"
-                + " call `select_features` method first"
-            )
-        outer_loop_aggregation = [self._process_outer_loop(ol) for ol in self._results]
-        all_scores = []
-        for j, res in enumerate(outer_loop_aggregation):
-            for i, score in enumerate(res["scores"]):
-                label = "Outer loop average" if i + j == 0 else None
-                sorted_score_items = sorted(score.items())
-                n_feats, score_values = zip(*sorted_score_items)
-                all_scores += score_values
-                plt.semilogx(n_feats, score_values, c="#deebf7", label=label)
-        max_score = max(all_scores)
-        min_score = min(all_scores)
-        repetition_averages = []
-        for i, r in enumerate(outer_loop_aggregation):
-            label = "Repetition average" if i == 0 else None
-            avg_scores = average_scores(r["scores"])
-            sorted_score_items = sorted(avg_scores.items())
-            n_feats, score_values = zip(*sorted_score_items)
-            plt.semilogx(n_feats, score_values, c="#3182bd", label=label)
-            repetition_averages.append(avg_scores)
-        final_avg = average_scores(repetition_averages)
-        sorted_score_items = sorted(final_avg.items())
-        n_feats, score_values = zip(*sorted_score_items)
-        plt.semilogx(n_feats, score_values, c="k", lw=3, label="Final average")
-        for key in (MIN, MAX, MID):
-            n_feats = len(self._selected_features[key])
-            plt.vlines(
-                n_feats,
-                min_score,
-                max_score,
-                linestyle="--",
-                colors="grey",
-                lw=2,
-                label=key,
-            )
-        plt.xlabel("# features")
-        plt.ylabel("Fitness score")
-        plt.grid(ls=":")
-        plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
-        return plt.gca()

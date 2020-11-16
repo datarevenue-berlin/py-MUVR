@@ -32,66 +32,6 @@ def feature_selector():
 
 
 @pytest.fixture
-def results():
-    return [
-        [
-            {
-                "test_results": {
-                    "min": {"score": 4, "feature_ranks": {0: 1.0, 1: 2.0}},
-                    "max": {
-                        "score": 5,
-                        "feature_ranks": {0: 1.0, 1: 2.0, 2: 4.0, 3: 3.0},
-                    },
-                    "mid": {"score": 5, "feature_ranks": {0: 1.0, 1: 2.0, 3: 3.0}},
-                },
-                "scores": {5: 4, 4: 3, 3: 3, 2: 3},
-            },
-            {
-                "test_results": {
-                    "min": {
-                        "score": 3,
-                        "feature_ranks": {0: 1.0, 1: 2.0, 4: 3.0, 3: 4.0},
-                    },
-                    "max": {
-                        "score": 3,
-                        "feature_ranks": {0: 1.0, 1: 2.0, 4: 3.0, 3: 4.0},
-                    },
-                    "mid": {
-                        "score": 2,
-                        "feature_ranks": {0: 1.0, 1: 2.0, 4: 3.0, 3: 4.0},
-                    },
-                },
-                "scores": {5: 5, 4: 4, 3: 5, 2: 5},
-            },
-        ],
-        [
-            {
-                "test_results": {
-                    "min": {"score": 4, "feature_ranks": {0: 1.0, 1: 2.0}},
-                    "max": {
-                        "score": 5,
-                        "feature_ranks": {0: 1.0, 1: 2.0, 4: 3.0, 2: 4.0},
-                    },
-                    "mid": {"score": 5, "feature_ranks": {0: 2.0, 1: 1.0, 4: 3.0}},
-                },
-                "scores": {5: 5, 4: 3, 3: 5, 2: 3},
-            },
-            {
-                "test_results": {
-                    "min": {"score": 2, "feature_ranks": {0: 1.0, 1: 2.0}},
-                    "max": {
-                        "score": 2,
-                        "feature_ranks": {0: 1.0, 1: 2.0, 2: 5.0, 3: 4.0, 4: 3.0},
-                    },
-                    "mid": {"score": 2, "feature_ranks": {0: 1.0, 1: 2.0, 4: 3.0}},
-                },
-                "scores": {5: 5, 4: 6, 3: 5, 2: 5},
-            },
-        ],
-    ]
-
-
-@pytest.fixture
 def outer_loop_aggregation():
     return [
         {
@@ -203,11 +143,3 @@ def test_compute_final_ranks(feature_selector_mosquito, outer_loop_aggregation):
     assert len(ranks) == 5
     assert ranks.loc[0, "min"] == 2
     assert ranks.loc[4, "mid"] == 3
-
-
-def test_plot_validation_curves(feature_selector_mosquito, results):
-    feature_selector_mosquito._results = results
-    sel_feats = feature_selector_mosquito._process_results(results)
-    feature_selector_mosquito._selected_features = sel_feats
-    ax = feature_selector_mosquito.plot_validation_curves()
-    assert ax
