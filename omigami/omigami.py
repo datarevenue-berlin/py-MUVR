@@ -21,6 +21,8 @@ Estimator = Union[BaseEstimator, GenericEstimator]
 
 # TODO: create data classes
 
+# TODO: propagate random state
+
 
 class FeatureSelector:
     # TODO: docstring
@@ -31,20 +33,15 @@ class FeatureSelector:
 
     def __init__(
         self,
-        X: NumpyArray,  # TODO: move this as fit method param
-        y: NumpyArray,
         n_outer: int,
         metric: Union[str, MetricFunction],
         estimator: Union[str, Estimator],
         features_dropout_rate: float = 0.05,
         robust_minimum: float = 0.05,
         n_inner: int = None,
-        groups: NumpyArray = None,
         repetitions: int = 8,
         random_state: int = None,
     ):
-        self.X = X
-        self.y = y
         self.random_state = random_state
         self.n_outer = n_outer
         self.metric = metric
@@ -58,15 +55,11 @@ class FeatureSelector:
             n_inner = n_outer - 1
         self.n_inner = n_inner
 
-        if groups is None:
-            logging.debug("groups is not specified: i.i.d. samples assumed")
-            groups = np.arange(self.X.shape[0])
-        self.n_features = self.X.shape[1]
-        self.groups = groups
+        self.n_features = None
         self._results = None
         self._selected_features = None
 
-    def select_features(self) -> Dict[str, set]:
+    def fit(self, X, y, groups=None) -> Dict[str, set]:
         """This method implement the MUVR method from:
         https://academic.oup.com/bioinformatics/article/35/6/972/5085367
 
@@ -100,12 +93,19 @@ class FeatureSelector:
         Returns:
             Dict[str, set]: The 2 sets of selected features, "min", "mid", "max".
         """
+
+        if groups is None:
+            logging.debug("groups is not specified: i.i.d. samples assumed")
+            groups = np.arange(X.shape[0])
+
+        self.n_features = X.shape[1]
+
         results_futures = []
         for _ in range(self.repetitions):
             model_trainer = ModelTrainer(
-                X=self.X,
-                y=self.y,
-                groups=self.groups,
+                X=X,
+                y=y,
+                groups=groups,
                 n_inner=self.n_inner,
                 n_outer=self.n_outer,
                 estimator=self.estimator,

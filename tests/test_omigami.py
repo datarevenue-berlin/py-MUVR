@@ -19,21 +19,15 @@ def mosquito():
 
 @pytest.fixture
 def feature_selector_mosquito(mosquito):
-    return FeatureSelector(
-        X=mosquito.X,
-        y=mosquito.y,
-        groups=mosquito.groups,
-        n_outer=5,
-        metric="MISS",
-        estimator="RFC",
-    )
+    fs = FeatureSelector(n_outer=5, metric="MISS", estimator="RFC",)
+    fs.n_features = mosquito.X.shape[1]
+    return fs
 
 
 @pytest.fixture
 def feature_selector():
-    X, y = datasets.make_classification(n_features=5, random_state=0)
     return FeatureSelector(
-        X, y, n_outer=2, n_inner=2, repetitions=1, estimator="RFC", metric="MISS"
+        n_outer=2, n_inner=2, repetitions=1, estimator="RFC", metric="MISS"
     )
 
 
@@ -147,14 +141,16 @@ def test_feature_selector_creation(feature_selector_mosquito):
     assert feature_selector_mosquito
     assert feature_selector_mosquito.n_inner == 4
     assert feature_selector_mosquito.features_dropout_rate == 0.05
-    assert feature_selector_mosquito.groups.size
 
 
-def test_select_features(feature_selector):
-    assert feature_selector.select_features()
+def test_fit(feature_selector):
+    X, y = datasets.make_classification(n_features=5, random_state=0)
+    assert feature_selector.fit(X, y)
+    assert feature_selector.n_features == X.shape[1]
 
 
 def test_process_results(feature_selector, results):
+    feature_selector.n_features = 5  # to mimick fit
     best_feats = feature_selector._process_results(results)
     assert best_feats["min"]
     assert best_feats["max"]
@@ -165,6 +161,7 @@ def test_process_results(feature_selector, results):
 
 
 def test_process_outer_loop(feature_selector, outer_loop_results):
+    feature_selector.n_features = 5  # to mimick fit
     processed = feature_selector._process_outer_loop(outer_loop_results)
     assert processed["avg_feature_ranks"]
     assert processed["scores"]
@@ -208,8 +205,10 @@ def test_compute_final_ranks(feature_selector_mosquito, outer_loop_aggregation):
     assert ranks.loc[4, "mid"] == 3
 
 
-def test_plot_validation_curves(feature_selector, results):
-    feature_selector._results = results
-    feature_selector._selected_features = feature_selector._process_results(results)
-    ax = feature_selector.plot_validation_curves()
+def test_plot_validation_curves(feature_selector_mosquito, results):
+    feature_selector_mosquito._results = results
+    feature_selector_mosquito._selected_features = feature_selector_mosquito._process_results(
+        results
+    )
+    ax = feature_selector_mosquito.plot_validation_curves()
     assert ax
