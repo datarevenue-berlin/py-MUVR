@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, List
 import dask
 from omigami.inner_looper import InnerLooper, InnerLoopResults
-from omigami.model_trainer import TrainingTestingResult
+from omigami.model_trainer import TrainingTestingResult, ModelTrainer
 import omigami.utils as utils
 
 
@@ -40,10 +40,13 @@ class OuterLooper:
     MID = utils.MID
 
     def __init__(
-        self, n_inner, n_outer, features_dropout_rate, robust_minimum, model_trainer,
+        self,
+        features_dropout_rate: float,
+        robust_minimum: float,
+        model_trainer: ModelTrainer,
     ):
-        self.n_inner = n_inner
-        self.n_outer = n_outer
+        self.n_inner = model_trainer.n_inner
+        self.n_outer = model_trainer.n_outer
         self.features_dropout_rate = features_dropout_rate
         self.robust_minimum = robust_minimum
         self.model_trainer = model_trainer

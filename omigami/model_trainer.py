@@ -20,7 +20,15 @@ class ModelTrainer:
     RFC = "RFC"
 
     def __init__(
-        self, X, y, groups, n_inner, n_outer, estimator, metric, random_state=None
+        self,
+        X: NumpyArray,
+        y: NumpyArray,
+        groups: NumpyArray,
+        n_inner: int,
+        n_outer: int,
+        estimator: Estimator,
+        metric: MetricFunction,
+        random_state: int = None,
     ):
         self.random_state = random_state
         self.X = X
@@ -122,7 +130,7 @@ class ModelTrainer:
         raise ValueError("Input metric is not a valid string")
 
 
-def miss_score(y_true, y_pred):
+def miss_score(y_true: NumpyArray, y_pred: NumpyArray):
     """MISS score: number of wrong classifications preceded by - so that the higher
     this score the better the model"""
     return -(y_true != y_pred).sum()
@@ -130,15 +138,15 @@ def miss_score(y_true, y_pred):
 
 @dataclass
 class FeatureRanks:
-    def __init__(self, features, ranks):
+    def __init__(self, features: List[int], ranks: List[float]):
         self.features = features
         self.ranks = ranks
         self._data = dict(zip(features, ranks))
 
-    def __getitem__(self, feature):
+    def __getitem__(self, feature: int) -> float:
         return self._data[feature]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.features)
 
 

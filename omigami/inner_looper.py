@@ -3,7 +3,7 @@ from typing import List, Tuple, Union, TypeVar
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
-from omigami.model_trainer import TrainingTestingResult
+from omigami.model_trainer import TrainingTestingResult, ModelTrainer
 
 NumpyArray = np.ndarray
 GenericEstimator = TypeVar("GenericEstimator")
@@ -27,7 +27,7 @@ class InnerCVResult:
             yield res
 
     @property
-    def average_score(self):
+    def average_score(self) -> float:
         return np.average([r.score for r in self.train_results])
 
 
@@ -37,7 +37,7 @@ class InnerLoopResults:
     _n_features_map: dict = field(default_factory=lambda: {})
     score: dict = field(default_factory=lambda: {})
 
-    def __setitem__(self, features, inner_cv_result):
+    def __setitem__(self, features: List[int], inner_cv_result: InnerCVResult):
         features = tuple(features)
         self._data[features] = inner_cv_result
         n_features = len(features)
@@ -51,17 +51,22 @@ class InnerLoopResults:
     def __len__(self):
         return len(self._data)
 
-    def get_features_from_their_number(self, n_features):
+    def get_features_from_their_number(self, n_features: int) -> List[int]:
         return self._n_features_map[n_features]
 
-    def get_closest_number_of_features(self, n_features):
+    def get_closest_number_of_features(self, n_features: int) -> int:
         return min(self.score.keys(), key=lambda x: abs(x - n_features))
 
 
 class InnerLooper:
     # TODO: docstring
 
-    def __init__(self, outer_index, features_dropout_rate, model_trainer):
+    def __init__(
+        self,
+        outer_index: int,
+        features_dropout_rate: float,
+        model_trainer: ModelTrainer,
+    ):
         self.n_inner = model_trainer.n_inner
         self.splits = [(outer_index, j) for j in range(self.n_inner)]
         assert outer_index < model_trainer.n_outer

@@ -27,11 +27,7 @@ def model_trainer(dataset):
 @pytest.fixture
 def outer_looper(model_trainer):
     return OuterLooper(
-        n_inner=2,
-        n_outer=2,
-        robust_minimum=0.05,
-        features_dropout_rate=0.2,
-        model_trainer=model_trainer,
+        robust_minimum=0.05, features_dropout_rate=0.2, model_trainer=model_trainer,
     )
 
 

@@ -20,6 +20,7 @@ def model_trainer(dataset):
         n_outer=2,
         estimator="RFC",
         metric="MISS",
+        random_state=42,
     )
 
 

@@ -8,7 +8,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from sklearn.base import BaseEstimator
-from omigami.outer_looper import OuterLooper
+from omigami.outer_looper import OuterLooper, OuterLoopResults
 from omigami.model_trainer import ModelTrainer
 from omigami.utils import compute_number_of_features, average_scores, MIN, MAX, MID
 
@@ -31,7 +31,7 @@ class SelectedFeatures:
         MAX: "MAX",
     }
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str):
         attribute = self._attribute_map[key]
         return self.__getattribute__(attribute)
 
@@ -67,7 +67,9 @@ class FeatureSelector:
         self._results = None
         self._selected_features = None
 
-    def fit(self, X, y, groups=None) -> Dict[str, set]:
+    def fit(
+        self, X: NumpyArray, y: NumpyArray, groups: NumpyArray = None
+    ) -> SelectedFeatures:
         """This method implement the MUVR method from:
         https://academic.oup.com/bioinformatics/article/35/6/972/5085367
 
@@ -109,26 +111,12 @@ class FeatureSelector:
         self.n_features = X.shape[1]
 
         results_futures = []
-        for j in range(self.repetitions):
-            model_trainer = ModelTrainer(
-                X=X,
-                y=y,
-                groups=groups,
-                n_inner=self.n_inner,
-                n_outer=self.n_outer,
-                estimator=self.estimator,
-                metric=self.metric,
-                random_state=self.random_state + j,
-            )
-            ol = OuterLooper(
-                n_inner=self.n_inner,
-                n_outer=self.n_outer,
-                features_dropout_rate=self.features_dropout_rate,
-                robust_minimum=self.robust_minimum,
-                model_trainer=model_trainer,
-            )
-            repetition_futures = ol.run()
+        for repetition_idx in range(self.repetitions):
+            model_trainer = self._build_model_trainer(repetition_idx, X, y, groups)
+            outer_looper = self._build_outer_looper(model_trainer)
+            repetition_futures = outer_looper.run()
             results_futures.append(repetition_futures)
+
         results = dask.compute(
             results_futures,
             # scheduler="single-threaded"  #TODO: put single thread if env.DEBUG=True
@@ -137,7 +125,35 @@ class FeatureSelector:
         self._selected_features = self._process_results(results)
         return self._selected_features
 
-    def _process_results(self, results: List) -> Dict[str, set]:
+    def _build_model_trainer(
+        self, repetition_idx: int, X: NumpyArray, y: NumpyArray, groups: NumpyArray
+    ) -> ModelTrainer:
+        random_state = (
+            self.random_state + repetition_idx
+            if self.random_state is not None
+            else None
+        )
+        return ModelTrainer(
+            X=X,
+            y=y,
+            groups=groups,
+            n_inner=self.n_inner,
+            n_outer=self.n_outer,
+            estimator=self.estimator,
+            metric=self.metric,
+            random_state=random_state,
+        )
+
+    def _build_outer_looper(self, model_trainer: ModelTrainer) -> OuterLooper:
+        return OuterLooper(
+            features_dropout_rate=self.features_dropout_rate,
+            robust_minimum=self.robust_minimum,
+            model_trainer=model_trainer,
+        )
+
+    def _process_results(
+        self, results: List[List[OuterLoopResults]]
+    ) -> SelectedFeatures:
         """Process the input list of outer loop results and returns the three sets
         of selected features.
         The input list is composed by outputs of `self._perform_outer_loop_cv`,
@@ -147,7 +163,7 @@ class FeatureSelector:
         outer_loop_aggregation = [self._process_outer_loop(ol) for ol in results]
         return self._select_best_features(outer_loop_aggregation)
 
-    def _process_outer_loop(self, outer_loop_results: List) -> Dict:
+    def _process_outer_loop(self, outer_loop_results: List[OuterLoopResults]) -> Dict:
         """Process the self.n_outer elements of the input list to extract the condensed
         resuñts for the repetition. It return a dictionary containing
         1. the average rank of the three sets of features
@@ -165,7 +181,7 @@ class FeatureSelector:
         }
 
     def _compute_avg_feature_rank(
-        self, outer_loop_results: List
+        self, outer_loop_results: List[OuterLoopResults]
     ) -> Dict[str, pd.DataFrame]:
         """Compute the average feature rank from a list of outputs of
         `_perform_outer_loop_cv`.
@@ -179,7 +195,7 @@ class FeatureSelector:
             )
         return avg_feature_rank
 
-    def _select_best_features(self, results: List) -> Dict[str, set]:
+    def _select_best_features(self, results: List[Dict]) -> SelectedFeatures:
         """Select the best features set from the outer loop aggregated results.
         The input is a list with n_repetitions elements."""
         final_feature_ranks = self._compute_final_ranks(results)
@@ -195,7 +211,7 @@ class FeatureSelector:
             MID=feature_sets[MID], MIN=feature_sets[MIN], MAX=feature_sets[MAX],
         )
 
-    def _compute_final_ranks(self, results: List) -> pd.DataFrame:
+    def _compute_final_ranks(self, results: List[Dict]) -> pd.DataFrame:
         """Average the ranks for the three sets to abaine a definitive feature rank"""
         final_ranks = {}
         for key in (MIN, MAX, MID):
