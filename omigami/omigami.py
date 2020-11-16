@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass
 from typing import Callable, Dict, List, Tuple, TypeVar, Union
 
 import dask
@@ -22,6 +23,16 @@ Estimator = Union[BaseEstimator, GenericEstimator]
 # TODO: create data classes
 
 # TODO: propagate random state
+
+
+@dataclass
+class SelectedFeatures:
+    MIN: set
+    MAX: set
+    MID: set
+
+    def __getitem__(self, key):
+        return self.__getattribute__(key.upper())
 
 
 class FeatureSelector:
@@ -176,11 +187,17 @@ class FeatureSelector:
         final_feature_ranks = self._compute_final_ranks(results)
         avg_scores = [average_scores(r["scores"]) for r in results]
         n_feats = compute_number_of_features(avg_scores, self.robust_minimum)
+
         feature_sets = {}
         for key in (self.MIN, self.MAX, self.MID):
             feats = final_feature_ranks.sort_values(by=key).head(n_feats[key])
             feature_sets[key] = set(feats[key].index)
-        return feature_sets
+
+        return SelectedFeatures(
+            MID=feature_sets[self.MID],
+            MIN=feature_sets[self.MIN],
+            MAX=feature_sets[self.MAX],
+        )
 
     def _compute_final_ranks(self, results: List) -> pd.DataFrame:
         """Average the ranks for the three sets to abaine a definitive feature rank"""

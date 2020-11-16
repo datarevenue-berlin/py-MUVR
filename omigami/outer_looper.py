@@ -12,6 +12,9 @@ class OuterLoopModelTrainResults:
     MAX: TrainingTestingResult
     MID: TrainingTestingResult
 
+    def __getitem__(self, key):
+        return self.__getattribute__(key.upper())
+
 
 @dataclass
 class OuterLoopResults:
@@ -38,7 +41,7 @@ class OuterLooper:
         self.robust_minimum = robust_minimum
         self.model_trainer = model_trainer
 
-    def run(self) -> List:
+    def run(self) -> List[OuterLoopResults]:
         return [self._perform_outer_loop_cv(i) for i in range(self.n_outer)]
 
     @dask.delayed  # TODO: keep it generalizable
