@@ -10,8 +10,7 @@ from matplotlib.axes import Axes
 from sklearn.base import BaseEstimator
 from omigami.outer_looper import OuterLooper
 from omigami.model_trainer import ModelTrainer
-from omigami.utils import compute_number_of_features, average_scores
-from omigami import utils
+from omigami.utils import compute_number_of_features, average_scores, MIN, MAX, MID
 
 NumpyArray = np.ndarray
 MetricFunction = Callable[[NumpyArray, NumpyArray], float]
@@ -32,9 +31,9 @@ class SelectedFeatures:
     MID: set
 
     _attribute_map = {
-        utils.MIN: "MIN",
-        utils.MID: "MID",
-        utils.MAX: "MAX",
+        MIN: "MIN",
+        MID: "MID",
+        MAX: "MAX",
     }
 
     def __getitem__(self, key):
@@ -44,10 +43,6 @@ class SelectedFeatures:
 
 class FeatureSelector:
     # TODO: docstring
-    RFC = "RFC"
-    MIN = utils.MIN
-    MAX = utils.MIN
-    MID = utils.MIN
 
     def __init__(
         self,
@@ -85,9 +80,9 @@ class FeatureSelector:
         the optimal number of features that explain the relationship between
         `self.X` and `self.y`.
         The alforithm return three sets of features:
-        1. `self.MIN`: is the minimum number of feature that gives good predictive power
-        2. `self.MAX`: is the maximum number of feature that gives good predictive power
-        3. `self.MID`: is the set of features to build a model using a number of feature
+        1. `MIN`: is the minimum number of feature that gives good predictive power
+        2. `MAX`: is the maximum number of feature that gives good predictive power
+        3. `MID`: is the set of features to build a model using a number of feature
             that is the geometric mean of the minimum and the maximum number of features
 
         The structure of the nested CV loops is the following:
@@ -181,7 +176,7 @@ class FeatureSelector:
         """
         outer_test_results = [r["test_results"] for r in outer_loop_results]
         avg_feature_rank = {}
-        for key in {self.MIN, self.MAX, self.MID}:
+        for key in {MIN, MAX, MID}:
             feature_ranks = [res[key]["feature_ranks"] for res in outer_test_results]
             avg_feature_rank[key] = (
                 pd.DataFrame(feature_ranks).fillna(0).mean().to_dict()
@@ -196,20 +191,18 @@ class FeatureSelector:
         n_feats = compute_number_of_features(avg_scores, self.robust_minimum)
 
         feature_sets = {}
-        for key in (self.MIN, self.MAX, self.MID):
+        for key in (MIN, MAX, MID):
             feats = final_feature_ranks.sort_values(by=key).head(n_feats[key])
             feature_sets[key] = set(feats[key].index)
 
         return SelectedFeatures(
-            MID=feature_sets[self.MID],
-            MIN=feature_sets[self.MIN],
-            MAX=feature_sets[self.MAX],
+            MID=feature_sets[MID], MIN=feature_sets[MIN], MAX=feature_sets[MAX],
         )
 
     def _compute_final_ranks(self, results: List) -> pd.DataFrame:
         """Average the ranks for the three sets to abaine a definitive feature rank"""
         final_ranks = {}
-        for key in (self.MIN, self.MAX, self.MID):
+        for key in (MIN, MAX, MID):
             avg_ranks = [r["avg_feature_ranks"][key] for r in results]
             final_ranks[key] = (
                 pd.DataFrame(avg_ranks).fillna(self.n_features).mean().to_dict()
@@ -252,7 +245,7 @@ class FeatureSelector:
         sorted_score_items = sorted(final_avg.items())
         n_feats, score_values = zip(*sorted_score_items)
         plt.semilogx(n_feats, score_values, c="k", lw=3, label="Final average")
-        for key in (self.MIN, self.MAX, self.MID):
+        for key in (MIN, MAX, MID):
             n_feats = len(self._selected_features[key])
             plt.vlines(
                 n_feats,
