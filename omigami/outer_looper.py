@@ -12,8 +12,15 @@ class OuterLoopModelTrainResults:
     MAX: TrainingTestingResult
     MID: TrainingTestingResult
 
+    _attribute_map = {
+        utils.MIN: "MIN",
+        utils.MID: "MID",
+        utils.MAX: "MAX",
+    }
+
     def __getitem__(self, key):
-        return self.__getattribute__(key.upper())
+        attribute = self._attribute_map[key]
+        return self.__getattribute__(attribute)
 
 
 @dataclass

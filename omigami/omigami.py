@@ -11,7 +11,7 @@ from sklearn.base import BaseEstimator
 from omigami.outer_looper import OuterLooper
 from omigami.model_trainer import ModelTrainer
 from omigami.utils import compute_number_of_features, average_scores
-
+from omigami import utils
 
 NumpyArray = np.ndarray
 MetricFunction = Callable[[NumpyArray, NumpyArray], float]
@@ -31,16 +31,23 @@ class SelectedFeatures:
     MAX: set
     MID: set
 
+    _attribute_map = {
+        utils.MIN: "MIN",
+        utils.MID: "MID",
+        utils.MAX: "MAX",
+    }
+
     def __getitem__(self, key):
-        return self.__getattribute__(key.upper())
+        attribute = self._attribute_map[key]
+        return self.__getattribute__(attribute)
 
 
 class FeatureSelector:
     # TODO: docstring
     RFC = "RFC"
-    MIN = "min"
-    MAX = "max"
-    MID = "mid"
+    MIN = utils.MIN
+    MAX = utils.MIN
+    MID = utils.MIN
 
     def __init__(
         self,
