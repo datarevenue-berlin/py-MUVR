@@ -207,8 +207,7 @@ def test_compute_final_ranks(feature_selector_mosquito, outer_loop_aggregation):
 
 def test_plot_validation_curves(feature_selector_mosquito, results):
     feature_selector_mosquito._results = results
-    feature_selector_mosquito._selected_features = feature_selector_mosquito._process_results(
-        results
-    )
+    sel_feats = feature_selector_mosquito._process_results(results)
+    feature_selector_mosquito._selected_features = sel_feats
     ax = feature_selector_mosquito.plot_validation_curves()
     assert ax

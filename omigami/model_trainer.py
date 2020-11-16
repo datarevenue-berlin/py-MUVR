@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Callable, Dict, List, Tuple, TypeVar, Union
 import numpy as np
 from scipy.stats import rankdata
@@ -65,10 +66,9 @@ class ModelTrainer:
         model = clone(self.estimator)
         y_pred = model.fit(X_train, y_train).predict(X_test)
         feature_ranks = self._extract_feature_rank(model, features)
-        return {
-            "score": -self.metric(y_pred, y_test),
-            "feature_ranks": feature_ranks,
-        }
+        return TrainingTestingResult(
+            score=-self.metric(y_pred, y_test), feature_ranks=feature_ranks,
+        )
 
     @staticmethod
     def _extract_feature_rank(
@@ -83,7 +83,7 @@ class ModelTrainer:
             ranks = rankdata(-np.abs(estimator.coef_[0]))
         else:
             raise ValueError("The estimator provided has no feature importances")
-        return dict(zip(features, ranks))
+        return FeatureRanks(features=features, ranks=ranks)
 
     def _make_estimator(self, estimator: Union[str, Estimator]) -> Estimator:
         """Make an estimator from the input `estimator`.
@@ -126,3 +126,26 @@ def miss_score(y_true, y_pred):
     """MISS score: number of wrong classifications preceded by - so that the higher
     this score the better the model"""
     return -(y_true != y_pred).sum()
+
+
+@dataclass
+class FeatureRanks:
+    def __init__(self, features, ranks):
+        self.features = features
+        self.ranks = ranks
+        self._data = dict(zip(features, ranks))
+
+    def __getitem__(self, feature):
+        return self._data[feature]
+
+    def __len__(self):
+        return len(self.features)
+
+
+@dataclass
+class TrainingTestingResult:
+    score: float
+    feature_ranks: FeatureRanks
+
+    def __getitem__(self, item_name):
+        return self.__getattribute__(item_name)
