@@ -72,9 +72,9 @@ def test_perform_outer_loop_cv(outer_looper):
     olcv = outer_looper._perform_outer_loop_cv(i).compute()
     assert olcv["test_results"]
     assert olcv["scores"] is not None
-    assert olcv["test_results"]["min"]
-    assert olcv["test_results"]["max"]
-    assert olcv["test_results"]["mid"]
-    assert olcv["test_results"]["mid"]["feature_ranks"]
-    assert olcv["test_results"]["mid"]["feature_ranks"]
-    assert olcv["test_results"]["mid"]["score"] is not None
+    assert olcv.test_results.MIN
+    assert olcv.test_results.MAX
+    assert olcv.test_results.MID
+    assert olcv.test_results.MID.feature_ranks
+    assert olcv.test_results.MID.feature_ranks
+    assert olcv.test_results.MID.score is not None
