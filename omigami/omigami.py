@@ -19,11 +19,6 @@ GenericEstimator = TypeVar("GenericEstimator")
 Estimator = Union[BaseEstimator, GenericEstimator]
 
 
-# TODO: create data classes
-
-# TODO: propagate random state
-
-
 @dataclass
 class SelectedFeatures:
     MIN: set
@@ -114,7 +109,7 @@ class FeatureSelector:
         self.n_features = X.shape[1]
 
         results_futures = []
-        for _ in range(self.repetitions):
+        for j in range(self.repetitions):
             model_trainer = ModelTrainer(
                 X=X,
                 y=y,
@@ -123,6 +118,7 @@ class FeatureSelector:
                 n_outer=self.n_outer,
                 estimator=self.estimator,
                 metric=self.metric,
+                random_state=self.random_state + j,
             )
             ol = OuterLooper(
                 n_inner=self.n_inner,
@@ -218,7 +214,7 @@ class FeatureSelector:
         lines.
         """
         if self._results is None or self._selected_features is None:
-            logging.warning(
+            logging.warning(  # pylint: disable=logging-not-lazy
                 "Validation curves have not been generated. To be able to plot"
                 + " call `select_features` method first"
             )

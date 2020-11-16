@@ -116,10 +116,10 @@ class ModelTrainer:
     def _make_metric_from_string(metric_string: str) -> MetricFunction:
         if metric_string == "MISS":
             return miss_score
-        elif metric_string in sklearn.metrics.SCORERS:
+        if metric_string in sklearn.metrics.SCORERS:
+            # pylint: disable=protected-access
             return sklearn.metrics.get_scorer(metric_string)._score_func
-        else:
-            raise ValueError("Input metric is not a valid string")
+        raise ValueError("Input metric is not a valid string")
 
 
 def miss_score(y_true, y_pred):
