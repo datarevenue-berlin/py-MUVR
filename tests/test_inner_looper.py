@@ -7,7 +7,7 @@ from omigami.model_trainer import ModelTrainer, TrainingTestingResult
 
 @pytest.fixture
 def dataset():
-    return datasets.make_classification(n_samples=20, n_features=5, random_state=42)
+    return datasets.make_classification(n_samples=20, n_features=6, random_state=42)
 
 
 @pytest.fixture
@@ -59,9 +59,9 @@ def inner_loop_results(inner_results):
 
 def test_run(inner_looper):
     res = inner_looper.run()
-    assert len(res) == 4
+    assert len(res) == 5
     lengths = tuple(sorted(len(feats) for feats, _ in res))
-    assert lengths == (2, 3, 4, 5)
+    assert lengths == (2, 3, 4, 5, 6)
     for _, inner_results in res:
         break
     assert isinstance(inner_results, InnerCVResult)
