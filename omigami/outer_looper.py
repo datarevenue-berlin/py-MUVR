@@ -4,6 +4,7 @@ import dask
 from omigami.inner_looper import InnerLooper, InnerLoopResults
 from omigami.model_trainer import TrainingTestingResult, ModelTrainer
 import omigami.utils as utils
+from omigami.utils import MIN, MAX, MID
 
 
 @dataclass
@@ -13,9 +14,9 @@ class OuterLoopModelTrainResults:
     MID: TrainingTestingResult
 
     _attribute_map = {
-        utils.MIN: "MIN",
-        utils.MID: "MID",
-        utils.MAX: "MAX",
+        MIN: "MIN",
+        MID: "MID",
+        MAX: "MAX",
     }
 
     def __getitem__(self, key):
@@ -33,11 +34,16 @@ class OuterLoopResults:
 
 
 class OuterLooper:
-    # TODO: docstring
+    """Class that performs the outer loop CV feature selection.
 
-    MIN = utils.MIN
-    MAX = utils.MAX
-    MID = utils.MID
+    Args:
+        features_dropout_rate (float): fraction of features to drop at each elimination
+            step
+        robust_minimum (float): maximum normalized-score value to be considered when
+            computing the selected features
+        model_trainer (ModelTrainer): object that trains the model over the splits
+
+    """
 
     def __init__(
         self,
@@ -78,9 +84,9 @@ class OuterLooper:
 
         outer_split_id = (outer_index,)
         outer_test_results = OuterLoopModelTrainResults(
-            MIN=self.model_trainer.run(outer_split_id, res[self.MIN]),
-            MID=self.model_trainer.run(outer_split_id, res[self.MID]),
-            MAX=self.model_trainer.run(outer_split_id, res[self.MAX]),
+            MIN=self.model_trainer.run(outer_split_id, res[MIN]),
+            MID=self.model_trainer.run(outer_split_id, res[MID]),
+            MAX=self.model_trainer.run(outer_split_id, res[MAX]),
         )
 
         return OuterLoopResults(
@@ -114,13 +120,13 @@ class OuterLooper:
         n_feats = utils.compute_number_of_features(
             [inner_loop_results.score], self.robust_minimum
         )
-        max_feats = n_feats[self.MAX]
-        min_feats = n_feats[self.MIN]
-        mid_feats = n_feats[self.MID]
+        max_feats = n_feats[MAX]
+        min_feats = n_feats[MIN]
+        mid_feats = n_feats[MID]
         mid_feats = inner_loop_results.get_closest_number_of_features(mid_feats)
         return {
-            "min": inner_loop_results.get_features_from_their_number(min_feats),
-            "max": inner_loop_results.get_features_from_their_number(max_feats),
-            "mid": inner_loop_results.get_features_from_their_number(mid_feats),
+            MIN: inner_loop_results.get_features_from_their_number(min_feats),
+            MAX: inner_loop_results.get_features_from_their_number(max_feats),
+            MID: inner_loop_results.get_features_from_their_number(mid_feats),
             "score": inner_loop_results.score,
         }

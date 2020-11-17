@@ -15,7 +15,21 @@ Estimator = Union[BaseEstimator, GenericEstimator]
 
 
 class ModelTrainer:
-    # TODO: docstring
+    """Class to train an estimator across several folds of a given dataset.
+    The class creates group splits according to n_inner and n_outer number of CV
+    fold. Folds are labelled as (outer_idx, inner_idx (optional)).
+
+    Args:
+        X (NumpyArray): input variables
+        y (NumpyArray): output variables
+        groups (NumpyArray): sample groups
+        n_outer (int): number of outer CV folds
+        n_inner (int): number of inner CV folds
+        estimator (str, BaseEstimator): estimator to be used for feature elimination
+        metric (str, callable): metric to be used to assess estimator goodness
+        random_state (int): pass an int for reproducible output (default: None)
+
+    """
 
     RFC = "RFC"
 
@@ -65,7 +79,7 @@ class ModelTrainer:
     def run(self, split_id, features: List[int]) -> Dict:
         """Train and test a clone of self.evaluator over the input split using the
         input features only. It outputs the fitness score over the test split and
-        the feature rank of the variables"""
+        the feature rank of the variables as a TrainingTestingResult object"""
         inner_train_idx, inner_test_idx = self.splits[tuple(split_id)]
         X_train = self.X[inner_train_idx, :][:, features]
         X_test = self.X[inner_test_idx, :][:, features]
@@ -83,7 +97,7 @@ class ModelTrainer:
         estimator: Estimator, features: List[int]
     ) -> Dict[int, float]:
         """Extract the feature rank from the input estimator. So far it can only handle
-        estimators as scikit.learn ones, so either having `the feature_importances_` or
+        estimators as scikit-learn ones, so either having the `feature_importances_` or
         the `coef_` attribute."""
         if hasattr(estimator, "feature_importances_"):
             ranks = rankdata(-estimator.feature_importances_)

@@ -59,7 +59,16 @@ class InnerLoopResults:
 
 
 class InnerLooper:
-    # TODO: docstring
+    """This class perform the recursive feature elimination based on the inner loop
+    cross validation fold.
+
+    Args:
+        outer_index (int): index of the outer loop the inner loop is related to
+        features_dropout_rate (float): fraction of features to drop at each elimination
+            step
+        model_trainer (ModelTrainer): object that trains the model over the splits
+
+    """
 
     def __init__(
         self,
@@ -76,19 +85,16 @@ class InnerLooper:
         self.all_features = list(range(self.n_features))
 
     def run(self) -> InnerLoopResults:
-        """Perform inner loop cross validation using all the inner loop splits derived
-        from the outer split i. The inner loop performs iteratve variable removal.
-        At each step a fraction `self.feature_dropout_rate`  of the features is removed.
+        """Perform inner loop cross validation using all the inner loop splits.
+        The inner loop performs iteratve variable removal.
+        At each step a fraction `self.feature_dropout_rate` of the features is removed.
         To choose the features to remove a CV based on the `self.n_inner`splits is
         performed. It return a dectionary containing the results of every train-test
         CV at each step of the iterative variable removal. Each key corresponds to the
         set of features used at that removal iteration.
 
-        Args:
-            i (int): outer loop index
-
         Returns:
-            Dict[Tuple[int], List]: variable removal train-test results.
+            InnerLoopResults: variable removal train-test results.
         """
         final_results = InnerLoopResults()
         features = self.all_features

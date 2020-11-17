@@ -35,7 +35,34 @@ class SelectedFeatures:
 
 
 class FeatureSelector:
-    # TODO: docstring
+    """Feature selection based on double cross validation and iterative feature
+    elimination.
+
+    This class is based on the feature selection algorithm proposed in
+    "Variable selection and validation in multivariate modelling", Shi L. et al.,
+    Bioinformatics 2019
+    https://academic.oup.com/bioinformatics/article/35/6/972/5085367
+
+    Args:
+        n_outer (int): number of outer CV folds
+        metric (str, callable): metric to be used to assess estimator goodness
+        estimator (str, BaseEstimator): estimator to be used for feature elimination
+        features_dropout_rate (float): fraction of features to drop at each elimination
+            step
+        robust_minimum (float): maximum normalized-score value to be considered when
+            computing the selected features
+        n_inner (int): number of inner CV folds (default: n_outer - 1)
+        repetitions (int): number of repetitions of the double CV loops (default: 8)
+        random_state (int): pass an int for reproducible output (default: None)
+
+    Examples:
+        >>> X, y = load_some_dataset()
+        >>> feature_selector = FeatureSelector(10, "MISS", "RFC")
+        >>> selected_feats = feature_selector.fit(X, y)
+        >>> selected_feats.MIN
+        {0, 1, 2}
+
+    """
 
     def __init__(
         self,
@@ -71,12 +98,12 @@ class FeatureSelector:
         self, X: NumpyArray, y: NumpyArray, groups: NumpyArray = None
     ) -> SelectedFeatures:
         """This method implement the MUVR method from:
-        https://academic.oup.com/bioinformatics/article/35/6/972/5085367
+        https://academic.oup.com/bioinformatics/article/35/6/972/5085367 and
+        https://gitlab.com/CarlBrunius/MUVR/-/tree/master/R
 
         Perform recursive feature selection using nested cross validation to select
-        the optimal number of features that explain the relationship between
-        `self.X` and `self.y`.
-        The alforithm return three sets of features:
+        the optimal number of features explaining the relationship between `X` and `y`.
+        The alforithm return three sets of features, stored in SelectedFeatures:
         1. `MIN`: is the minimum number of feature that gives good predictive power
         2. `MAX`: is the maximum number of feature that gives good predictive power
         3. `MID`: is the set of features to build a model using a number of feature
@@ -89,19 +116,20 @@ class FeatureSelector:
                     - Inner CV loops
         The inner loop are used to understand which feature to drop at each
         iteration removal.
-        For each outer loop element, we have a curve linking the fitness to the
-        number of features and average ranks for each variable.
-        From the average of these curves the number of variables for each "best" model
-        are extracted and the feature rank of the best models are computed.
+        For each outer loop element, we have a score curve linking the fitness to the
+        number of features, and average ranks for each variable.
+        From the average of these curves, the number of variables for each "best" model
+        (MIN, MID and MAX) are extracted and the feature rank of the best models
+        are computed.
 
-        Averaging the resuñts and the feature importances across repetition we select
+        Averaging the results and the feature importances across repetitions,  we select
         the final set of features.
 
         For additional informations about the algorithm, please check the original
         paper linked above.
 
         Returns:
-            Dict[str, set]: The 2 sets of selected features, "min", "mid", "max".
+            SelectedFeatures: The 3 sets of selected features, MIN, MID and MAX.
         """
 
         if groups is None:
