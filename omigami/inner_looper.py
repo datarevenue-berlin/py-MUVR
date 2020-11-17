@@ -109,11 +109,10 @@ class InnerLooper:
 
     def _keep_best_features(self, inner_cv_results: InnerCVResult) -> List[int]:
         """Keep the best features based on their average rank"""
-        feature_ranks = [r["feature_ranks"] for r in inner_cv_results.train_results]
+        feature_ranks = [
+            r.feature_ranks.to_dict() for r in inner_cv_results.train_results
+        ]
         avg_ranks = pd.DataFrame(feature_ranks).fillna(self.n_features).mean().to_dict()
-        for f in inner_cv_results.features:
-            if f not in avg_ranks:
-                avg_ranks[f] = self.n_features
         sorted_averages = sorted(avg_ranks.items(), key=lambda x: x[1])
         n_feats = len(inner_cv_results.features)
         n_features_to_drop = round(self.features_dropout_rate * n_feats)

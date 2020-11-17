@@ -163,6 +163,9 @@ class FeatureRanks:
     def __len__(self) -> int:
         return len(self.features)
 
+    def to_dict(self):
+        return self._data
+
 
 @dataclass
 class TrainingTestingResult:

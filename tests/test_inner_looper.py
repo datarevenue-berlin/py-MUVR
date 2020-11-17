@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from sklearn import datasets
 from omigami.inner_looper import InnerLooper, InnerCVResult, InnerLoopResults
-from omigami.model_trainer import ModelTrainer, TrainingTestingResult
+from omigami.model_trainer import ModelTrainer, TrainingTestingResult, FeatureRanks
 
 
 @pytest.fixture
@@ -36,13 +36,22 @@ def inner_results():
     return InnerCVResult(
         train_results=[
             TrainingTestingResult(
-                feature_ranks={0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6}, score=10,
+                feature_ranks=FeatureRanks(
+                    features=[0, 1, 2, 3, 4, 5], ranks=[1, 2, 3, 4, 5, 6]
+                ),
+                score=10,
             ),
             TrainingTestingResult(
-                feature_ranks={0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6}, score=9
+                feature_ranks=FeatureRanks(
+                    features=[0, 1, 2, 3, 4, 5], ranks=[1, 2, 3, 4, 5, 6]
+                ),
+                score=9,
             ),
             TrainingTestingResult(
-                feature_ranks={0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6}, score=4
+                feature_ranks=FeatureRanks(
+                    features=[0, 1, 2, 3, 4, 5], ranks=[1, 2, 3, 4, 5, 6]
+                ),
+                score=4,
             ),
         ],
         features=[0, 1, 2, 3, 4, 5],
