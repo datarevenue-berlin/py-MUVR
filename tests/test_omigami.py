@@ -3,7 +3,8 @@ import pytest
 import pandas as pd
 from sklearn import datasets
 from omigami.omigami import FeatureSelector
-
+from omigami.model_trainer import FeatureRanks, TrainingTestingResult
+from omigami.outer_looper import OuterLoopModelTrainResults, OuterLoopResults
 
 Dataset = collections.namedtuple("Dataset", "X y groups")
 
@@ -58,22 +59,52 @@ def outer_loop_aggregation():
 @pytest.fixture
 def outer_loop_results():
     return [
-        {
-            "test_results": {
-                "min": {"score": 4, "feature_ranks": {0: 1, 1: 2, 2: 3, 3: 4, 4: 5}},
-                "max": {"score": 3, "feature_ranks": {0: 5, 1: 4, 2: 3, 3: 2, 4: 1}},
-                "mid": {"score": 5, "feature_ranks": {0: 2, 1: 3, 2: 4, 3: 5, 4: 1}},
-            },
-            "scores": {5: -5, 4: -5, 3: -4, 2: -4},
-        },
-        {
-            "test_results": {
-                "min": {"score": 7, "feature_ranks": {0: 4, 1: 3, 2: 2, 3: 5, 4: 5}},
-                "max": {"score": 6, "feature_ranks": {0: 1, 1: 2, 2: 3, 3: 5, 4: 5}},
-                "mid": {"score": 7, "feature_ranks": {0: 3, 1: 2, 2: 2, 3: 5, 4: 5}},
-            },
-            "scores": {5: -7, 4: -5, 3: -7, 2: -11},
-        },
+        OuterLoopResults(
+            test_results=OuterLoopModelTrainResults(
+                MIN=TrainingTestingResult(
+                    score=4,
+                    feature_ranks=FeatureRanks(
+                        features=[0, 1, 2, 3, 4], ranks=[1, 2, 3, 4, 5]
+                    ),
+                ),
+                MAX=TrainingTestingResult(
+                    score=3,
+                    feature_ranks=FeatureRanks(
+                        features=[0, 1, 2, 3, 4], ranks=[5, 4, 3, 2, 1]
+                    ),
+                ),
+                MID=TrainingTestingResult(
+                    score=5,
+                    feature_ranks=FeatureRanks(
+                        features=[0, 1, 2, 3, 4], ranks=[2, 3, 4, 5, 1]
+                    ),
+                ),
+            ),
+            scores={5: -5, 4: -5, 3: -4, 2: -4},
+        ),
+        OuterLoopResults(
+            test_results=OuterLoopModelTrainResults(
+                MIN=TrainingTestingResult(
+                    score=7,
+                    feature_ranks=FeatureRanks(
+                        features=[0, 1, 2, 3, 4], ranks=[4, 3, 2, 5, 1]
+                    ),
+                ),
+                MAX=TrainingTestingResult(
+                    score=6,
+                    feature_ranks=FeatureRanks(
+                        features=[0, 1, 2, 3, 4], ranks=[1, 2, 3, 5, 5]
+                    ),
+                ),
+                MID=TrainingTestingResult(
+                    score=7,
+                    feature_ranks=FeatureRanks(
+                        features=[0, 1, 2, 3, 4], ranks=[3, 2, 2, 5, 5]
+                    ),
+                ),
+            ),
+            scores={5: -7, 4: -5, 3: -7, 2: -11},
+        ),
     ]
 
 
@@ -121,7 +152,7 @@ def test_compute_avg_feature_rank(feature_selector_mosquito, outer_loop_results)
     assert avg_rks[1] == 2.5
     assert avg_rks[2] == 2.5
     assert avg_rks[3] == 4.5
-    assert avg_rks[4] == 5
+    assert avg_rks[4] == 3
 
 
 def test_select_best_features(feature_selector_mosquito, outer_loop_aggregation):

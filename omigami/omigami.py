@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 from omigami.outer_looper import OuterLooper, OuterLoopResults
-from omigami.model_trainer import ModelTrainer
+from omigami.model_trainer import ModelTrainer, FeatureRanks
 from omigami.utils import compute_number_of_features, average_scores, MIN, MAX, MID
 
 NumpyArray = np.ndarray
@@ -219,7 +219,9 @@ class FeatureSelector:
         outer_test_results = [r["test_results"] for r in outer_loop_results]
         avg_feature_rank = {}
         for key in {MIN, MAX, MID}:
-            feature_ranks = [res[key]["feature_ranks"] for res in outer_test_results]
+            feature_ranks = [
+                res[key].feature_ranks.to_dict() for res in outer_test_results
+            ]
             avg_feature_rank[key] = (
                 pd.DataFrame(feature_ranks).fillna(0).mean().to_dict()
             )
