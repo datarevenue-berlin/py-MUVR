@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 from omigami.outer_looper import OuterLooper, OuterLoopResults
-from omigami.model_trainer import ModelTrainer, FeatureRanks
+from omigami.model_trainer import ModelTrainer
 from omigami.utils import compute_number_of_features, average_scores, MIN, MAX, MID
 
 NumpyArray = np.ndarray
@@ -92,7 +92,7 @@ class FeatureSelector:
         self.n_features = None
         self.selected_features = None
         self.outer_loop_aggregation = None
-        self._results = None
+        self.results = None
 
     def fit(
         self, X: NumpyArray, y: NumpyArray, groups: NumpyArray = None
@@ -149,7 +149,7 @@ class FeatureSelector:
             results_futures,
             # scheduler="single-threaded"  #TODO: put single thread if env.DEBUG=True
         )[0]
-        self._results = results
+        self.results = results
         self.selected_features = self._process_results(results)
         self.is_fit = True
         return self.selected_features
