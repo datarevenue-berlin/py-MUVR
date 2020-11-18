@@ -87,7 +87,7 @@ def outer_loop_results():
                 MIN=TrainingTestingResult(
                     score=7,
                     feature_ranks=FeatureRanks(
-                        features=[0, 1, 2, 3, 4], ranks=[4, 3, 2, 5, 1]
+                        features=[0, 1, 2, 3], ranks=[4, 3, 2, 5]
                     ),
                 ),
                 MAX=TrainingTestingResult(
@@ -152,7 +152,7 @@ def test_compute_avg_feature_rank(feature_selector_mosquito, outer_loop_results)
     assert avg_rks[1] == 2.5
     assert avg_rks[2] == 2.5
     assert avg_rks[3] == 4.5
-    assert avg_rks[4] == 3
+    assert avg_rks[4] == (5 + feature_selector_mosquito.n_features) / 2
 
 
 def test_select_best_features(feature_selector_mosquito, outer_loop_aggregation):

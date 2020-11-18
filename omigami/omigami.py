@@ -223,7 +223,7 @@ class FeatureSelector:
                 res[key].feature_ranks.to_dict() for res in outer_test_results
             ]
             avg_feature_rank[key] = (
-                pd.DataFrame(feature_ranks).fillna(0).mean().to_dict()
+                pd.DataFrame(feature_ranks).fillna(self.n_features).mean().to_dict()
             )
         return avg_feature_rank
 
