@@ -1,4 +1,5 @@
 import logging
+from typing import List
 from matplotlib import pyplot as plt
 import pandas as pd
 from matplotlib.axes import Axes
@@ -60,7 +61,9 @@ def plot_validation_curves(feature_selector: FeatureSelector) -> Axes:
     return plt.gca()
 
 
-def plot_feature_rank(feature_selector, model_key):
+def plot_feature_rank(
+    feature_selector: FeatureSelector, model_key: str, feature_names: List = None
+) -> plt.Figure:
 
     ranks = []
     for r in feature_selector.results:
@@ -93,6 +96,12 @@ def plot_feature_rank(feature_selector, model_key):
 
     fig_width = len(selected_ranks.columns) / 3
     figsize = (max(fig_width, 5), 3)
+
+    if feature_names is not None:
+        feature_numbers = range(len(feature_names))
+        selected_ranks.rename(
+            columns=dict(zip(feature_numbers, feature_names)), inplace=True,
+        )
 
     selected_ranks.notna().mean().plot.bar(
         figsize=figsize, facecolor=color_notnan, ax=ax_notnan, alpha=0.7
