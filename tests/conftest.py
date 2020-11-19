@@ -1,6 +1,20 @@
+import collections
 import pytest
+import pandas as pd
 from omigami.outer_looper import OuterLoopResults, OuterLoopModelTrainResults
 from omigami.model_trainer import TrainingTestingResult, FeatureRanks
+
+Dataset = collections.namedtuple("Dataset", "X y groups")
+
+
+@pytest.fixture(scope="session")
+def mosquito():
+    df = pd.read_csv("tests/assets/mosquito.csv").set_index("Unnamed: 0")
+    df = df.sample(frac=1)
+    X = df.drop(columns=["Yotu"]).values
+    y = df.Yotu.values
+    groups = df.index
+    return Dataset(X=X, y=y, groups=groups)
 
 
 @pytest.fixture(scope="session")

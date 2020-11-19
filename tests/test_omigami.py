@@ -1,21 +1,8 @@
-import collections
 import pytest
-import pandas as pd
 from sklearn import datasets
 from omigami.omigami import FeatureSelector
 from omigami.model_trainer import FeatureRanks, TrainingTestingResult
 from omigami.outer_looper import OuterLoopModelTrainResults, OuterLoopResults
-
-Dataset = collections.namedtuple("Dataset", "X y groups")
-
-
-@pytest.fixture
-def mosquito():
-    df = pd.read_csv("tests/assets/mosquito.csv").set_index("Unnamed: 0")
-    X = df.drop(columns=["Yotu"]).values
-    y = df.Yotu.values
-    groups = df.index
-    return Dataset(X=X, y=y, groups=groups)
 
 
 @pytest.fixture

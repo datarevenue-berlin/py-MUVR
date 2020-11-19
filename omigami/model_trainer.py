@@ -3,7 +3,7 @@ from typing import Callable, Dict, List, Tuple, TypeVar, Union
 import numpy as np
 from scipy.stats import rankdata
 import sklearn.metrics
-from sklearn.model_selection import GroupKFold
+from sklearn.model_selection import GroupShuffleSplit
 from sklearn.base import BaseEstimator, clone
 from sklearn.ensemble import RandomForestClassifier
 
@@ -63,8 +63,8 @@ class ModelTrainer:
         The splits are keyed (outer_index_split, n_inner_split).
         Outer splits are simply keyed (outer_index_split,).
         """
-        outer_splitter = GroupKFold(self.n_outer)
-        inner_splitter = GroupKFold(self.n_inner)
+        outer_splitter = GroupShuffleSplit(self.n_outer, test_size=1 / self.n_outer)
+        inner_splitter = GroupShuffleSplit(self.n_inner, test_size=1 / self.n_outer)
         outer_splits = outer_splitter.split(self.X, self.y, self.groups)
         splits = {}
         for i, (out_train, out_test) in enumerate(outer_splits):
