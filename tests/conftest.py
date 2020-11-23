@@ -1,6 +1,7 @@
 import pytest
 from omigami.outer_looper import OuterLoopResults, OuterLoopModelTrainResults
 from omigami.model_trainer import TrainingTestingResult, FeatureRanks
+from omigami.omigami import FeatureSelector
 
 
 @pytest.fixture(scope="session")
@@ -92,3 +93,14 @@ def results():
         ],
     ]
 
+
+@pytest.fixture(scope="session")
+def fitted_feature_selector(results):
+    fs = FeatureSelector(n_outer=5, metric="MISS", estimator="RFC",)
+    fs.n_features = 10
+    fs.is_fit = True
+    fs.selected_features = {"min": (0, 1), "max": (0, 1), "mid": (0, 1)}
+    fs._results = results
+    sel_feats = fs._process_results(results)
+    fs._selected_features = sel_feats
+    return fs
