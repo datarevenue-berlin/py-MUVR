@@ -18,11 +18,11 @@ def test_get_avg_score(fitted_feature_selector):
     assert avg_score == 4
 
 
-def test_get_avg_scores(fitted_feature_selector):
+def test_get_pipeline_scores(fitted_feature_selector):
     pt = permutation_test.PermutationTest(
         feature_selector=fitted_feature_selector, n_permutations=10
     )
-    avg_scores = pt._get_avg_scores()
+    avg_scores = pt._get_pipeline_scores()
     assert avg_scores["min"] == 4
     assert avg_scores["max"] == 4
 

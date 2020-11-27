@@ -1,13 +1,14 @@
 import logging
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Tuple, TypeVar, Union
+from abc import ABC, abstractmethod
 
 import dask
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 from omigami.outer_looper import OuterLooper, OuterLoopResults
-from omigami.model_trainer import ModelTrainer, FeatureRanks
+from omigami.model_trainer import ModelTrainer
 from omigami.utils import compute_number_of_features, average_scores, MIN, MAX, MID
 
 NumpyArray = np.ndarray
@@ -34,7 +35,13 @@ class SelectedFeatures:
         return self.__getattribute__(attribute)
 
 
-class FeatureSelector:
+class FeatureSelectorBase(ABC):
+    @abstractmethod
+    def fit(self, X: NumpyArray, y: NumpyArray, groups: NumpyArray = None):
+        raise NotImplementedError("Implement fit method")
+
+
+class FeatureSelector(FeatureSelectorBase):
     """Feature selection based on double cross validation and iterative feature
     elimination.
 

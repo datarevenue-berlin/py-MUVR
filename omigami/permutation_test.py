@@ -5,28 +5,15 @@ import dask
 import scipy
 import tqdm
 from omigami.utils import compute_t_student_p_value, MIN, MAX
-from omigami.omigami import FeatureSelector
+from omigami.omigami import FeatureSelectorBase
 
 
-class PermutationTest:
-    def __init__(self, feature_selector: FeatureSelector, n_permutations: int = 100):
+class PermutationTestBase:
+    def __init__(self, feature_selector: FeatureSelectorBase, n_permutations: int):
         self.n_permutations = n_permutations
         self._fs = feature_selector
         self.res = None
         self.res_perm = None
-
-    def _get_avg_score(self, model: str) -> float:
-        n_feats = len(self._fs.selected_features[model])
-        return np.average(
-            [
-                score[n_feats]
-                for ol in self._fs.outer_loop_aggregation
-                for score in ol["scores"]
-            ]
-        )
-
-    def _get_avg_scores(self) -> dict:
-        return {model: self._get_avg_score(model) for model in {MIN, MAX}}
 
     def fit(self, X: np.ndarray, y: np.ndarray, groups: np.ndarray = None):
 
@@ -35,7 +22,7 @@ class PermutationTest:
 
         self._fs.fit(X, y, groups=groups)
 
-        self.res = self._get_avg_scores()
+        self.res = self._get_pipeline_scores()
         logging.debug("Run permutations")
         self.res_perm = []
         for _ in tqdm.tqdm(range(self.n_permutations)):
@@ -44,7 +31,7 @@ class PermutationTest:
 
             self._fs.fit(X, y_perm, groups=groups)
 
-            self.res_perm.append(self._get_avg_scores())
+            self.res_perm.append(self._get_pipeline_scores())
 
         return self
 
@@ -52,7 +39,7 @@ class PermutationTest:
         if not self.res:
             raise RuntimeError("Call fit method first")
         p_values = {}
-        for model in {MIN, MAX}:
+        for model in self.res.keys():
             x = self.res[model]
             x_perm = [r[model] for r in self.res_perm]
             if ranks:
@@ -64,3 +51,23 @@ class PermutationTest:
     def _rank_data(sample: float, population: Iterable):
         ranks = scipy.stats.rankdata([sample] + list(population))
         return ranks[0], ranks[1:]
+
+    def _get_pipeline_scores(self) -> dict:
+        raise NotImplementedError(
+            "You have to implement this method depending on the input feature selector"
+        )
+
+
+class PermutationTest(PermutationTestBase):
+    def _get_avg_score(self, model: str) -> float:
+        n_feats = len(self._fs.selected_features[model])
+        return np.average(
+            [
+                score[n_feats]
+                for ol in self._fs.outer_loop_aggregation
+                for score in ol["scores"]
+            ]
+        )
+
+    def _get_pipeline_scores(self) -> dict:
+        return {model: self._get_avg_score(model) for model in {MIN, MAX}}
