@@ -36,9 +36,12 @@ class SelectedFeatures:
 
 
 class FeatureSelectorBase(ABC):
+    def __init__(self):
+        self.selection_score = None
+
     @abstractmethod
     def fit(self, X: NumpyArray, y: NumpyArray, groups: NumpyArray = None):
-        raise NotImplementedError("Implement fit method")
+        ...
 
 
 class FeatureSelector(FeatureSelectorBase):
@@ -82,6 +85,7 @@ class FeatureSelector(FeatureSelectorBase):
         repetitions: int = 8,
         random_state: int = None,
     ):
+        super().__init__()
         self.is_fit = False
         self.random_state = random_state
         self.n_outer = n_outer
@@ -159,7 +163,21 @@ class FeatureSelector(FeatureSelectorBase):
         self._results = results
         self.selected_features = self._process_results(results)
         self.is_fit = True
+        self.selection_score = self.compute_selection_score()
         return self.selected_features
+
+    def compute_selection_score(self):
+        return {model: self._get_avg_model_score(model) for model in {MIN, MAX}}
+
+    def _get_avg_model_score(self, model: str) -> float:
+        n_feats = len(self.selected_features[model])
+        return np.average(
+            [
+                score[n_feats]
+                for ol in self.outer_loop_aggregation
+                for score in ol["scores"]
+            ]
+        )
 
     def _build_model_trainer(
         self, repetition_idx: int, X: NumpyArray, y: NumpyArray, groups: NumpyArray

@@ -10,23 +10,6 @@ def test_permutation_test(fitted_feature_selector):
     )
 
 
-def test_get_avg_score(fitted_feature_selector):
-    pt = permutation_test.PermutationTest(
-        feature_selector=fitted_feature_selector, n_permutations=10
-    )
-    avg_score = pt._get_avg_score("min")
-    assert avg_score == 4
-
-
-def test_get_pipeline_scores(fitted_feature_selector):
-    pt = permutation_test.PermutationTest(
-        feature_selector=fitted_feature_selector, n_permutations=10
-    )
-    avg_scores = pt._get_pipeline_scores()
-    assert avg_scores["min"] == 4
-    assert avg_scores["max"] == 4
-
-
 def test_fit(monkeypatch, results):
     def fit_mock(*args, **kwargs):
         pass
@@ -38,6 +21,7 @@ def test_fit(monkeypatch, results):
     fs._results = results
     sel_feats = fs._process_results(results)
     fs._selected_features = sel_feats
+    fs.selection_score = {"min": 10, "max": 10}
 
     monkeypatch.setattr(fs, "fit", fit_mock)
     n_permutations = 10
@@ -64,6 +48,7 @@ def test_compute_p_values(monkeypatch, results):
     fs._results = results
     sel_feats = fs._process_results(results)
     fs._selected_features = sel_feats
+    fs.selection_score = fs.compute_selection_score()
 
     monkeypatch.setattr(fs, "fit", fit_mock)
     n_permutations = 10
@@ -73,10 +58,8 @@ def test_compute_p_values(monkeypatch, results):
 
     X, y = datasets.make_classification(n_features=5, random_state=0)
     pt.fit(X, y)
-    import logging
 
-    pt.res_perm[0]["min"] = 4.1
-    pt.res_perm[0]["max"] = 4.1
+    pt.res_perm[0] = {"min": 4.1, "max": 4.1}
     p_values = pt.compute_p_values()
     assert p_values
     assert p_values["min"]

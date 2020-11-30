@@ -174,3 +174,17 @@ def test_compute_final_ranks(feature_selector_mosquito, outer_loop_aggregation):
     assert len(ranks) == 5
     assert ranks.loc[0, "min"] == 2
     assert ranks.loc[4, "mid"] == 3
+
+
+def test_get_avg_model_score(fitted_feature_selector, results):
+    assert fitted_feature_selector._get_avg_model_score("min")
+    assert (
+        fitted_feature_selector._get_avg_model_score("min")
+        == (
+            results[0][0].scores[2]
+            + results[0][1].scores[2]
+            + results[1][0].scores[2]
+            + results[1][1].scores[2]
+        )
+        / 4
+    )

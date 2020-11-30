@@ -4,11 +4,11 @@ import numpy as np
 import dask
 import scipy
 import tqdm
-from omigami.utils import compute_t_student_p_value, MIN, MAX
+from omigami.utils import compute_t_student_p_value
 from omigami.omigami import FeatureSelectorBase
 
 
-class PermutationTestBase:
+class PermutationTest:
     def __init__(self, feature_selector: FeatureSelectorBase, n_permutations: int):
         self.n_permutations = n_permutations
         self._fs = feature_selector
@@ -22,7 +22,7 @@ class PermutationTestBase:
 
         self._fs.fit(X, y, groups=groups)
 
-        self.res = self._get_pipeline_scores()
+        self.res = self._fs.selection_score
         logging.debug("Run permutations")
         self.res_perm = []
         for _ in tqdm.tqdm(range(self.n_permutations)):
@@ -31,7 +31,7 @@ class PermutationTestBase:
 
             self._fs.fit(X, y_perm, groups=groups)
 
-            self.res_perm.append(self._get_pipeline_scores())
+            self.res_perm.append(self._fs.selection_score)
 
         return self
 
@@ -51,23 +51,3 @@ class PermutationTestBase:
     def _rank_data(sample: float, population: Iterable):
         ranks = scipy.stats.rankdata([sample] + list(population))
         return ranks[0], ranks[1:]
-
-    def _get_pipeline_scores(self) -> dict:
-        raise NotImplementedError(
-            "You have to implement this method depending on the input feature selector"
-        )
-
-
-class PermutationTest(PermutationTestBase):
-    def _get_avg_score(self, model: str) -> float:
-        n_feats = len(self._fs.selected_features[model])
-        return np.average(
-            [
-                score[n_feats]
-                for ol in self._fs.outer_loop_aggregation
-                for score in ol["scores"]
-            ]
-        )
-
-    def _get_pipeline_scores(self) -> dict:
-        return {model: self._get_avg_score(model) for model in {MIN, MAX}}
