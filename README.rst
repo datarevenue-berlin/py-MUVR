@@ -83,6 +83,7 @@ Eventually, all the scores of the recursive model training are avergaed to get t
 of features for which the model performs the best.
 
 The feature selector returns 3 possible feature sets:
+
 - The minimum number of features for which the model performs well
 - The maximum number of features for which the model performs well
 - Their geometric mean
