@@ -40,21 +40,25 @@ Install
 Omigami can be easily installed using PIP. It's recommendable to use a virtual
 environment before performing the install. It can be done either using your python
 release as
-```
-python3 -m venv <path_to_venv>
-source <path_to_venv>/bin/activate
-```
+
+.. code-block:: bash
+
+    python3 -m venv <path_to_venv>
+    source <path_to_venv>/bin/activate
 
 or using Anaconda
-```
-conda create --name omigami_venv
-conda activate omigami_venv
-```
+
+.. code-block:: bash
+
+        conda create --name omigami_venv
+        conda activate omigami_venv
 
 When the virtual environment is installed, you can use PIP to install omigami:
-```
-pip install omigami
-```
+
+.. code-block:: bash
+
+        pip install omigami
+
 
 
 How to use Omigami
@@ -84,7 +88,8 @@ The feature selector returns 3 possible feature sets:
 
 The whole process is repeated `n_repetitions` times to enhance selection robustness.
 
-## A minimal example
+A minimal example
++++++++++++++++++
 This is a minimal example to show the usage of the main omigami class.
 
 Let's suppose that our data is composed of N samples for which M features have been
@@ -93,23 +98,27 @@ The data should be stored in tabular data in two arrays: an array of predictor, 
 containing the feature values, and a target array, `y`, containing the classes to predict.
 
 For example, using `pandas` we would do something like
-```python
-import pandas as pd
-data = pd.read_csv('test.csv')
-X = data.drop(columns=["target"]).values
-y = data["target"].values
-```
+
+.. code-block:: python
+
+        import pandas as pd
+        data = pd.read_csv('test.csv')
+        X = data.drop(columns=["target"]).values
+        y = data["target"].values
 
 Once the data is ready we can instanciate the feature selector:
-```python
-from omigami.omigami import FeatureSelector
-feature_selector = FeatureSelector(
-    n_repetitions=10,
-    n_outer=5,
-    estimator="RFC",   # random forest classifier
-    metric="MISS",   # missclassifications
-)
-```
+
+.. code-block:: python
+
+
+        from omigami.omigami import FeatureSelector
+        feature_selector = FeatureSelector(
+            n_repetitions=10,
+            n_outer=5,
+            estimator="RFC",   # random forest classifier
+            metric="MISS",   # missclassifications
+        )
+
 The `estimator` parameter denotes the model to be used for the feature elimination. So
 far, the only native option supported is "RFC", but the class would also accept any scikit-learn
 model instance.
@@ -118,33 +127,39 @@ example we are using the number of missclassified samples. Other possibilities a
 given by scikit-learn scores, such as "accuracy".
 
 Fitting the selector is as easy as
-```python
-feature_selector.fit(X, y)
-```
+
+.. code-block:: python
+
+        feature_selector.fit(X, y)
 
 It might take a while for it to complete, depending on your machine and the model
 selected.
 
 Once the fit method is completed, selected features can be retrieved as
-```python
-selected_features = feature_selector.selected_features
-```
+
+.. code-block:: python
+
+        selected_features = feature_selector.selected_features
 
 The features are reported as column indexes. To get the names just pass the selection
 to the data frame:
-```python
-selected_feature_names = data.columns[selected_features["min"]]
-```
 
-## Parallelization
+.. code-block:: python
+
+        selected_feature_names = data.columns[selected_features["min"]]
+
+Parallelization
++++++++++++++++
 The fit mthod can be time consuming, for this reason Omigami gives the option
 to execute the various CV loops in parallel using a dask cluster.
 The dask cluster can be remote, or running in local to exploit the processors of
 the user's computer.
 For the latter case - which is probably the most common case - it's sufficient to run the following
 at the beginning of the script:
-```python
-from dask.distributed import Client
-client = Client()
-```
+
+.. code-block:: python
+
+        from dask.distributed import Client
+        client = Client()
+
 this will allow the user to inspect the status of the calculation at `http://localhost:8787/status`.
