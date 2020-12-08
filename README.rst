@@ -72,6 +72,7 @@ features from the input dataset. The workflow of the feature selection is the fo
 - A recursive feature selection is performed and evaluated on every CV split
 
 The recursive feature elimination is also cross validated, so for each outer split:
+
 - `n_inner` CV splits are created (default is `n_outer` - 1)
 - for each CV split a model is trained. Performance and feature importances are extracted
 - the least important features are discarded
