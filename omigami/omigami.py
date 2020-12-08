@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 from omigami.outer_looper import OuterLooper, OuterLoopResults
-from omigami.model_trainer import ModelTrainer, FeatureRanks
+from omigami.model_trainer import ModelTrainer
 from omigami.utils import compute_number_of_features, average_scores, MIN, MAX, MID
 
 NumpyArray = np.ndarray
@@ -85,7 +85,7 @@ class FeatureSelector:
         self.repetitions = repetitions
 
         if not n_inner:
-            logging.debug("n_inner is not specified, setting it to n_outer - 1")
+            logging.warning("n_inner is not specified, setting it to n_outer - 1")
             n_inner = n_outer - 1
         self.n_inner = n_inner
 
@@ -133,7 +133,7 @@ class FeatureSelector:
         """
 
         if groups is None:
-            logging.debug("groups is not specified: i.i.d. samples assumed")
+            logging.info("groups is not specified: i.i.d. samples assumed")
             groups = np.arange(X.shape[0])
 
         self.n_features = X.shape[1]

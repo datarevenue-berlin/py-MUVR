@@ -80,11 +80,11 @@ class ModelTrainer:
         """Train and test a clone of self.evaluator over the input split using the
         input features only. It outputs the fitness score over the test split and
         the feature rank of the variables as a TrainingTestingResult object"""
-        inner_train_idx, inner_test_idx = self.splits[tuple(split_id)]
-        X_train = self.X[inner_train_idx, :][:, features]
-        X_test = self.X[inner_test_idx, :][:, features]
-        y_train = self.y[inner_train_idx]
-        y_test = self.y[inner_test_idx]
+        train_idx, test_idx = self.splits[tuple(split_id)]
+        X_train = self.X[train_idx, :][:, features]
+        X_test = self.X[test_idx, :][:, features]
+        y_train = self.y[train_idx]
+        y_test = self.y[test_idx]
         model = clone(self.estimator)
         y_pred = model.fit(X_train, y_train).predict(X_test)
         feature_ranks = self._extract_feature_rank(model, features)
