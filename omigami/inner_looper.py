@@ -89,7 +89,7 @@ class InnerLooper:
         The inner loop performs iteratve variable removal.
         At each step a fraction `self.feature_dropout_rate` of the features is removed.
         To choose the features to remove a CV based on the `self.n_inner`splits is
-        performed. It return a dectionary containing the results of every train-test
+        performed. It returns a dictionary containing the results of every train-test
         CV at each step of the iterative variable removal. Each key corresponds to the
         set of features used at that removal iteration.
 
