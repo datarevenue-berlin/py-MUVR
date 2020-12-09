@@ -34,7 +34,7 @@ setup(
     ],
     description="Nested cross validation for feature selection in Python",
     install_requires=[
-        "dask>=2.30.0",
+        "dask[complete]>=2.30.0",
         "matplotlib>=3.3.2",
         "numpy>=1.19.2",
         "pandas>=1.1.3",

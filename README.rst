@@ -96,7 +96,7 @@ This is a minimal example to show the usage of the main omigami class.
 
 Let's suppose that our data is composed of N samples for which M features have been
 measured. Among these features, we want to select the best predictors for a target class.
-The data should be stored in tabular data in two arrays: an array of predictor, `X`, with N rows and M columns,
+The data should be stored in tabular data in two arrays: an array of predictors, `X`, with N rows and M columns,
 containing the feature values, and a target array, `y`, containing the classes to predict.
 
 For example, using `pandas` we would do something like
@@ -108,7 +108,7 @@ For example, using `pandas` we would do something like
         X = data.drop(columns=["target"]).values
         y = data["target"].values
 
-Once the data is ready we can instanciate the feature selector:
+Once the data is ready, we can instantiate the feature selector:
 
 .. code-block:: python
 
@@ -134,7 +134,7 @@ Fitting the selector is as easy as
 
         feature_selector.fit(X, y)
 
-It might take a while for it to complete, depending on your machine and the model
+It might take a while for it to complete, depending on your machine and on the model
 selected.
 
 Once the fit method is completed, selected features can be retrieved as
