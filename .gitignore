@@ -70,6 +70,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+notebooks/
 
 # pyenv
 .python-version
@@ -100,3 +101,7 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# VSCODE
+.DS_Store
+.vscode
