@@ -72,7 +72,7 @@ class OuterLooper:
         outer_splits = self._make_outer_splits(X, y)
         outer_loop_results = []
 
-        for outer_index, (outer_train_idx, outer_test_idx) in enumerate(outer_splits):
+        for outer_train_idx, outer_test_idx in outer_splits:
             outer_fold_results = self._run_outer_fold(
                 X, y, model_trainer, rfe, outer_train_idx, outer_test_idx
             )
@@ -87,26 +87,20 @@ class OuterLooper:
         y: NumpyArray,
         model_trainer: ModelTrainer,
         rfe: RecursiveFeatureEliminator,
-        outer_train_ix: NumpyArray,
-        outer_test_ix: NumpyArray,
+        train_ix: NumpyArray,
+        test_ix: NumpyArray,
     ):
-        X_outer, y_outer = X[outer_train_ix], y[outer_train_ix]
+        X_outer, y_outer = X[train_ix], y[train_ix]
         feature_elim_results = rfe.run(
-            X_outer, y_outer, model_trainer, self.groups[outer_train_ix]
+            X_outer, y_outer, model_trainer, self.groups[train_ix]
         )
 
         res = self._select_best_features_and_score(feature_elim_results)
 
         outer_test_results = OuterLoopModelTrainResults(
-            MIN=model_trainer.evaluate_features(
-                X, y, outer_train_ix, outer_test_ix, res[MIN]
-            ),
-            MID=model_trainer.evaluate_features(
-                X, y, outer_train_ix, outer_test_ix, res[MID]
-            ),
-            MAX=model_trainer.evaluate_features(
-                X, y, outer_train_ix, outer_test_ix, res[MAX]
-            ),
+            MIN=model_trainer.evaluate_features(X, y, train_ix, test_ix, res[MIN]),
+            MID=model_trainer.evaluate_features(X, y, train_ix, test_ix, res[MID]),
+            MAX=model_trainer.evaluate_features(X, y, train_ix, test_ix, res[MAX]),
         )
         outer_fold_results = OuterLoopResults(
             test_results=outer_test_results, scores=feature_elim_results.score
