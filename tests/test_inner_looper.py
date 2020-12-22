@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from sklearn import datasets
-from omigami.inner_looper import InnerLooper, InnerCVResult, InnerLoopResults
+from omigami.inner_looper import InnerLooper, InnerLoopResult, InnerLoopResults
 from omigami.model_trainer import ModelTrainer, TrainingTestingResult, FeatureRanks
 
 
@@ -33,7 +33,7 @@ def inner_looper(model_trainer):
 
 @pytest.fixture
 def inner_results():
-    return InnerCVResult(
+    return InnerLoopResult(
         train_results=[
             TrainingTestingResult(
                 feature_ranks=FeatureRanks(
@@ -73,7 +73,7 @@ def test_run(inner_looper):
     assert lengths == (2, 3, 4, 5, 6)
     for _, inner_results in res:
         break
-    assert isinstance(inner_results, InnerCVResult)
+    assert isinstance(inner_results, InnerLoopResult)
     assert len(inner_results) == len(inner_looper.splits)
     assert isinstance(inner_results[0], TrainingTestingResult)
 

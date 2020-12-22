@@ -1,11 +1,18 @@
-from typing import List, Dict
+from typing import List, Dict, Callable, Tuple, TypeVar, Union
 from scipy.stats import gmean
 import pandas as pd
+import numpy as np
+from sklearn.base import BaseEstimator
 
 MIN = "min"
 MAX = "max"
 MID = "mid"
 
+NumpyArray = np.ndarray
+MetricFunction = Callable[[NumpyArray, NumpyArray], float]
+Split = Tuple[NumpyArray, NumpyArray]
+GenericEstimator = TypeVar("GenericEstimator")
+Estimator = Union[BaseEstimator, GenericEstimator]
 
 def compute_number_of_features(
     scores: List[Dict[int, float]], robust_minimum: float

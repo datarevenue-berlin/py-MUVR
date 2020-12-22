@@ -1,4 +1,6 @@
 import collections
+from pathlib import Path
+
 import pytest
 import pandas as pd
 from sklearn import datasets
@@ -7,11 +9,12 @@ from omigami.model_trainer import FeatureRanks, TrainingTestingResult
 from omigami.outer_looper import OuterLoopModelTrainResults, OuterLoopResults
 
 Dataset = collections.namedtuple("Dataset", "X y groups")
+ASSETS_DIR = Path(__file__).parent / "assets"  # TODO: move to conftest
 
 
 @pytest.fixture
 def mosquito():
-    df = pd.read_csv("tests/assets/mosquito.csv").set_index("Unnamed: 0")
+    df = pd.read_csv(ASSETS_DIR / "mosquito.csv").set_index("Unnamed: 0")
     X = df.drop(columns=["Yotu"]).values
     y = df.Yotu.values
     groups = df.index

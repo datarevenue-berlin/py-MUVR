@@ -8,13 +8,10 @@ import pandas as pd
 from sklearn.base import BaseEstimator
 from omigami.outer_looper import OuterLooper, OuterLoopResults
 from omigami.model_trainer import ModelTrainer
-from omigami.utils import compute_number_of_features, average_scores, MIN, MAX, MID
+from omigami.utils import compute_number_of_features, average_scores, MIN, MAX, MID, NumpyArray, MetricFunction, Estimator
 
-NumpyArray = np.ndarray
-MetricFunction = Callable[[NumpyArray, NumpyArray], float]
-Split = Tuple[NumpyArray, NumpyArray]
-GenericEstimator = TypeVar("GenericEstimator")
-Estimator = Union[BaseEstimator, GenericEstimator]
+
+# TODO: I like it, although I think it is better in a separate script
 
 
 @dataclass
@@ -140,9 +137,9 @@ class FeatureSelector:
 
         results_futures = []
         for repetition_idx in range(self.repetitions):
-            model_trainer = self._build_model_trainer(repetition_idx, X, y, groups)
-            outer_looper = self._build_outer_looper(model_trainer)
-            repetition_futures = outer_looper.run()
+            model_trainer = self._build_model_trainer(repetition_idx)
+            outer_looper = self._build_outer_looper(groups)
+            repetition_futures = outer_looper.run(X, y, model_trainer, self.features_dropout_rate, self.n_inner)
             results_futures.append(repetition_futures)
 
         results = dask.compute(
@@ -155,7 +152,7 @@ class FeatureSelector:
         return self.selected_features
 
     def _build_model_trainer(
-        self, repetition_idx: int, X: NumpyArray, y: NumpyArray, groups: NumpyArray
+        self, repetition_idx: int,
     ) -> ModelTrainer:
         random_state = (
             self.random_state + repetition_idx
@@ -163,21 +160,16 @@ class FeatureSelector:
             else None
         )
         return ModelTrainer(
-            X=X,
-            y=y,
-            groups=groups,
-            n_inner=self.n_inner,
-            n_outer=self.n_outer,
             estimator=self.estimator,
             metric=self.metric,
             random_state=random_state,
         )
 
-    def _build_outer_looper(self, model_trainer: ModelTrainer) -> OuterLooper:
+    def _build_outer_looper(self, groups: NumpyArray) -> OuterLooper:
         return OuterLooper(
-            features_dropout_rate=self.features_dropout_rate,
+            n_outer=self.n_outer,
             robust_minimum=self.robust_minimum,
-            model_trainer=model_trainer,
+            groups=groups,
         )
 
     def _process_results(

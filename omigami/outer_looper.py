@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 from typing import Dict, List
+
 import dask
-from omigami.inner_looper import InnerLooper, InnerLoopResults
+from sklearn.model_selection import GroupKFold
+
 from omigami.model_trainer import TrainingTestingResult, ModelTrainer
-import omigami.utils as utils
-from omigami.utils import MIN, MAX, MID
+from omigami.recursive_feature_eliminator import RecursiveFeatureEliminator, RecursiveFeatureEliminatorResults
+from omigami.utils import MIN, MAX, MID, NumpyArray, compute_number_of_features
 
 
 @dataclass
@@ -24,6 +26,7 @@ class OuterLoopModelTrainResults:
         return self.__getattribute__(attribute)
 
 
+# TODO: why not a single dataclass?
 @dataclass
 class OuterLoopResults:
     test_results: OuterLoopModelTrainResults
@@ -47,54 +50,58 @@ class OuterLooper:
 
     def __init__(
         self,
-        features_dropout_rate: float,
         robust_minimum: float,
-        model_trainer: ModelTrainer,
+        n_outer: float,
+        groups: NumpyArray,
     ):
-        self.n_inner = model_trainer.n_inner
-        self.n_outer = model_trainer.n_outer
-        self.features_dropout_rate = features_dropout_rate
+        self.n_outer = n_outer
         self.robust_minimum = robust_minimum
-        self.model_trainer = model_trainer
+        self.groups = groups
 
-    def run(self) -> List[OuterLoopResults]:
-        return [self._perform_outer_loop_cv(i) for i in range(self.n_outer)]
+    def run(
+        self,
+        X: NumpyArray,
+        y: NumpyArray,
+        model_trainer: ModelTrainer,
+        features_dropout_rate: float,
+        n_inner: float,
+    ) -> List[OuterLoopResults]:
+        rfe = RecursiveFeatureEliminator(features_dropout_rate, n_inner)
 
-    @dask.delayed  # TODO: keep it generalizable
-    def _perform_outer_loop_cv(self, outer_index: int) -> OuterLoopResults:
-        """Perform an outer loop cross validation on all the splits linked to the
-        outer fold `i`. It returns a dictionary containing the fitness score of the
-        loop and the results of the prediction using the selected best features on
-        the outer test fold
+        outer_splits = self._make_outer_splits(X, y)
+        outer_loop_results = []
 
-        Args:
-            outer_index (int): index of the loop
+        for outer_index, (outer_train_idx, outer_test_idx) in enumerate(outer_splits):
+            outer_fold_results = self._run_outer_fold(X, y, model_trainer, rfe, outer_train_idx)
+            outer_loop_results.append(
+                outer_fold_results
+            )
 
-        Returns:
-            Dict: Results of the outer loop training and testing
-        """
+        return outer_loop_results
 
-        inner_looper = InnerLooper(
-            outer_index=outer_index,
-            features_dropout_rate=self.features_dropout_rate,
-            model_trainer=self.model_trainer,
+    @dask.delayed
+    def _run_outer_fold(self, X, y, model_trainer, rfe, outer_split_idx):
+        X_outer, y_outer = X[outer_split_idx], y[outer_split_idx]
+        feature_elim_results = dask.delayed(rfe.run)(
+            X_outer, y_outer, model_trainer
         )
-        inner_loop_results = inner_looper.run()
-        res = self._select_best_features_and_score(inner_loop_results)
 
-        outer_split_id = (outer_index,)
+        res = self._select_best_features_and_score(feature_elim_results)
+
         outer_test_results = OuterLoopModelTrainResults(
-            MIN=self.model_trainer.run(outer_split_id, res[MIN]),
-            MID=self.model_trainer.run(outer_split_id, res[MID]),
-            MAX=self.model_trainer.run(outer_split_id, res[MAX]),
+            MIN=model_trainer.evaluate_features(X_outer[res[MIN]], y_outer),
+            MID=model_trainer.evaluate_features(X_outer[res[MID]], y_outer),
+            MAX=model_trainer.evaluate_features(X_outer[res[MAX]], y_outer),
+        )
+        outer_fold_results = OuterLoopResults(
+            test_results=outer_test_results,
+            scores=feature_elim_results.score
         )
 
-        return OuterLoopResults(
-            test_results=outer_test_results, scores=inner_loop_results.score
-        )
+        return outer_fold_results
 
     def _select_best_features_and_score(
-        self, inner_loop_results: InnerLoopResults
+        self, rfe_results: RecursiveFeatureEliminatorResults
     ) -> Dict:
         """Select the best features analysing the train results across the feature
         removal cycle. Each step of the cycle is an entry in the input dictionary
@@ -117,16 +124,22 @@ class OuterLooper:
             Dict: The best feature for each of the three sets and the condensed score
         """
 
-        n_feats = utils.compute_number_of_features(
-            [inner_loop_results.score], self.robust_minimum
+        n_feats = compute_number_of_features(
+            [rfe_results.score], self.robust_minimum
         )
         max_feats = n_feats[MAX]
         min_feats = n_feats[MIN]
         mid_feats = n_feats[MID]
-        mid_feats = inner_loop_results.get_closest_number_of_features(mid_feats)
+        mid_feats = rfe_results.get_closest_number_of_features(mid_feats)
         return {
-            MIN: inner_loop_results.get_features_from_their_number(min_feats),
-            MAX: inner_loop_results.get_features_from_their_number(max_feats),
-            MID: inner_loop_results.get_features_from_their_number(mid_feats),
-            "score": inner_loop_results.score,
+            MIN: rfe_results.get_features_from_their_number(min_feats),
+            MAX: rfe_results.get_features_from_their_number(max_feats),
+            MID: rfe_results.get_features_from_their_number(mid_feats),
+            "score": rfe_results.score,
         }
+
+    def _make_outer_splits(self, X: NumpyArray, y: NumpyArray):
+        outer_splitter = GroupKFold(self.n_outer)
+        outer_splits = outer_splitter.split(X, y, self.groups)
+
+        return outer_splits
