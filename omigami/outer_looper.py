@@ -63,27 +63,33 @@ class OuterLooper:
         X: NumpyArray,
         y: NumpyArray,
         model_trainer: ModelTrainer,
-        features_dropout_rate: float,
-        n_inner: float,
+        rfe: RecursiveFeatureEliminator,
     ) -> List[OuterLoopResults]:
-        rfe = RecursiveFeatureEliminator(features_dropout_rate, n_inner)
 
         outer_splits = self._make_outer_splits(X, y)
         outer_loop_results = []
 
         for outer_index, (outer_train_idx, outer_test_idx) in enumerate(outer_splits):
-            outer_fold_results = self._run_outer_fold(X, y, model_trainer, rfe, outer_train_idx)
-            outer_loop_results.append(
-                outer_fold_results
+            outer_fold_results = self._run_outer_fold(
+                X, y, model_trainer, rfe, outer_train_idx, outer_test_idx
             )
+            outer_loop_results.append(outer_fold_results)
 
         return outer_loop_results
 
     @dask.delayed
-    def _run_outer_fold(self, X, y, model_trainer, rfe, outer_split_idx):
-        X_outer, y_outer = X[outer_split_idx], y[outer_split_idx]
-        feature_elim_results = dask.delayed(rfe.run)(
-            X_outer, y_outer, model_trainer
+    def _run_outer_fold(
+        self,
+        X: NumpyArray,
+        y: NumpyArray,
+        model_trainer: ModelTrainer,
+        rfe: RecursiveFeatureEliminator,
+        outer_train_ix: NumpyArray,
+        outer_test_ix: NumpyArray,
+    ):
+        X_outer, y_outer = X[outer_train_ix], y[outer_train_ix]
+        feature_elim_results = rfe.run(
+            X_outer, y_outer, model_trainer, self.groups[outer_train_ix]
         )
 
         res = self._select_best_features_and_score(feature_elim_results)

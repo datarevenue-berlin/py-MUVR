@@ -9,18 +9,30 @@ from omigami.utils import NumpyArray
 
 
 class RecursiveFeatureEliminator:
-    def __init__(self, features_dropout_rate, min_features):
+    def __init__(
+        self,
+        features_dropout_rate: float,
+        n_features: int,
+        n_inner: int,
+        min_features: int = 1,
+    ):
         self.min_features = min_features
         self.features_dropout_rate = features_dropout_rate
+        self.n_features = n_features
         self.all_features = list(range(self.n_features))
+        self.n_inner = n_inner
 
-    def run(self, X, y, model_trainer, n_inner, groups: NumpyArray) -> RecursiveFeatureEliminatorResults:
+    def run(
+        self, X, y, model_trainer, groups: NumpyArray
+    ) -> RecursiveFeatureEliminatorResults:
         features = self.all_features
-        inner_looper = InnerLooper(n_inner, groups)
+        inner_looper = InnerLooper(self.n_inner, groups)
         rfe_results = RecursiveFeatureEliminatorResults()
 
         while len(features) > self.min_features:
-            inner_loop_results = inner_looper.run(X[:, features], y, model_trainer)
+            inner_loop_results = inner_looper.run(
+                X[:, features], y, model_trainer, features
+            )
             rfe_results[features] = inner_loop_results
             features = self._keep_best_features(inner_loop_results, features)
 

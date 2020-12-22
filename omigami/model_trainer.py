@@ -29,8 +29,6 @@ class ModelTrainer:
         random_state (int): pass an int for reproducible output (default: None)
 
     """
-    # TODO: why only support RFC as string? Could add it to the default values then,
-    # TODO: like estimator=None, if estimator is None: RFC
     RFC = "RFC"
 
     def __init__(
@@ -43,15 +41,16 @@ class ModelTrainer:
         self.estimator = self._make_estimator(estimator)
         self.metric = self._make_metric(metric)
 
-    def evaluate_features(self, X_train, y_train, features: List[int]) -> TrainingTestingResult:
+    def evaluate_features(self, X, y, train_split, test_split, features: List[int]) -> TrainingTestingResult:
         """Train and test a clone of self.evaluator over the input split using the
         input features only. It outputs the fitness score over the test split and
         the feature rank of the variables as a TrainingTestingResult object"""
+
         model = clone(self.estimator)
-        y_pred = model.fit(X_train, y_train).predict(X_test)
+        y_pred = model.fit(X[train_split], y[train_split]).predict(X[test_split])
         feature_ranks = self._extract_feature_rank(model, features)
         return TrainingTestingResult(
-            score=-self.metric(y_pred, y_test), feature_ranks=feature_ranks,
+            score=-self.metric(y_pred, y[test_split]), feature_ranks=feature_ranks,
         )
 
     @staticmethod
@@ -76,7 +75,6 @@ class ModelTrainer:
         the string is returned. Supported strings are:
             - RFC: Random Forest Classifier
         """
-        # TODO: if we want to support more estimators need to refactor this method a bit
         if estimator == self.RFC:
             return RandomForestClassifier(
                 n_estimators=150, n_jobs=-1, random_state=self.random_state

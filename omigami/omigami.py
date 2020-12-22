@@ -8,10 +8,8 @@ import pandas as pd
 from sklearn.base import BaseEstimator
 from omigami.outer_looper import OuterLooper, OuterLoopResults
 from omigami.model_trainer import ModelTrainer
+from omigami.recursive_feature_eliminator import RecursiveFeatureEliminator
 from omigami.utils import compute_number_of_features, average_scores, MIN, MAX, MID, NumpyArray, MetricFunction, Estimator
-
-
-# TODO: I like it, although I think it is better in a separate script
 
 
 @dataclass
@@ -139,7 +137,13 @@ class FeatureSelector:
         for repetition_idx in range(self.repetitions):
             model_trainer = self._build_model_trainer(repetition_idx)
             outer_looper = self._build_outer_looper(groups)
-            repetition_futures = outer_looper.run(X, y, model_trainer, self.features_dropout_rate, self.n_inner)
+            rfe = RecursiveFeatureEliminator(  # TODO: make a build method like others
+                features_dropout_rate=self.features_dropout_rate,
+                n_features=self.n_features,
+                n_inner=self.n_inner
+            )
+
+            repetition_futures = outer_looper.run(X, y, model_trainer, rfe)
             results_futures.append(repetition_futures)
 
         results = dask.compute(
