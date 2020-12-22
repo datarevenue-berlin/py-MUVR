@@ -1,7 +1,6 @@
-from dataclasses import dataclass, field
-from typing import List, Tuple
+from dataclasses import dataclass
+from typing import List
 import numpy as np
-import pandas as pd
 from sklearn.model_selection import GroupKFold
 
 from omigami.model_trainer import TrainingTestingResult, ModelTrainer
@@ -54,13 +53,12 @@ class InnerLooper:
             inner_fold_results = model_trainer.evaluate_features(
                 X, y, inner_train_idx, inner_val_idx, features
             )
+            inner_loop_results.append(inner_fold_results)
 
         return InnerLoopResult(inner_loop_results, features=features)
 
-    def _make_inner_splits(self, X, y):
+    def _make_inner_splits(self, X: NumpyArray, y: NumpyArray):
         inner_splitter = GroupKFold(self.n_inner)
-        inner_splits = inner_splitter.split(
-            X, y, self.groups
-        )
+        inner_splits = inner_splitter.split(X, y, self.groups)
 
         return inner_splits

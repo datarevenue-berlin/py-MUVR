@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Union
+from typing import List, Union
 import numpy as np
 from scipy.stats import rankdata
 import sklearn.metrics
-from sklearn.model_selection import GroupKFold
 from sklearn.base import BaseEstimator, clone
 from sklearn.ensemble import RandomForestClassifier
 
 
-from omigami.utils import NumpyArray, MetricFunction, Estimator, Split
+from omigami.utils import NumpyArray, MetricFunction, Estimator
 
 
 class ModelTrainer:
@@ -19,11 +18,6 @@ class ModelTrainer:
     fold. Folds are labelled as (outer_idx, inner_idx (optional)).
 
     Args:
-        X (NumpyArray): input variables
-        y (NumpyArray): output variables
-        groups (NumpyArray): sample groups
-        n_outer (int): number of outer CV folds
-        n_inner (int): number of inner CV folds
         estimator (str, BaseEstimator): estimator to be used for feature elimination
         metric (str, callable): metric to be used to assess estimator goodness
         random_state (int): pass an int for reproducible output (default: None)

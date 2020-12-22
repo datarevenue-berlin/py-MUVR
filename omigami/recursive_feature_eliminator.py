@@ -38,7 +38,9 @@ class RecursiveFeatureEliminator:
 
         return rfe_results
 
-    def _keep_best_features(self, inner_cv_results: InnerLoopResult, features) -> List[int]:
+    def _keep_best_features(
+        self, inner_cv_results: InnerLoopResult, features
+    ) -> List[int]:
         """Keep the best features based on their average rank"""
         feature_ranks = [
             r.feature_ranks.to_dict() for r in inner_cv_results.train_results

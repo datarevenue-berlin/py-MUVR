@@ -1,11 +1,10 @@
 import logging
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Tuple, TypeVar, Union
+from typing import Dict, List, Union
 
 import dask
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator
 from omigami.outer_looper import OuterLooper, OuterLoopResults
 from omigami.model_trainer import ModelTrainer
 from omigami.recursive_feature_eliminator import RecursiveFeatureEliminator

@@ -5,7 +5,10 @@ import dask
 from sklearn.model_selection import GroupKFold
 
 from omigami.model_trainer import TrainingTestingResult, ModelTrainer
-from omigami.recursive_feature_eliminator import RecursiveFeatureEliminator, RecursiveFeatureEliminatorResults
+from omigami.recursive_feature_eliminator import (
+    RecursiveFeatureEliminator,
+    RecursiveFeatureEliminatorResults,
+)
 from omigami.utils import MIN, MAX, MID, NumpyArray, compute_number_of_features
 
 
@@ -95,13 +98,18 @@ class OuterLooper:
         res = self._select_best_features_and_score(feature_elim_results)
 
         outer_test_results = OuterLoopModelTrainResults(
-            MIN=model_trainer.evaluate_features(X_outer[res[MIN]], y_outer),
-            MID=model_trainer.evaluate_features(X_outer[res[MID]], y_outer),
-            MAX=model_trainer.evaluate_features(X_outer[res[MAX]], y_outer),
+            MIN=model_trainer.evaluate_features(
+                X, y, outer_train_ix, outer_test_ix, res[MIN]
+            ),
+            MID=model_trainer.evaluate_features(
+                X, y, outer_train_ix, outer_test_ix, res[MID]
+            ),
+            MAX=model_trainer.evaluate_features(
+                X, y, outer_train_ix, outer_test_ix, res[MAX]
+            ),
         )
         outer_fold_results = OuterLoopResults(
-            test_results=outer_test_results,
-            scores=feature_elim_results.score
+            test_results=outer_test_results, scores=feature_elim_results.score
         )
 
         return outer_fold_results
@@ -130,9 +138,7 @@ class OuterLooper:
             Dict: The best feature for each of the three sets and the condensed score
         """
 
-        n_feats = compute_number_of_features(
-            [rfe_results.score], self.robust_minimum
-        )
+        n_feats = compute_number_of_features([rfe_results.score], self.robust_minimum)
         max_feats = n_feats[MAX]
         min_feats = n_feats[MIN]
         mid_feats = n_feats[MID]
