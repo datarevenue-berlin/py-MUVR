@@ -41,7 +41,16 @@ def test_make_splits(dataset):
 
 def test_make_splits_grouped(grouped_dataset):
     ds = DataSplitter(n_outer=5, n_inner=4, input_data=grouped_dataset, random_state=0)
+    groups = grouped_dataset.groups
     assert ds
+    # check there is no intersection among the groups
+    for i in range(ds.n_outer):
+        train_idx, test_idx = ds._splits[(i, None)]
+        for j in range(ds.n_inner):
+            inner_train, valid_idx = ds._splits[(i, j)]
+            assert not set(groups[inner_train]).intersection(groups[valid_idx])
+            assert not set(groups[test_idx]).intersection(groups[valid_idx])
+            assert not set(groups[inner_train]).intersection(groups[test_idx])
 
 
 def test_get_outer_splits(dataset):
