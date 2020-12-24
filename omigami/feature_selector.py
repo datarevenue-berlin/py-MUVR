@@ -1,7 +1,9 @@
 import logging
 from typing import Union
-from types import MetricFunction, Estimator
 import numpy as np
+from omigami.types import MetricFunction, Estimator
+from omigami.models import InputData
+from omigami.data_splitter import DataSplitter
 
 
 class FeatureSelector:
@@ -39,5 +41,11 @@ class FeatureSelector:
         if groups is None:
             logging.info("groups is not specified: i.i.d. samples assumed")
             groups = np.arange(X.shape[0])
+        input_data = InputData(X=X, y=y, groups=groups)
+        data_splitter = DataSplitter(
+            self.n_outer, self.n_outer, input_data, random_state=self.random_state
+        )
 
         self.n_features = X.shape[1]
+
+        return True
