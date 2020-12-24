@@ -12,3 +12,4 @@ def test_feature_selector():
         random_state=0,
     )
     assert fs
+    assert fs.n_inner == 7

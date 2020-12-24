@@ -1,13 +1,7 @@
 import logging
-from typing import Callable, Tuple, TypeVar, Union
+from typing import Union
+from types import MetricFunction, Estimator
 import numpy as np
-from sklearn.base import BaseEstimator
-
-NumpyArray = np.ndarray
-MetricFunction = Callable[[NumpyArray, NumpyArray], float]
-Split = Tuple[NumpyArray, NumpyArray]
-GenericEstimator = TypeVar("GenericEstimator")
-Estimator = Union[BaseEstimator, GenericEstimator]
 
 
 class FeatureSelector:
@@ -23,7 +17,7 @@ class FeatureSelector:
         random_state: int = None,
     ):
         self.is_fit = False
-        self.random_state = random_state
+        self.random_state = np.random.RandomState(random_state)
         self.n_outer = n_outer
         self.metric = metric
         self.estimator = estimator
@@ -39,4 +33,11 @@ class FeatureSelector:
         self.n_features = None
         self.selected_features = None
         self.outer_loop_aggregation = None
-        self._results = None
+        self.results = None
+
+    def fit(self, X, y, groups=None):
+        if groups is None:
+            logging.info("groups is not specified: i.i.d. samples assumed")
+            groups = np.arange(X.shape[0])
+
+        self.n_features = X.shape[1]
