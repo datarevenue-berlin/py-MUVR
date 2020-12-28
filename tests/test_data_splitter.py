@@ -20,12 +20,20 @@ def grouped_dataset():
 
 
 def test_data_splitter(dataset):
-    ds = DataSplitter(n_outer=5, n_inner=4, input_data=dataset, random_state=0)
+    ds = DataSplitter(n_outer=5, n_inner=4, random_state=0)
     assert ds
 
 
+def test_fit(dataset):
+    ds = DataSplitter(n_outer=5, n_inner=4, random_state=0)
+    ds = ds.fit(input_data=dataset)
+    assert ds
+    assert ds._splits
+
+
 def test_make_splits(dataset):
-    ds = DataSplitter(n_outer=5, n_inner=4, input_data=dataset, random_state=0)
+    ds = DataSplitter(n_outer=5, n_inner=4, random_state=0)
+    ds.fit(input_data=dataset)
     assert ds._splits
     assert len(ds._splits) == 5 * 4 + 5
     assert len(ds._splits[(0, None)]) == 2
@@ -40,7 +48,8 @@ def test_make_splits(dataset):
 
 
 def test_make_splits_grouped(grouped_dataset):
-    ds = DataSplitter(n_outer=5, n_inner=4, input_data=grouped_dataset, random_state=0)
+    ds = DataSplitter(n_outer=5, n_inner=4, random_state=0)
+    ds.fit(input_data=grouped_dataset)
     groups = grouped_dataset.groups
     assert ds
     # check there is no intersection among the groups
