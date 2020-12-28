@@ -15,6 +15,7 @@ class DataSplitter:
         self.n_inner = n_inner
         self.random_state = random_state
         self._splits = None
+        self.is_fit = False
 
     # TODO:
     # on one side it make sense to have a `fit` method,
@@ -22,6 +23,7 @@ class DataSplitter:
     # another name?
     def fit(self, input_data: InputData):
         self._splits = self._make_splits(input_data)
+        self.is_fit = True
         return self
 
     def _make_splits(self, input_data: InputData) -> Dict[tuple, Split]:

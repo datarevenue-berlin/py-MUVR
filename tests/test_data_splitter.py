@@ -63,14 +63,14 @@ def test_make_splits_grouped(grouped_dataset):
 
 
 def test_get_outer_splits(dataset):
-    ds = DataSplitter(n_outer=5, n_inner=4, input_data=dataset, random_state=0)
-    outer_split = ds.get_outer_split(0)
+    ds = DataSplitter(n_outer=5, n_inner=4, random_state=0).fit(input_data=dataset)
+    outer_split = ds.get_split(0, None)
     assert len(outer_split) == 2
     assert outer_split == ds._splits[(0, None)]
 
 
 def test_get_inner_splits(dataset):
-    ds = DataSplitter(n_outer=5, n_inner=4, input_data=dataset, random_state=0)
-    inner_split = ds.get_inner_split(0, 0)
+    ds = DataSplitter(n_outer=5, n_inner=4, random_state=0).fit(input_data=dataset)
+    inner_split = ds.get_split(0, 0)
     assert len(inner_split) == 2
     assert inner_split == ds._splits[(0, 0)]
