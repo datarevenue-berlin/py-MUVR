@@ -32,7 +32,7 @@ class ModelTrainer:
         else:
             raise ValueError("Unknown type of estimator")
 
-    def train_model(self, X: NumpyArray, y: NumpyArray):
+    def train_model(self, X: NumpyArray, y: NumpyArray) -> Estimator:
         estimator = clone(self._estimator)  # refresh in case fit has memory
         estimator.fit(X, y)
         return estimator
