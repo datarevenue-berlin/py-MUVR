@@ -18,6 +18,7 @@ class FeatureEvaluator:
         metric: Union[str, MetricFunction],
         random_state: Union[int, RandomState],
     ):
+        self._input_data = input_data
         self._X = input_data.X
         self._y = input_data.y
         self._model_trainer = ModelTrainer(estimator, random_state=random_state)
@@ -93,6 +94,9 @@ class FeatureEvaluator:
         feature_importances = self._get_feature_importances(estimator)
         ranks = rankdata(-feature_importances)
         return FeatureRanks(features=features, ranks=ranks, n_feats=self._n_features)
+
+    def refresh_splits(self):
+        self._splitter = self._splitter.fit(self._input_data)
 
 
 def miss_score(y_true: NumpyArray, y_pred: NumpyArray):

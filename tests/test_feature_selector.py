@@ -20,4 +20,6 @@ def test_fit():
     X = np.random.rand(10, 10)
     y = np.round(np.random.rand(10))
     fs = FeatureSelector(n_outer=8, repetitions=8, random_state=0)
-    assert fs.fit(X, y)
+    fitted_fs = fs.fit(X, y)
+    assert fitted_fs is fs
+    assert fs.selected_features

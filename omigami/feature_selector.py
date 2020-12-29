@@ -3,7 +3,9 @@ from typing import Union
 import numpy as np
 from omigami.types import MetricFunction, Estimator
 from omigami.models import InputData
-from omigami.data_splitter import DataSplitter
+from omigami.outer_loop import OuterLoop
+from omigami.feature_evaluator import FeatureEvaluator
+from omigami.post_processor import PostProcessor
 
 
 class FeatureSelector:
@@ -35,17 +37,38 @@ class FeatureSelector:
         self.n_features = None
         self.selected_features = None
         self.outer_loop_aggregation = None
-        self.results = None
+        self._results = None
+        self.post_processor = PostProcessor(robust_minimum)
 
     def fit(self, X, y, groups=None):
         if groups is None:
             logging.info("groups is not specified: i.i.d. samples assumed")
             groups = np.arange(X.shape[0])
         input_data = InputData(X=X, y=y, groups=groups)
-        data_splitter = DataSplitter(
-            self.n_outer, self.n_outer, input_data, random_state=self.random_state
+        feature_evaluator = self._make_feature_evaluator(input_data)
+        outer_loop = self._make_outer_loop(feature_evaluator)
+        self._results = []
+        for _ in range(self.repetitions):
+            feature_evaluator.refresh_splits()
+            result = outer_loop.run()
+            self._results.append(result)
+        self.selected_features = self.post_processor.select_features(self._results)
+        return self
+
+    def _make_feature_evaluator(self, input_data):
+        return FeatureEvaluator(
+            input_data,
+            self.n_outer,
+            self.n_inner,
+            self.estimator,
+            self.metric,
+            self.random_state,
         )
 
-        self.n_features = X.shape[1]
-
-        return True
+    def _make_outer_loop(self, feature_evaluator):
+        return OuterLoop(
+            self.n_outer,
+            feature_evaluator,
+            self.features_dropout_rate,
+            self.robust_minimum,
+        )
