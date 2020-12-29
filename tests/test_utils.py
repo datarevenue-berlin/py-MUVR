@@ -2,6 +2,7 @@ import pytest
 from omigami import utils
 from omigami.models import FeatureRanks
 
+
 @pytest.fixture
 def scores():
     return [{5: 5, 4: 4, 3: 4, 2: 4}, {5: 10, 4: 9, 3: 10, 2: 11}]
@@ -49,12 +50,7 @@ def test_average_ranks():
 
 
 @pytest.mark.parametrize(
-    "n, best", [
-        (1, [5]),
-        (2, [5, 0]),
-        (3, [5, 0, 1]),
-        (4, [5, 0, 1, 4]),
-    ]
+    "n, best", [(1, [5]), (2, [5, 0]), (3, [5, 0, 1]), (4, [5, 0, 1, 4]),]
 )
 def test_get_best_ranks(n, best):
     ranks = FeatureRanks(features=[5, 0, 1, 4], ranks=[1, 2, 3, 4], n_feats=10)

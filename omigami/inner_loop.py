@@ -5,7 +5,6 @@ InnerLoopResults = List[FeatureEvaluationResults]
 
 
 class InnerLoop:
-
     def __init__(self, feature_evaluator: FeatureEvaluator):
         self._n_inner = feature_evaluator.get_inner_loop_size()
         self.feature_evaluator = feature_evaluator

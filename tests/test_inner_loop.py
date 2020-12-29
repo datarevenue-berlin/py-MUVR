@@ -35,7 +35,3 @@ def test_run(feature_evaluator):
     assert res[0].ranks[2] < 12
     assert res[0].ranks[3] < 12
     assert res[0].ranks[10] == 12
-
-
-
-

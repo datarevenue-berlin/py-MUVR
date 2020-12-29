@@ -8,7 +8,12 @@ from omigami.inner_loop import InnerLoop, InnerLoopResults
 
 
 class RecursiveFeatureEliminator:
-    def __init__(self, feature_evaluator: FeatureEvaluator, dropout_rate: float, robust_minimum: float):
+    def __init__(
+        self,
+        feature_evaluator: FeatureEvaluator,
+        dropout_rate: float,
+        robust_minimum: float,
+    ):
         self.keep_fraction = 1 - dropout_rate
         self.robust_minimum = robust_minimum
         self.inner_loop = InnerLoop(feature_evaluator)
@@ -25,8 +30,7 @@ class RecursiveFeatureEliminator:
         avg_scores = self._compute_score_curve(results)
         best_features = self._select_best_features(results, avg_scores)
         return RecursiveFeatureEliminationResults(
-            best_feats=best_features,
-            score_vs_feats=avg_scores,
+            best_feats=best_features, score_vs_feats=avg_scores,
         )
 
     @staticmethod
@@ -38,7 +42,9 @@ class RecursiveFeatureEliminator:
         return get_best_n_features(avg_ranks, keep_n)
 
     @staticmethod
-    def _compute_score_curve(elimination_results: Dict[Tuple[int], InnerLoopResults]) -> Dict[int, float]:
+    def _compute_score_curve(
+        elimination_results: Dict[Tuple[int], InnerLoopResults]
+    ) -> Dict[int, float]:
         avg_scores = {}
         for features, in_loop_res in elimination_results.items():
             n_feats = len(features)
@@ -47,17 +53,25 @@ class RecursiveFeatureEliminator:
         return avg_scores
 
     @staticmethod
-    def _compute_n_features_map(elimination_results: Dict[Tuple[int], InnerLoopResults]) -> Dict[int, Tuple[int]]:
+    def _compute_n_features_map(
+        elimination_results: Dict[Tuple[int], InnerLoopResults]
+    ) -> Dict[int, Tuple[int]]:
         n_to_features = {}
         for features, in_loop_res in elimination_results.items():
             n_feats = len(features)
             n_to_features[n_feats] = features
         return n_to_features
 
-    def _select_best_features(self, elimination_results: Dict[Tuple[int], InnerLoopResults], avg_scores: Dict[int, float]) -> SelectedFeatures:
+    def _select_best_features(
+        self,
+        elimination_results: Dict[Tuple[int], InnerLoopResults],
+        avg_scores: Dict[int, float],
+    ) -> SelectedFeatures:
         n_to_features = self._compute_n_features_map(elimination_results)
         norm_score = normalize_score(avg_scores)
-        n_feats_close_to_min = [n for n, s in norm_score.items() if s <= self.robust_minimum]
+        n_feats_close_to_min = [
+            n for n, s in norm_score.items() if s <= self.robust_minimum
+        ]
         max_feats = max(n_feats_close_to_min)
         min_feats = min(n_feats_close_to_min)
         mid_feats = gmean([max_feats, min_feats])

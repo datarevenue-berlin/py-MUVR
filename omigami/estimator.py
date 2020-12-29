@@ -5,13 +5,13 @@ from sklearn.base import BaseEstimator, clone
 from sklearn.ensemble import RandomForestClassifier
 from omigami.types import MetricFunction, Estimator, RandomState, NumpyArray
 
+
 class ModelTrainer:
 
     RFC = "RFC"
 
     def __init__(
-        self, estimator: Union[str, Estimator],
-        random_state: Union[int, RandomState]
+        self, estimator: Union[str, Estimator], random_state: Union[int, RandomState]
     ):
         self.random_state = random_state
         self._estimator = self._make_estimator(estimator)

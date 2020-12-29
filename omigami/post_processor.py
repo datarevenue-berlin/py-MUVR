@@ -2,13 +2,17 @@ from typing import List
 from scipy.stats import gmean
 from omigami.outer_loop import OuterLoopResults
 from omigami.models import SelectedFeatures
-from omigami.utils import average_ranks, average_scores, normalize_score, get_best_n_features
+from omigami.utils import (
+    average_ranks,
+    average_scores,
+    normalize_score,
+    get_best_n_features,
+)
 
 FeatureSelectionResults = List[List[OuterLoopResults]]
 
 
 class PostProcessor:
-
     def __init__(self, robust_minimum):
         self.robust_minimum = robust_minimum
 
@@ -31,7 +35,9 @@ class PostProcessor:
             avg_scores.append(average_scores(scores))
         avg_scores = average_scores(avg_scores)
         norm_score = normalize_score(avg_scores)
-        n_feats_close_to_min = [n for n, s in norm_score.items() if s <= self.robust_minimum]
+        n_feats_close_to_min = [
+            n for n, s in norm_score.items() if s <= self.robust_minimum
+        ]
         max_feats = max(n_feats_close_to_min)
         min_feats = min(n_feats_close_to_min)
         mid_feats = gmean([max_feats, min_feats])

@@ -23,13 +23,15 @@ class FeatureEvaluator:
         self._model_trainer = ModelTrainer(estimator, random_state=random_state)
         self._metric = self._make_metric(metric)
         self._random_state = random_state
-        self._splitter = DataSplitter(
-            n_outer, n_inner, random_state=random_state
-        ).fit(input_data)
+        self._splitter = DataSplitter(n_outer, n_inner, random_state=random_state).fit(
+            input_data
+        )
         self._n_features = input_data.X.shape[1]
         self._n_inner = n_inner
 
-    def evaluate_features(self, features: Iterable[int], outer_idx: int, inner_idx: int = None) -> FeatureEvaluationResults:
+    def evaluate_features(
+        self, features: Iterable[int], outer_idx: int, inner_idx: int = None
+    ) -> FeatureEvaluationResults:
         train_idx, test_idx = self._splitter.get_split(outer_idx, inner_idx)
 
         X_train = self._X[train_idx, :][:, features]

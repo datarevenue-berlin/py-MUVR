@@ -16,7 +16,9 @@ class InputData:
 
 @dataclass
 class FeatureRanks:
-    def __init__(self, features: Iterable[int], ranks: Iterable[float], n_feats: int = None):
+    def __init__(
+        self, features: Iterable[int], ranks: Iterable[float], n_feats: int = None
+    ):
         if n_feats is None:
             n_feats = max(features) + 1
 

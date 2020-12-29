@@ -15,6 +15,7 @@ def dataset():
     y = np.random.choice([0, 1], 12)
     return InputData(X=X, y=y, groups=np.arange(12))
 
+
 @pytest.fixture
 def feature_evaluator(dataset):
     fe = FeatureEvaluator(
@@ -27,6 +28,7 @@ def feature_evaluator(dataset):
     )
     return fe
 
+
 def test_feature_evaluator(feature_evaluator):
     assert feature_evaluator
     assert feature_evaluator._splitter.is_fit
@@ -36,10 +38,9 @@ def test_feature_evaluator(feature_evaluator):
 
 
 def test_evaluate_features(dataset):
-    pipeline = Pipeline([
-        ("normalizer", Normalizer()),
-        ("model", SVC(kernel="linear", random_state=0))
-    ])
+    pipeline = Pipeline(
+        [("normalizer", Normalizer()), ("model", SVC(kernel="linear", random_state=0))]
+    )
     fe = FeatureEvaluator(
         n_inner=3,
         n_outer=4,
@@ -61,31 +62,39 @@ def test_evaluate_features(dataset):
 
 
 @pytest.mark.parametrize(
-    "estimator", [
+    "estimator",
+    [
         SVC(kernel="linear", random_state=0),
         RandomForestClassifier(random_state=0),
         Pipeline([("N", Normalizer()), ("C", SVC(kernel="linear", random_state=0))]),
-    ]
+    ],
 )
 def test_get_feature_importancres(estimator, dataset, feature_evaluator):
-    estimator.fit(dataset.X,  dataset.y)
+    estimator.fit(dataset.X, dataset.y)
     feature_importances = feature_evaluator._get_feature_importances(estimator)
     assert any(feature_importances)
     assert all(feature_importances > 0)
     assert len(feature_importances) == 12
 
+
 class EstimatorWithFI:
     feature_importances_ = None
+
 
 class EstimatorWithCoeffs:
     feature_coef_ = None
 
+
 @pytest.mark.parametrize(
     ("estimator", "attribute", "values"),
     [
-        (EstimatorWithFI, "feature_importances_", np.array([0.4, 0.05, 0.4, 0, 0, 0.15])),
+        (
+            EstimatorWithFI,
+            "feature_importances_",
+            np.array([0.4, 0.05, 0.4, 0, 0, 0.15]),
+        ),
         (EstimatorWithCoeffs, "coef_", np.array([[-0.4, -0.05, 0.4, 0, 0, 0.15]])),
-    ]
+    ],
 )
 def test_get_feature_rank(estimator, attribute, values, dataset, feature_evaluator):
     setattr(estimator, attribute, values)
@@ -121,6 +130,3 @@ def test_make_metric_from_string(feature_evaluator):
     assert feature_evaluator._make_metric_from_string("MISS") is miss_score
     with pytest.raises(ValueError):
         feature_evaluator._make_metric_from_string("yo")
-
-
-

@@ -4,10 +4,17 @@ from omigami.models import OuterLoopResults
 
 
 class OuterLoop:
-
-    def __init__(self, n_outer: int, feature_evaluator: FeatureEvaluator, dropout_rate: float, robust_minimum: float):
+    def __init__(
+        self,
+        n_outer: int,
+        feature_evaluator: FeatureEvaluator,
+        dropout_rate: float,
+        robust_minimum: float,
+    ):
         self.feature_evaluator = feature_evaluator
-        self.recursive_feature_eliminator = RecursiveFeatureEliminator(feature_evaluator, dropout_rate, robust_minimum)
+        self.recursive_feature_eliminator = RecursiveFeatureEliminator(
+            feature_evaluator, dropout_rate, robust_minimum
+        )
         self.n_outer = n_outer
 
     def run(self):

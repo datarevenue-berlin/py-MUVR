@@ -13,10 +13,7 @@ def dataset():
 
 @pytest.fixture
 def model_trainer():
-    return ModelTrainer(
-        estimator="RFC",
-        random_state=42,
-    )
+    return ModelTrainer(estimator="RFC", random_state=42,)
 
 
 def test_make_estimator(model_trainer):

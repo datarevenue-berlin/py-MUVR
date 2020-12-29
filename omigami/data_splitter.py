@@ -6,10 +6,7 @@ from sklearn.model_selection import GroupShuffleSplit
 
 class DataSplitter:
     def __init__(
-        self,
-        n_outer: int,
-        n_inner: int,
-        random_state: Union[int, RandomState],
+        self, n_outer: int, n_inner: int, random_state: Union[int, RandomState],
     ):
         self.n_outer = n_outer
         self.n_inner = n_inner
