@@ -55,3 +55,12 @@ def average_ranks(ranks: Iterable[FeatureRanks]) -> FeatureRanks:
         avg_rank = np.average([rank[f] for rank in ranks])
         avg_ranks.append(avg_rank)
     return FeatureRanks(features=features, ranks=avg_ranks)
+
+
+def get_best_n_features(ranks: FeatureRanks, n: int) -> List[int]:
+    # TODO: improve efficiency of range(avg_ranks.n_feats including an items
+    # method to FeatureRanks so that we don't have to go through all n_feats
+    # (those that are not there are useless, since they are the highest ranks)
+    best_ranks = sorted([(ranks[f], f) for f in range(ranks.n_feats)])
+    best_ranks = best_ranks[:int(n)]
+    return [f for _, f in best_ranks]

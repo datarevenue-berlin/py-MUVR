@@ -94,6 +94,16 @@ def test_remove_features(feature_evaluator, inner_loop_results, keep, selected):
     assert sorted(selected_features) == selected  # lowest avg ranks
 
 
+def test_compute_score_curve(inner_loop_results, inner_loop_results_2, feature_evaluator):
+    rfe_res = {(1, 2, 3): inner_loop_results, (1,): inner_loop_results_2}
+    rfe = RecursiveFeatureEliminator(feature_evaluator, dropout_rate=0.3, robust_minimum=0.05)
+    avg_scores = rfe._compute_score_curve(rfe_res)
+    assert len(avg_scores) == 2
+    assert 1 in avg_scores
+    assert 3 in avg_scores
+    assert avg_scores[3] < avg_scores[1]
+
+
 def test_select_best_features(inner_loop_results, inner_loop_results_2, feature_evaluator):
     rfe_res = {(1, 2, 3): inner_loop_results, (1,): inner_loop_results_2}
     rfe = RecursiveFeatureEliminator(feature_evaluator, dropout_rate=0.3, robust_minimum=0.05)

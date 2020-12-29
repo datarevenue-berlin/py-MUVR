@@ -3,7 +3,7 @@ import numpy as np
 from scipy.stats import gmean
 from omigami.feature_evaluator import FeatureEvaluator
 from omigami.models import RecursiveFeatureEliminationResults, SelectedFeatures
-from omigami.utils import average_ranks, normalize_score
+from omigami.utils import average_ranks, normalize_score, get_best_n_features
 from omigami.inner_loop import InnerLoop, InnerLoopResults
 
 
@@ -22,10 +22,11 @@ class RecursiveFeatureEliminator:
             results[tuple(features)] = inner_loop_result
             features_to_keep = np.floor(len(features) * self.keep_fraction)
             features = self._remove_features(inner_loop_result, features_to_keep)
-        best_features = self._select_best_features(results)
+        avg_scores = self._compute_score_curve(results)
+        best_features = self._select_best_features(results, avg_scores)
         return RecursiveFeatureEliminationResults(
             best_feats=best_features,
-            score_vs_feats=results,
+            score_vs_feats=avg_scores,
         )
 
     @staticmethod
@@ -34,21 +35,27 @@ class RecursiveFeatureEliminator:
             return []
         ranks = [r.ranks for r in inner_loop_result]
         avg_ranks = average_ranks(ranks)
-        # TODO: improve efficiency of range(avg_ranks.n_feats including an items
-        # method to FeatureRanks so that we don't have to go through all n_feats
-        # (those that are not there are useless, since they are the highest ranks)
-        best_ranks = sorted([(avg_ranks[f], f) for f in range(avg_ranks.n_feats)])
-        best_ranks = best_ranks[:int(keep_n)]
-        return [f for _, f in best_ranks]
+        return get_best_n_features(avg_ranks, keep_n)
 
-    def _select_best_features(self, elimination_results: Dict[Tuple[int], InnerLoopResults]) -> SelectedFeatures:
+    @staticmethod
+    def _compute_score_curve(elimination_results: Dict[Tuple[int], InnerLoopResults]) -> Dict[int, float]:
         avg_scores = {}
+        for features, in_loop_res in elimination_results.items():
+            n_feats = len(features)
+            test_scores = [r.test_score for r in in_loop_res]
+            avg_scores[n_feats] = np.average(test_scores)
+        return avg_scores
+
+    @staticmethod
+    def _compute_n_features_map(elimination_results: Dict[Tuple[int], InnerLoopResults]) -> Dict[int, Tuple[int]]:
         n_to_features = {}
         for features, in_loop_res in elimination_results.items():
             n_feats = len(features)
             n_to_features[n_feats] = features
-            test_scores = [r.test_score for r in in_loop_res]
-            avg_scores[n_feats] = np.average(test_scores)
+        return n_to_features
+
+    def _select_best_features(self, elimination_results: Dict[Tuple[int], InnerLoopResults], avg_scores: Dict[int, float]) -> SelectedFeatures:
+        n_to_features = self._compute_n_features_map(elimination_results)
         norm_score = normalize_score(avg_scores)
         n_feats_close_to_min = [n for n, s in norm_score.items() if s <= self.robust_minimum]
         max_feats = max(n_feats_close_to_min)
@@ -61,5 +68,3 @@ class RecursiveFeatureEliminator:
             min_feats=n_to_features[min_feats],
             max_feats=n_to_features[max_feats],
         )
-
-
