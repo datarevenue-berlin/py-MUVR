@@ -1,3 +1,5 @@
+# TODO: rename as data_models
+
 from typing import Iterable, Union
 from dataclasses import dataclass
 from omigami.types import NumpyArray
@@ -30,10 +32,31 @@ class FeatureRanks:
             raise ValueError(
                 f"The feature ranks are relative to {self.n_feats} features at most"
             )
-        return self._data.get(feature, self.n_feats - 1)
+        return self._data.get(feature, self.n_feats)
 
 
 @dataclass
 class FeatureEvaluationResults:
     ranks: FeatureRanks
     test_score: float
+
+
+@dataclass
+class OuterLoopResults:
+    min_feats: FeatureEvaluationResults
+    max_feats: FeatureEvaluationResults
+    mid_feats: FeatureEvaluationResults
+    score_vs_feats: dict  # TODO: find a better name and signature
+
+
+@dataclass
+class SelectedFeatures:
+    min_feats: Iterable[int]
+    max_feats: Iterable[int]
+    mid_feats: Iterable[int]
+
+
+@dataclass
+class RecursiveFeatureEliminationResults:
+    score_vs_feats: dict  # TODO: find a better name and signature
+    best_feats: SelectedFeatures

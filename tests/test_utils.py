@@ -1,6 +1,6 @@
 import pytest
 from omigami import utils
-
+from omigami.models import FeatureRanks
 
 @pytest.fixture
 def scores():
@@ -29,8 +29,20 @@ def test_average_scores(scores):
 
 def test_normalize_score():
     avg_score = {1: 11, 2: 6, 3: 1, 4: 6, 5: 11}
-    norm_score = utils._normalize_score(avg_score)
+    norm_score = utils.normalize_score(avg_score)
     assert norm_score
     assert norm_score[1] == 1
     assert norm_score[3] == 0
     assert norm_score[2] == 0.5
+
+
+def test_average_ranks():
+    features1 = [1, 2, 3]
+    features2 = [0, 1, 4, 5]
+    ranks1 = FeatureRanks(features=features1, ranks=[1, 2, 3], n_feats=10)
+    ranks2 = FeatureRanks(features=features2, ranks=[1, 2, 3, 4], n_feats=10)
+    avg_ranks = utils.average_ranks([ranks1, ranks2])
+    assert isinstance(avg_ranks, FeatureRanks)
+    assert avg_ranks[0] == 5.5
+    assert avg_ranks[1] == 1.5
+    assert avg_ranks[2] == 6

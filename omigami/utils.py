@@ -1,6 +1,8 @@
-from typing import List, Dict
+from typing import List, Dict, Iterable
 from scipy.stats import gmean
 import pandas as pd
+import numpy as np
+from omigami.models import FeatureRanks
 
 MIN = "min"
 MAX = "max"
@@ -17,7 +19,7 @@ def compute_number_of_features(
     maximum of this list and their geometrical mean.
     """
     avg_score = average_scores(scores)
-    norm_score = _normalize_score(avg_score)
+    norm_score = normalize_score(avg_score)
     n_feats_close_to_minumum = [n for n, s in norm_score.items() if s <= robust_minimum]
     max_feats = max(n_feats_close_to_minumum)
     min_feats = min(n_feats_close_to_minumum)
@@ -34,9 +36,22 @@ def average_scores(scores: List[Dict]) -> Dict[int, float]:
     return avg_score
 
 
-def _normalize_score(score: Dict[int, float]) -> Dict[int, float]:
+def normalize_score(score: Dict[int, float]) -> Dict[int, float]:
     """Normalize input score between min (=0) and max (=1)"""
     max_s = max(score.values())
     min_s = min(score.values())
     delta = max_s - min_s if max_s != min_s else 1
     return {key: (val - min_s) / delta for key, val in score.items()}
+
+
+def average_ranks(ranks: Iterable[FeatureRanks]) -> FeatureRanks:
+    n_feats = set(r.n_feats for r in ranks)
+    if len(n_feats) > 1:
+        raise ValueError("Input ranks refer to different features")
+    n_feats = n_feats.pop()
+    features = np.arange(n_feats)
+    avg_ranks = []
+    for f in features:
+        avg_rank = np.average([rank[f] for rank in ranks])
+        avg_ranks.append(avg_rank)
+    return FeatureRanks(features=features, ranks=avg_ranks)

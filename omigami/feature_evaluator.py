@@ -27,8 +27,9 @@ class FeatureEvaluator:
             n_outer, n_inner, random_state=random_state
         ).fit(input_data)
         self._n_features = input_data.X.shape[1]
+        self._n_inner = n_inner
 
-    def evaluate_features(self, features: Iterable[int], outer_idx: int, inner_idx: int) -> FeatureEvaluationResults:
+    def evaluate_features(self, features: Iterable[int], outer_idx: int, inner_idx: int = None) -> FeatureEvaluationResults:
         train_idx, test_idx = self._splitter.get_split(outer_idx, inner_idx)
 
         X_train = self._X[train_idx, :][:, features]
@@ -42,6 +43,12 @@ class FeatureEvaluator:
         score = self._metric(y_test, y_pred)
         feature_ranks = self._get_feature_ranks(estimator, features)
         return FeatureEvaluationResults(test_score=score, ranks=feature_ranks)
+
+    def get_n_features(self):
+        return self._n_features
+
+    def get_inner_loop_size(self):
+        return self._n_inner
 
     def _make_metric(self, metric: Union[str, MetricFunction]) -> MetricFunction:
         """Build metric function using the input `metric`. If a metric is a string

@@ -53,6 +53,7 @@ def test_evaluate_features(dataset):
     assert evaluation.test_score
     assert evaluation.ranks
     assert isinstance(evaluation.ranks, FeatureRanks)
+    assert evaluation.ranks.n_feats == 12
     assert evaluation.ranks[0]
     assert evaluation.ranks[1]
     with pytest.raises(ValueError):
@@ -97,7 +98,6 @@ def test_get_feature_rank(estimator, attribute, values, dataset, feature_evaluat
     assert ranks[9] == 5.5
     assert ranks[10] == 5.5
     assert ranks[11] == 3
-
 
 
 def test_make_metric(feature_evaluator):
