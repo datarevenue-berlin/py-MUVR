@@ -1,5 +1,6 @@
 from omigami.feature_selector import FeatureSelector
 import numpy as np
+from sklearn.linear_model import LinearRegression
 
 
 def test_feature_selector():
@@ -18,8 +19,9 @@ def test_feature_selector():
 
 def test_fit():
     X = np.random.rand(10, 10)
-    y = np.round(np.random.rand(10))
-    fs = FeatureSelector(n_outer=8, repetitions=8, random_state=0)
+    y = np.array([np.random.choice([0, 1]) for _ in range(10)])
+    lr = LinearRegression()
+    fs = FeatureSelector(n_outer=8, repetitions=8, random_state=0, estimator=lr, metric="MISS")
     fitted_fs = fs.fit(X, y)
     assert fitted_fs is fs
     assert fs.selected_features
