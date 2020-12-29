@@ -43,9 +43,9 @@ class FeatureEvaluationResults:
 
 @dataclass
 class OuterLoopResults:
-    min_feats: FeatureEvaluationResults
-    max_feats: FeatureEvaluationResults
-    mid_feats: FeatureEvaluationResults
+    min_eval: FeatureEvaluationResults
+    max_eval: FeatureEvaluationResults
+    mid_eval: FeatureEvaluationResults
     score_vs_feats: dict  # TODO: find a better name and signature
 
 
