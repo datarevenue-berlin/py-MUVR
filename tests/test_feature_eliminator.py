@@ -81,11 +81,7 @@ def test_run(feature_evaluator):
     assert isinstance(results, RecursiveFeatureEliminationResults)
     assert results.best_feats
     assert results.score_vs_feats
-    assert len(results.score_vs_feats) == 4
-    assert (
-        len(results.score_vs_feats[(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)])
-        == feature_evaluator.get_inner_loop_size()
-    )
+    assert len(results.score_vs_feats) == 4  # 4 rounds
 
 
 @pytest.mark.parametrize("keep, selected", [(2, [2, 3]), (1, [2])])
@@ -119,7 +115,8 @@ def test_select_best_features(
     rfe = RecursiveFeatureEliminator(
         feature_evaluator, dropout_rate=0.3, robust_minimum=0.05
     )
-    selected_feats = rfe._select_best_features(rfe_res)
+    avg_scores = rfe._compute_score_curve(rfe_res)
+    selected_feats = rfe._select_best_features(rfe_res, avg_scores)
     # edge case: it's just two recursive steps at 3 and 1 features. The one at
     # 3 is the best (lowest test-score) so every feature set should be [1, 2, 3]
     assert sorted(selected_feats.min_feats) == [1, 2, 3]
