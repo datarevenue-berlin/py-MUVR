@@ -38,3 +38,6 @@ class OuterLoop:
             mid_eval=mid_eval,
             score_vs_feats=elimination_res.score_vs_feats,
         )
+
+    def refresh_splits(self):
+        self.feature_evaluator.refresh_splits()

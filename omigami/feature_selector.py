@@ -45,15 +45,18 @@ class FeatureSelector:
             logging.info("groups is not specified: i.i.d. samples assumed")
             groups = np.arange(X.shape[0])
         input_data = InputData(X=X, y=y, groups=groups)
-        feature_evaluator = self._make_feature_evaluator(input_data)
-        outer_loop = self._make_outer_loop(feature_evaluator)
-        self._results = []
-        for _ in range(self.repetitions):
-            feature_evaluator.refresh_splits()
-            result = outer_loop.run()
-            self._results.append(result)
+        outer_loop = self._make_outer_loop(input_data)
+        self._results = self._execute_repetitions(outer_loop)
         self.selected_features = self.post_processor.select_features(self._results)
         return self
+
+    def _execute_repetitions(self, outer_loop):
+        results = []
+        for _ in range(self.repetitions):
+            outer_loop.refresh_splits()
+            result = outer_loop.run()
+            results.append(result)
+        return results
 
     def _make_feature_evaluator(self, input_data):
         return FeatureEvaluator(
@@ -65,7 +68,8 @@ class FeatureSelector:
             self.random_state,
         )
 
-    def _make_outer_loop(self, feature_evaluator):
+    def _make_outer_loop(self, input_data):
+        feature_evaluator = self._make_feature_evaluator(self, input_data)
         return OuterLoop(
             self.n_outer,
             feature_evaluator,
