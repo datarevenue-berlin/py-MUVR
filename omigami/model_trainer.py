@@ -6,6 +6,7 @@ import sklearn.metrics
 from sklearn.model_selection import GroupKFold
 from sklearn.base import BaseEstimator, clone
 from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
 
 NumpyArray = np.ndarray
 MetricFunction = Callable[[NumpyArray, NumpyArray], float]
@@ -32,6 +33,7 @@ class ModelTrainer:
     """
 
     RFC = "RFC"
+    XGBOOST_C = "XGBC"
 
     def __init__(
         self,
@@ -118,6 +120,8 @@ class ModelTrainer:
             return RandomForestClassifier(
                 n_estimators=150, n_jobs=-1, random_state=self.random_state
             )
+        elif estimator == self.XGBOOST_C:
+            return XGBClassifier(random_state=self.random_state)
         elif isinstance(estimator, BaseEstimator):
             return estimator
         else:

@@ -70,7 +70,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
-notebooks/
+#notebooks/
 
 # pyenv
 .python-version
@@ -105,3 +105,6 @@ ENV/
 # VSCODE
 .DS_Store
 .vscode
+
+# PyCharm
+.idea
