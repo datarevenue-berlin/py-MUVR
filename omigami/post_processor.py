@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Union
+from concurrent.futures import Future
 from scipy.stats import gmean
 from omigami.outer_loop import OuterLoopResults
 from omigami.models import SelectedFeatures
@@ -9,7 +10,7 @@ from omigami.utils import (
     get_best_n_features,
 )
 
-FeatureSelectionResults = List[List[OuterLoopResults]]
+FeatureSelectionResults = List[List[Union[OuterLoopResults, Future]]]
 
 
 class PostProcessor:
@@ -17,6 +18,7 @@ class PostProcessor:
         self.robust_minimum = robust_minimum
 
     def select_features(self, results: FeatureSelectionResults) -> SelectedFeatures:
+        results = self._fetch_results(results)
         flat_results = [r for repetition in results for r in repetition]
         average_ranks_min = average_ranks([r.min_eval.ranks for r in flat_results])
         average_ranks_mid = average_ranks([r.mid_eval.ranks for r in flat_results])
@@ -27,6 +29,18 @@ class PostProcessor:
             mid_feats=get_best_n_features(average_ranks_mid, features_mid),
             max_feats=get_best_n_features(average_ranks_max, features_max),
         )
+
+    @staticmethod
+    def _fetch_results(results: FeatureSelectionResults) -> FeatureSelectionResults:
+        fetched_results = []
+        for repetition in results:
+            fetched_repetition = []
+            for outer_iteration in repetition:
+                if isinstance(outer_iteration, Future):
+                    outer_iteration = outer_iteration.get_result()
+                fetched_repetition.append(outer_iteration)
+            fetched_results.append(fetched_repetition)
+        return fetched_results
 
     def _compute_n_features(self, results: FeatureSelectionResults):
         avg_scores = []

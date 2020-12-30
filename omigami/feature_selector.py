@@ -1,5 +1,6 @@
 import logging
 from typing import Union
+from concurrent.futures import Executor
 import numpy as np
 from omigami.types import MetricFunction, Estimator
 from omigami.models import InputData
@@ -19,6 +20,7 @@ class FeatureSelector:
         n_inner: int = None,
         repetitions: int = 8,
         random_state: int = None,
+        executor: Executor = None,
     ):
         self.is_fit = False
         self.random_state = np.random.RandomState(random_state)
@@ -39,6 +41,7 @@ class FeatureSelector:
         self.outer_loop_aggregation = None
         self._results = None
         self.post_processor = PostProcessor(robust_minimum)
+        self.executor = executor
 
     def fit(self, X, y, groups=None):
         if groups is None:
@@ -69,10 +72,11 @@ class FeatureSelector:
         )
 
     def _make_outer_loop(self, input_data):
-        feature_evaluator = self._make_feature_evaluator(self, input_data)
+        feature_evaluator = self._make_feature_evaluator(input_data)
         return OuterLoop(
             self.n_outer,
             feature_evaluator,
             self.features_dropout_rate,
             self.robust_minimum,
+            self.executor,
         )
