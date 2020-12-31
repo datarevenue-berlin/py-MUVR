@@ -57,7 +57,7 @@ class FeatureSelector:
         results = []
         for _ in range(self.repetitions):
             outer_loop.refresh_splits()
-            result = outer_loop.run()
+            result = outer_loop.run(executor=self.executor)
             results.append(result)
         return results
 
@@ -78,5 +78,4 @@ class FeatureSelector:
             feature_evaluator,
             self.features_dropout_rate,
             self.robust_minimum,
-            self.executor,
         )

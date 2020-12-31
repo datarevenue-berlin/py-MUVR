@@ -12,26 +12,24 @@ class OuterLoop:
         feature_evaluator: FeatureEvaluator,
         dropout_rate: float,
         robust_minimum: float,
-        executor: Union[None, Executor],
     ):
         self.feature_evaluator = feature_evaluator
         self.recursive_feature_eliminator = RecursiveFeatureEliminator(
             feature_evaluator, dropout_rate, robust_minimum
         )
         self.n_outer = n_outer
-        self._executor = executor
 
-    def run(self):
+    def run(self, executor: Executor = None):
         results = []
         for outer_loop_idx in range(self.n_outer):
-            result = self._execute_loop(outer_loop_idx)
+            result = self._deferred_execute_loop(outer_loop_idx, executor)
             results.append(result)
         return results
 
-    def _deferred_execute_loop(self, outer_loop_idx: int) -> Future:
-        if self._executor is None:
+    def _deferred_execute_loop(self, outer_loop_idx: int, executor: Executor) -> Future:
+        if executor is None:
             return self._execute_loop(outer_loop_idx)
-        return self._executor.submit(self._execute_loop, outer_loop_idx)
+        return executor.submit(self._execute_loop, outer_loop_idx)
 
     def _execute_loop(self, outer_loop_idx) -> OuterLoopResults:
         elimination_res = self.recursive_feature_eliminator.run(outer_loop_idx)

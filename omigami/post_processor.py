@@ -37,7 +37,7 @@ class PostProcessor:
             fetched_repetition = []
             for outer_iteration in repetition:
                 if isinstance(outer_iteration, Future):
-                    outer_iteration = outer_iteration.get_result()
+                    outer_iteration = outer_iteration.result()
                 fetched_repetition.append(outer_iteration)
             fetched_results.append(fetched_repetition)
         return fetched_results

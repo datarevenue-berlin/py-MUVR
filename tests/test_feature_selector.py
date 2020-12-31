@@ -57,7 +57,7 @@ def test_execute_repetitions():
         def refresh_splits(self):
             self.refresh_count += 1
 
-        def run(self):
+        def run(self, executor=None):
             self.run_count += 1
             return self.run_count
 
