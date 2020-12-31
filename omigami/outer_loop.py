@@ -1,9 +1,7 @@
-from typing import Union
 from concurrent.futures import Executor, Future
 from omigami.feature_evaluator import FeatureEvaluator
 from omigami.recursive_feature_eliminator import RecursiveFeatureEliminator
 from omigami.models import OuterLoopResults
-from dask import delayed
 
 
 class OuterLoop:

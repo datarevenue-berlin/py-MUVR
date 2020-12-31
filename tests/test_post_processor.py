@@ -2,7 +2,7 @@ import pytest
 from omigami.post_processor import PostProcessor
 from omigami.outer_loop import OuterLoopResults
 from omigami.feature_evaluator import FeatureEvaluationResults
-from omigami.models import FeatureRanks
+from omigami.models import FeatureRanks, ScoreCurve
 
 
 @pytest.fixture
@@ -116,3 +116,27 @@ def test_compute_n_features(repetitions):
     assert min_feats == 2
     assert mid_feats == 3
     assert max_feats == 4
+
+
+def test_get_repetition_avg_scores(repetitions):
+    pp = PostProcessor(robust_minimum=0.05)
+    avg_scores = pp._get_repetition_avg_scores(repetitions)
+    assert len(avg_scores) == 2
+    assert avg_scores[0][5] == 200
+    assert avg_scores[0][4] == 5.5
+    assert avg_scores[0][3] == 4
+    assert avg_scores[0][2] == 6
+    assert avg_scores[0][1] == 175
+
+
+def test_get_validation_curves(repetitions):
+    pp = PostProcessor(robust_minimum=0.05)
+    curves = pp.get_validation_curves(repetitions)
+    assert len(curves) == 3
+    assert len(curves["outer_loops"]) == 4
+    assert len(curves["repetitions"]) == 2
+    assert len(curves["total"]) == 1
+    assert isinstance(curves["total"][0], ScoreCurve)
+    assert sorted(curves["outer_loops"][0].n_features) == [1, 2, 3, 4, 5]
+    assert sorted(curves["repetitions"][0].n_features) == [1, 2, 3, 4, 5]
+    assert list(curves["repetitions"][0].scores) == [175, 6, 4, 5.5, 200]

@@ -3,7 +3,6 @@ from typing import Union
 from concurrent.futures import Executor
 import numpy as np
 from numpy.random import RandomState
-import dask
 from omigami.types import MetricFunction, Estimator
 from omigami.models import InputData
 from omigami.outer_loop import OuterLoop
@@ -82,3 +81,6 @@ class FeatureSelector:
             self.features_dropout_rate,
             self.robust_minimum,
         )
+
+    def get_validation_curves(self):
+        return self.post_processor.get_validation_curves(self._results)

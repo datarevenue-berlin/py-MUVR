@@ -1,6 +1,6 @@
 # TODO: rename as data_models
 
-from typing import Iterable, Union
+from typing import Iterable, List
 from dataclasses import dataclass
 from omigami.types import NumpyArray
 
@@ -62,3 +62,9 @@ class SelectedFeatures:
 class RecursiveFeatureEliminationResults:
     score_vs_feats: dict  # TODO: find a better name and signature
     best_feats: SelectedFeatures
+
+
+@dataclass
+class ScoreCurve:
+    n_features: List[int]
+    scores: List[float]
