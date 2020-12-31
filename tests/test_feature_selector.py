@@ -30,6 +30,7 @@ def test_fit():
     fitted_fs = fs.fit(X, y)
     assert fitted_fs is fs
     assert fs.selected_features
+    assert fs.is_fit
 
 
 def test_deferred_fit():
@@ -47,6 +48,7 @@ def test_deferred_fit():
     fitted_fs = fs.fit(X, y)
     assert fitted_fs is fs
     assert fs.selected_features
+    assert fs.is_fit
 
 
 def test_execute_repetitions():

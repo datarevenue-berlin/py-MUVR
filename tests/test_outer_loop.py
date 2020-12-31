@@ -32,9 +32,9 @@ def test_run(feature_evaluator):
     assert all(isinstance(r, OuterLoopResults) for r in res)
 
 
-def test_execute_loop(feature_evaluator):
+def testexecute_loop(feature_evaluator):
     out_loop = OuterLoop(4, feature_evaluator, 0.5, 0.001)
-    results = out_loop._execute_loop(0)
+    results = out_loop.execute_loop(0)
     assert results
     assert isinstance(results, OuterLoopResults)
     assert len(results.score_vs_feats) == 4

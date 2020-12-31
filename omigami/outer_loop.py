@@ -3,6 +3,7 @@ from concurrent.futures import Executor, Future
 from omigami.feature_evaluator import FeatureEvaluator
 from omigami.recursive_feature_eliminator import RecursiveFeatureEliminator
 from omigami.models import OuterLoopResults
+from dask import delayed
 
 
 class OuterLoop:
@@ -22,16 +23,16 @@ class OuterLoop:
     def run(self, executor: Executor = None):
         results = []
         for outer_loop_idx in range(self.n_outer):
-            result = self._deferred_execute_loop(outer_loop_idx, executor)
+            result = self._deferredexecute_loop(outer_loop_idx, executor)
             results.append(result)
         return results
 
-    def _deferred_execute_loop(self, outer_loop_idx: int, executor: Executor) -> Future:
+    def _deferredexecute_loop(self, outer_loop_idx: int, executor: Executor) -> Future:
         if executor is None:
-            return self._execute_loop(outer_loop_idx)
-        return executor.submit(self._execute_loop, outer_loop_idx)
+            return self.execute_loop(outer_loop_idx)
+        return executor.submit(trigger_outer_loop, self, outer_loop_idx)
 
-    def _execute_loop(self, outer_loop_idx) -> OuterLoopResults:
+    def execute_loop(self, outer_loop_idx) -> OuterLoopResults:
         elimination_res = self.recursive_feature_eliminator.run(outer_loop_idx)
         min_feats = elimination_res.best_feats.min_feats
         max_feats = elimination_res.best_feats.max_feats
@@ -48,3 +49,7 @@ class OuterLoop:
 
     def refresh_splits(self):
         self.feature_evaluator.refresh_splits()
+
+
+def trigger_outer_loop(outer_loop: OuterLoop, outer_loop_idx: int):
+    return outer_loop.execute_loop(outer_loop_idx)

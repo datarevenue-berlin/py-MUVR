@@ -43,7 +43,7 @@ class FeatureEvaluator:
         y_test = self._y[test_idx]
         y_pred = estimator.predict(X_test)
 
-        score = self._metric(y_test, y_pred)
+        score = -self._metric(y_test, y_pred)
         feature_ranks = self._get_feature_ranks(estimator, features)
         return FeatureEvaluationResults(test_score=score, ranks=feature_ranks)
 

@@ -2,6 +2,8 @@ import logging
 from typing import Union
 from concurrent.futures import Executor
 import numpy as np
+from numpy.random import RandomState
+import dask
 from omigami.types import MetricFunction, Estimator
 from omigami.models import InputData
 from omigami.outer_loop import OuterLoop
@@ -23,7 +25,7 @@ class FeatureSelector:
         executor: Executor = None,
     ):
         self.is_fit = False
-        self.random_state = np.random.RandomState(random_state)
+        self.random_state = None if random_state is None else RandomState(random_state)
         self.n_outer = n_outer
         self.metric = metric
         self.estimator = estimator
@@ -51,6 +53,7 @@ class FeatureSelector:
         outer_loop = self._make_outer_loop(input_data)
         self._results = self._execute_repetitions(outer_loop)
         self.selected_features = self.post_processor.select_features(self._results)
+        self.is_fit = True
         return self
 
     def _execute_repetitions(self, outer_loop):
