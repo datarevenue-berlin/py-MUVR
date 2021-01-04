@@ -1,13 +1,16 @@
 import logging
-from typing import Union
-from concurrent.futures import Executor
+from typing import Union, List, Dict
+from concurrent.futures import Executor, Future
 import numpy as np
 from numpy.random import RandomState
-from omigami.types import MetricFunction, Estimator
+from omigami.types import MetricFunction, Estimator, NumpyArray
 from omigami.models import InputData
-from omigami.outer_loop import OuterLoop
+from omigami.outer_loop import OuterLoop, OuterLoopResults
 from omigami.feature_evaluator import FeatureEvaluator
 from omigami.post_processor import PostProcessor
+
+
+Repetition = List[Union[OuterLoopResults, Future]]
 
 
 class FeatureSelector:
@@ -44,7 +47,7 @@ class FeatureSelector:
         self.post_processor = PostProcessor(robust_minimum)
         self.executor = executor
 
-    def fit(self, X, y, groups=None):
+    def fit(self, X: NumpyArray, y: NumpyArray, groups: NumpyArray = None):
         if groups is None:
             logging.info("groups is not specified: i.i.d. samples assumed")
             groups = np.arange(X.shape[0])
@@ -55,7 +58,7 @@ class FeatureSelector:
         self.is_fit = True
         return self
 
-    def _execute_repetitions(self, outer_loop):
+    def _execute_repetitions(self, outer_loop: OuterLoop) -> List[Repetition]:
         results = []
         for _ in range(self.repetitions):
             outer_loop.refresh_splits()
@@ -63,7 +66,7 @@ class FeatureSelector:
             results.append(result)
         return results
 
-    def _make_feature_evaluator(self, input_data):
+    def _make_feature_evaluator(self, input_data: InputData) -> FeatureEvaluator:
         return FeatureEvaluator(
             input_data,
             self.n_outer,
@@ -73,7 +76,7 @@ class FeatureSelector:
             self.random_state,
         )
 
-    def _make_outer_loop(self, input_data):
+    def _make_outer_loop(self, input_data: InputData) -> OuterLoop:
         feature_evaluator = self._make_feature_evaluator(input_data)
         return OuterLoop(
             self.n_outer,
@@ -82,5 +85,5 @@ class FeatureSelector:
             self.robust_minimum,
         )
 
-    def get_validation_curves(self):
+    def get_validation_curves(self) -> Dict[str, List]:
         return self.post_processor.get_validation_curves(self._results)
