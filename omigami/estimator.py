@@ -36,9 +36,3 @@ class ModelTrainer:
         estimator = clone(self._estimator)  # refresh in case fit has memory
         estimator.fit(X, y)
         return estimator
-
-
-def miss_score(y_true: NumpyArray, y_pred: NumpyArray):
-    """MISS score: number of wrong classifications preceded by - so that the higher
-    this score the better the model"""
-    return -(y_true != y_pred).sum()
