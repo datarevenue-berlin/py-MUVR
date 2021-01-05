@@ -5,13 +5,28 @@ from dataclasses import dataclass
 from omigami.types import NumpyArray
 
 
-# makes sense to me to group these three objects into
-# one, although I'm not sure it's not overkill
+@dataclass
+class Split:
+    id: int
+    train_indices: NumpyArray
+    test_indices: NumpyArray
+
+
 @dataclass
 class InputData:
     X: NumpyArray
     y: NumpyArray
     groups: NumpyArray
+
+    def slice_data(self, indices=None, features=None):
+        X_sliced = self.X
+        y_sliced = self.y
+        if indices is not None:
+            X_sliced = X_sliced[indices, :]
+            y_sliced = y_sliced[indices]
+        if features is not None:
+            X_sliced = X_sliced[:, features]
+        return X_sliced, y_sliced
 
 
 @dataclass

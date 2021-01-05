@@ -6,7 +6,6 @@ from sklearn.base import BaseEstimator
 
 NumpyArray = ndarray
 MetricFunction = Callable[[NumpyArray, NumpyArray], float]
-Split = Tuple[NumpyArray, NumpyArray]
 GenericEstimator = TypeVar("GenericEstimator")
 Estimator = Union[BaseEstimator, GenericEstimator]
 RandomState = type(random.RandomState)
