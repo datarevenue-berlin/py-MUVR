@@ -8,8 +8,7 @@ from scipy.stats import gmean
 from omigami.data_splitter import DataSplitter
 from omigami.recursive_feature_eliminator import RecursiveFeatureEliminator
 from omigami.types import MetricFunction, Estimator, NumpyArray
-from omigami.data_models import InputData, SelectedFeatures, FeatureEliminationResults
-from omigami.outer_loop import OuterLoop, OuterLoopResults
+from omigami.data_models import InputData, SelectedFeatures, FeatureEliminationResults, OuterLoopResults
 from omigami.feature_evaluator import FeatureEvaluator
 from omigami.post_processor import PostProcessor
 from omigami.utils import normalize_score
@@ -56,7 +55,7 @@ class FeatureSelector:
         input_data = InputData(X=X, y=y, groups=groups)
 
         # TODO: implement class
-        aggregator = ResultsAggregator()  # TODO: could this be an attribute?
+        repetition_results = Repetition()
 
         for _ in range(self.repetitions):
             # TODO: refactor this class
@@ -70,12 +69,12 @@ class FeatureSelector:
                 outer_loop_results = self._run_outer_loop(
                     input_data, data_splitter, outer_split
                 )
-                aggregator.add_outer_loop_results(outer_loop_results)
+                repetition_results.append(outer_loop_results)
 
         # outer_loop = self._make_outer_loop(input_data)
         # self._results = self._execute_repetitions(outer_loop)
-        # self.selected_features = self.post_processor.select_features(self._results)
-        # self.is_fit = True
+        self.selected_features = self.post_processor.select_features(repetition_results)
+        self.is_fit = True
         return self
 
     def get_groups(self, groups, size):
