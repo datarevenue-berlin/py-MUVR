@@ -4,7 +4,6 @@ from scipy.stats import rankdata
 import numpy as np
 from omigami.types import Estimator, MetricFunction, RandomState, NumpyArray
 from omigami.models import InputData, FeatureEvaluationResults, FeatureRanks
-from omigami.data_splitter import DataSplitter
 from omigami.estimator import ModelTrainer
 
 
@@ -12,28 +11,18 @@ class FeatureEvaluator:
     def __init__(
         self,
         input_data: InputData,
-        n_outer: int,
-        n_inner: int,
         estimator: Estimator,
         metric: Union[str, MetricFunction],
         random_state: Union[int, RandomState],
     ):
-        self._input_data = input_data
-        self._X = input_data.X
-        self._y = input_data.y
         self._model_trainer = ModelTrainer(estimator, random_state=random_state)
         self._metric = self._make_metric(metric)
         self._random_state = random_state
-        self._splitter = DataSplitter(n_outer, n_inner, random_state=random_state).fit(
-            input_data
-        )
         self._n_features = input_data.X.shape[1]
-        self._n_inner = n_inner
 
     def evaluate_features(
-        self, features: Iterable[int], outer_idx: int, inner_idx: int = None
+        self, evaluation_data
     ) -> FeatureEvaluationResults:
-        train_idx, test_idx = self._splitter.get_split(outer_idx, inner_idx)
 
         X_train = self._X[train_idx, :][:, features]
         y_train = self._y[train_idx]
@@ -49,9 +38,6 @@ class FeatureEvaluator:
 
     def get_n_features(self):
         return self._n_features
-
-    def get_inner_loop_size(self):
-        return self._n_inner
 
     def _make_metric(self, metric: Union[str, MetricFunction]) -> MetricFunction:
         """Build metric function using the input `metric`. If a metric is a string
@@ -94,9 +80,6 @@ class FeatureEvaluator:
         feature_importances = self._get_feature_importances(estimator)
         ranks = rankdata(-feature_importances)
         return FeatureRanks(features=features, ranks=ranks, n_feats=self._n_features)
-
-    def refresh_splits(self):
-        self._splitter = self._splitter.fit(self._input_data)
 
 
 def miss_score(y_true: NumpyArray, y_pred: NumpyArray):

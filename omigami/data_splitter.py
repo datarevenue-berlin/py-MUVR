@@ -6,22 +6,23 @@ from sklearn.model_selection import GroupShuffleSplit
 
 class DataSplitter:
     def __init__(
-        self, n_outer: int, n_inner: int, random_state: Union[int, RandomState],
+        self, size: int, n_outer: int, n_inner: int, random_state: Union[int, RandomState],
     ):
+        self.size = size
         self.n_outer = n_outer
         self.n_inner = n_inner
         self.random_state = random_state
-        self._splits = None
-        self.is_fit = False
+        self.outer_splits = self._make_outer_splits(n_outer)
+        self.inner_splits = self._make_inner_splits(n_outer)
 
     # TODO:
     # on one side it make sense to have a `fit` method,
     # but maybe the signature is odd because one relates it to fit(X, y). Maybe
     # another name?
-    def fit(self, input_data: InputData):
-        self._splits = self._make_splits(input_data)
-        self.is_fit = True
-        return self
+    # def fit(self, input_data: InputData):
+    #     self._splits = self._make_splits(input_data)
+    #     self.is_fit = True
+    #     return self
 
     def _make_splits(self, input_data: InputData) -> Dict[tuple, Split]:
         """Create a dictionary of split indexes for i`input_data`,
