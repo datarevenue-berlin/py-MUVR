@@ -57,17 +57,18 @@ class FeatureSelector:
         # TODO: implement class
         aggregator = ResultsAggregator()  # TODO: could this be an attribute?
 
-        for r in range(self.repetitions):
+        for _ in range(self.repetitions):
             # TODO: refactor this class
-            data_splitter = DataSplitter(size, self.n_outer, self.n_inner, r)
+            data_splitter = DataSplitter(
+                self.n_outer, self.n_inner, self.random_state, input_data
+            )
 
-            for outer_split in data_splitter.outer_splits:
-                # TODO: possibly implement it like this to make signature simpler
-                outer_loop_data = input_data.split(outer_split)
-
+            for outer_split in data_splitter.iter_outer_splits():
                 # TODO: implement this method. Outer loop results can be a dataclass that
                 # TODO: is expected by add_outer_loop_results
-                outer_loop_results = self._run_outer_loop(outer_loop_data, data_splitter)
+                outer_loop_results = self._run_outer_loop(
+                    input_data, data_splitter, outer_split
+                )
                 aggregator.add_outer_loop_results(outer_loop_results)
 
         # outer_loop = self._make_outer_loop(input_data)
@@ -76,22 +77,23 @@ class FeatureSelector:
         # self.is_fit = True
         return self
 
-    def _run_outer_loop(self, outer_loop_data, data_splitter):
+    def _run_outer_loop(self, input_data, data_splitter, outer_split):
         # TODO: refactor this class as needed
-        rfe = RecursiveFeatureEliminator(outer_loop_data.n_features)
+        rfe = RecursiveFeatureEliminator(input_data.n_features)
 
         # TODO: need implementation
         feature_elimination_results = FeatureEliminationResults()
 
         for feature_set in rfe.eliminate_features():
             inner_results = []
-            for inner_split in data_splitter.inner_splits:
-                inner_loop_data = outer_loop_data.split(inner_split, feature_set)
-                inner_results.append(self.feature_evaluator.evaluate_features(
-                    inner_loop_data
-                ))
+            for inner_split in data_splitter.iter_inner_splits(outer_split):
+                inner_loop_data = input_data.split_data(inner_split, feature_set)
+                inner_results.append(
+                    self.feature_evaluator.evaluate_features(inner_loop_data)
+                )
             feature_elimination_results.add(inner_results)
 
+        # TODO: we need somewhere here the outer loop evaluation no?
         return feature_elimination_results
 
     def get_groups(self, groups, size):

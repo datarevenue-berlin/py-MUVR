@@ -87,3 +87,26 @@ def test_iter_inner_splits(dataset):
         for inner_split in ds.iter_inner_splits(outer_split):
             assert inner_split
             assert inner_split == ds._splits[(outer_split.id, inner_split.id)]
+
+
+def test_randomness(dataset):
+    random_state = np.random.RandomState(0)
+    ds = DataSplitter(
+        n_outer=5, n_inner=4, random_state=random_state, input_data=dataset
+    )
+    ds2 = DataSplitter(
+        n_outer=5, n_inner=4, random_state=random_state, input_data=dataset
+    )
+    assert all(
+        sorted(ds._splits[k].train_indices) != sorted(ds2._splits[k].train_indices)
+        for k in ds._splits
+    )
+
+
+def test_non_randomness(dataset):
+    ds = DataSplitter(n_outer=5, n_inner=4, random_state=0, input_data=dataset)
+    ds2 = DataSplitter(n_outer=5, n_inner=4, random_state=0, input_data=dataset)
+    assert all(
+        sorted(ds._splits[k].train_indices) == sorted(ds2._splits[k].train_indices)
+        for k in ds._splits
+    )
