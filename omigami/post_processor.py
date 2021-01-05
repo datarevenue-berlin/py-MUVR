@@ -2,7 +2,7 @@ from typing import List, Union, Dict
 from concurrent.futures import Future
 from scipy.stats import gmean
 from omigami.outer_loop import OuterLoopResults
-from omigami.models import SelectedFeatures, ScoreCurve
+from omigami.data_models import SelectedFeatures, ScoreCurve
 from omigami.utils import (
     average_ranks,
     average_scores,

@@ -1,6 +1,6 @@
 # TODO: rename as data_models
 
-from typing import Iterable, List
+from typing import Iterable, List, Dict
 from dataclasses import dataclass
 from omigami.types import NumpyArray
 
@@ -17,6 +17,10 @@ class InputData:
     X: NumpyArray
     y: NumpyArray
     groups: NumpyArray
+    n_features: int = None
+
+    def __post_init__(self):
+        self.n_features = self.X.shape[1]
 
     def split_data(self, split, features=None):
         return TrainTestData(
@@ -72,6 +76,12 @@ class FeatureEvaluationResults:
     test_score: float
 
 
+InnerLoopResults = List[FeatureEvaluationResults]
+
+
+FeatureEliminationResults = Dict[NumpyArray, InnerLoopResults]
+
+
 @dataclass
 class OuterLoopResults:
     min_eval: FeatureEvaluationResults
@@ -85,12 +95,6 @@ class SelectedFeatures:
     min_feats: Iterable[int]
     max_feats: Iterable[int]
     mid_feats: Iterable[int]
-
-
-@dataclass
-class RecursiveFeatureEliminationResults:
-    score_vs_feats: dict  # TODO: find a better name and signature
-    best_feats: SelectedFeatures
 
 
 @dataclass

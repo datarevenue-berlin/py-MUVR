@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from omigami.outer_loop import OuterLoop, OuterLoopResults
 from omigami.feature_evaluator import FeatureEvaluator, FeatureEvaluationResults
-from omigami.models import InputData
+from omigami.data_models import InputData
 
 
 @pytest.fixture

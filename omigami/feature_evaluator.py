@@ -3,7 +3,7 @@ from sklearn.metrics import SCORERS, get_scorer
 from scipy.stats import rankdata
 import numpy as np
 from omigami.types import Estimator, MetricFunction, RandomState, NumpyArray
-from omigami.models import InputData, FeatureEvaluationResults, FeatureRanks
+from omigami.data_models import InputData, FeatureEvaluationResults, FeatureRanks
 from omigami.estimator import ModelTrainer
 
 

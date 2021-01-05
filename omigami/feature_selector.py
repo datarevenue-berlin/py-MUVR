@@ -1,17 +1,18 @@
 import logging
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Tuple
 from concurrent.futures import Executor, Future
 import numpy as np
 from numpy.random import RandomState
+from scipy.stats import gmean
 
 from omigami.data_splitter import DataSplitter
 from omigami.recursive_feature_eliminator import RecursiveFeatureEliminator
 from omigami.types import MetricFunction, Estimator, NumpyArray
-from omigami.models import InputData
+from omigami.data_models import InputData, SelectedFeatures, FeatureEliminationResults
 from omigami.outer_loop import OuterLoop, OuterLoopResults
 from omigami.feature_evaluator import FeatureEvaluator
 from omigami.post_processor import PostProcessor
-
+from omigami.utils import normalize_score
 
 Repetition = List[Union[OuterLoopResults, Future]]
 
@@ -77,47 +78,113 @@ class FeatureSelector:
         # self.is_fit = True
         return self
 
-    def _run_outer_loop(self, input_data, data_splitter, outer_split):
-        # TODO: refactor this class as needed
-        rfe = RecursiveFeatureEliminator(input_data.n_features)
-
-        # TODO: need implementation
-        feature_elimination_results = FeatureEliminationResults()
-
-        for feature_set in rfe.eliminate_features():
-            inner_results = []
-            for inner_split in data_splitter.iter_inner_splits(outer_split):
-                inner_loop_data = input_data.split_data(inner_split, feature_set)
-                inner_results.append(
-                    self.feature_evaluator.evaluate_features(inner_loop_data)
-                )
-            feature_elimination_results.add(inner_results)
-
-        # TODO: we need somewhere here the outer loop evaluation no?
-        return feature_elimination_results
-
     def get_groups(self, groups, size):
         if groups is None:
             logging.info("groups is not specified: i.i.d. samples assumed")
             groups = np.arange(size)
         return groups
 
-    def _execute_repetitions(self, outer_loop: OuterLoop) -> List[Repetition]:
-        results = []
-        for _ in range(self.repetitions):
-            outer_loop.refresh_splits()
-            result = outer_loop.run(executor=self.executor)
-            results.append(result)
-        return results
-
-    def _make_outer_loop(self, input_data: InputData) -> OuterLoop:
-        feature_evaluator = self._make_feature_evaluator(input_data)
-        return OuterLoop(
-            self.n_outer,
-            feature_evaluator,
-            self.features_dropout_rate,
-            self.robust_minimum,
+    def _run_outer_loop(self, input_data, data_splitter, outer_split):
+        rfe = RecursiveFeatureEliminator(
+            n_features=input_data.n_features,
+            dropout_rate=self.features_dropout_rate,
         )
+
+        feature_elimination_results = {}
+
+        for feature_set in rfe.iter_features():
+            inner_results = []
+
+            for inner_split in data_splitter.iter_inner_splits(outer_split):
+                inner_loop_data = input_data.split_data(inner_split, feature_set)
+                inner_results.append(
+                    self.feature_evaluator.evaluate_features(inner_loop_data)
+                )
+
+            feature_elimination_results[feature_set] = inner_results
+            rfe.remove_features(inner_results)
+
+        outer_loop_results = self.compute_outer_loop_results(
+            feature_elimination_results, input_data, outer_split
+        )
+
+        return outer_loop_results
+
+    def compute_outer_loop_results(self, feature_elimination_results, input_data, outer_split):
+        n_feats_to_score = self._compute_score_curve(feature_elimination_results)
+        best_features = self._select_best_features(feature_elimination_results, n_feats_to_score)
+        outer_loop_data_min_feats = input_data.split_data(outer_split, best_features.min_feats)
+        outer_loop_data_max_feats = input_data.split_data(outer_split, best_features.max_feats)
+        outer_loop_data_mid_feats = input_data.split_data(outer_split, best_features.mid_feats)
+        min_eval = self.feature_evaluator.evaluate_features(outer_loop_data_min_feats)
+        max_eval = self.feature_evaluator.evaluate_features(outer_loop_data_max_feats)
+        mid_eval = self.feature_evaluator.evaluate_features(outer_loop_data_mid_feats)
+        outer_loop_results = OuterLoopResults(
+            min_eval=min_eval,
+            max_eval=max_eval,
+            mid_eval=mid_eval,
+            score_vs_feats=n_feats_to_score,
+        )
+        return outer_loop_results
+
+    # def _execute_repetitions(self, outer_loop: OuterLoop) -> List[Repetition]:
+    #     results = []
+    #     for _ in range(self.repetitions):
+    #         outer_loop.refresh_splits()
+    #         result = outer_loop.run(executor=self.executor)
+    #         results.append(result)
+    #     return results
+    #
+    # def _make_outer_loop(self, input_data: InputData) -> OuterLoop:
+    #     feature_evaluator = self._make_feature_evaluator(input_data)
+    #     return OuterLoop(
+    #         self.n_outer,
+    #         feature_evaluator,
+    #         self.features_dropout_rate,
+    #         self.robust_minimum,
+    #     )
 
     def get_validation_curves(self) -> Dict[str, List]:
         return self.post_processor.get_validation_curves(self._results)
+
+    @staticmethod
+    def _compute_score_curve(
+        elimination_results: FeatureEliminationResults
+    ) -> Dict[int, float]:
+        avg_scores = {}
+        for features, in_loop_res in elimination_results.items():
+            n_feats = len(features)
+            test_scores = [r.test_score for r in in_loop_res]
+            avg_scores[n_feats] = np.average(test_scores)
+        return avg_scores
+
+    def _select_best_features(
+        self,
+        elimination_results: FeatureEliminationResults,
+        avg_scores: Dict[int, float],
+    ) -> SelectedFeatures:
+        n_to_features = self._compute_n_features_map(elimination_results)
+        norm_score = normalize_score(avg_scores)
+        n_feats_close_to_min = [
+            n for n, s in norm_score.items() if s <= self.robust_minimum
+        ]
+        max_feats = max(n_feats_close_to_min)
+        min_feats = min(n_feats_close_to_min)
+        mid_feats = gmean([max_feats, min_feats])
+        mid_feats = min(avg_scores.keys(), key=lambda x: abs(x - mid_feats))
+
+        return SelectedFeatures(
+            mid_feats=n_to_features[mid_feats],
+            min_feats=n_to_features[min_feats],
+            max_feats=n_to_features[max_feats],
+        )
+
+    @staticmethod
+    def _compute_n_features_map(
+        elimination_results: FeatureEliminationResults
+    ) -> Dict[int, Tuple[int]]:
+        n_to_features = {}
+        for features, in_loop_res in elimination_results.items():
+            n_feats = len(features)
+            n_to_features[n_feats] = features
+        return n_to_features

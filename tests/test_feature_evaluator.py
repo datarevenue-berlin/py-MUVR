@@ -5,7 +5,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from omigami.models import InputData, FeatureRanks
+from omigami.data_models import InputData, FeatureRanks
 from omigami.feature_evaluator import FeatureEvaluator, miss_score
 
 
