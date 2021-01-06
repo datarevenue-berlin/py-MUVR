@@ -2,7 +2,7 @@
 
 from typing import Iterable, List, Dict
 from dataclasses import dataclass
-from omigami.types import NumpyArray
+from omigami.data_types import NumpyArray
 
 
 @dataclass

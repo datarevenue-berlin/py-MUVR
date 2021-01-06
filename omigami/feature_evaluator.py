@@ -1,16 +1,15 @@
-from typing import Union, Iterable
+from typing import Union, List
 from sklearn.metrics import SCORERS, get_scorer
 from scipy.stats import rankdata
 import numpy as np
-from omigami.types import Estimator, MetricFunction, RandomState, NumpyArray
-from omigami.data_models import InputData, FeatureEvaluationResults, FeatureRanks
+from omigami.data_types import Estimator, MetricFunction, RandomState, NumpyArray
+from omigami.data_models import FeatureEvaluationResults, FeatureRanks
 from omigami.estimator import ModelTrainer
 
 
 class FeatureEvaluator:
     def __init__(
         self,
-        input_data: InputData,
         estimator: Estimator,
         metric: Union[str, MetricFunction],
         random_state: Union[int, RandomState],
@@ -18,7 +17,6 @@ class FeatureEvaluator:
         self._model_trainer = ModelTrainer(estimator, random_state=random_state)
         self._metric = self._make_metric(metric)
         self._random_state = random_state
-        self._n_features = input_data.X.shape[1]
 
     def evaluate_features(self, evaluation_data, features) -> FeatureEvaluationResults:
         X_train = evaluation_data.train_data.X
@@ -32,9 +30,6 @@ class FeatureEvaluator:
         score = -self._metric(y_test, y_pred)
         feature_ranks = self._get_feature_ranks(estimator, features)
         return FeatureEvaluationResults(test_score=score, ranks=feature_ranks)
-
-    def get_n_features(self):
-        return self._n_features
 
     def _make_metric(self, metric: Union[str, MetricFunction]) -> MetricFunction:
         """Build metric function using the input `metric`. If a metric is a string
@@ -69,14 +64,14 @@ class FeatureEvaluator:
             raise ValueError("The estimator provided has no feature importances")
 
     def _get_feature_ranks(
-        self, estimator: Estimator, features: Iterable[int]
+        self, estimator: Estimator, features: Union[List[int], NumpyArray]
     ) -> FeatureRanks:
         """Extract the feature rank from the input estimator. So far it can only handle
         estimators as scikit-learn ones, so either having the `feature_importances_` or
         the `coef_` attribute."""
         feature_importances = self._get_feature_importances(estimator)
         ranks = rankdata(-feature_importances)
-        return FeatureRanks(features=features, ranks=ranks, n_feats=self._n_features)
+        return FeatureRanks(features=features, ranks=ranks, n_feats=len(features))
 
 
 def miss_score(y_true: NumpyArray, y_pred: NumpyArray):

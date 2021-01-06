@@ -1,6 +1,5 @@
 from concurrent.futures import Executor, Future
 from omigami.feature_evaluator import FeatureEvaluator
-from omigami.recursive_feature_eliminator import RecursiveFeatureEliminator
 from omigami.data_models import OuterLoopResults
 
 

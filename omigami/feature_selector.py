@@ -6,12 +6,11 @@ from numpy.random import RandomState
 from scipy.stats import gmean
 
 from omigami.data_splitter import DataSplitter
-from omigami.recursive_feature_eliminator import RecursiveFeatureEliminator
-from omigami.types import MetricFunction, Estimator, NumpyArray
-from omigami.data_models import InputData, SelectedFeatures, FeatureEliminationResults, OuterLoopResults
+from omigami.data_types import MetricFunction, Estimator, NumpyArray
+from omigami.data_models import InputData, SelectedFeatures, FeatureEliminationResults, OuterLoopResults, InnerLoopResults, Split
 from omigami.feature_evaluator import FeatureEvaluator
 from omigami.post_processor import PostProcessor
-from omigami.utils import normalize_score
+from omigami.utils import normalize_score, get_best_n_features, average_ranks
 
 Repetition = List[Union[OuterLoopResults, Future]]
 
@@ -32,7 +31,7 @@ class FeatureSelector:
         self.is_fit = False
         self.random_state = None if random_state is None else RandomState(random_state)
         self.n_outer = n_outer
-        self.features_dropout_rate = features_dropout_rate
+        self.keep_fraction = 1 - features_dropout_rate
         self.robust_minimum = robust_minimum
         self.repetitions = repetitions
         self.feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
@@ -46,6 +45,7 @@ class FeatureSelector:
         self.selected_features = None
         self.outer_loop_aggregation = None
         self._results = None
+        self._minimum_features = 1
         self.post_processor = PostProcessor(robust_minimum)
         self.executor = executor
 
@@ -60,12 +60,10 @@ class FeatureSelector:
         for _ in range(self.repetitions):
             # TODO: refactor this class
             data_splitter = DataSplitter(
-                self.n_outer, self.n_inner, self.random_state, input_data
+                self.n_outer, self.n_inner, input_data, self.random_state,
             )
 
             for outer_split in data_splitter.iter_outer_splits():
-                # TODO: implement this method. Outer loop results can be a dataclass that
-                # TODO: is expected by add_outer_loop_results
                 outer_loop_results = self._run_outer_loop(
                     input_data, data_splitter, outer_split
                 )
@@ -77,31 +75,30 @@ class FeatureSelector:
         self.is_fit = True
         return self
 
-    def get_groups(self, groups, size):
+    def get_groups(self, groups: NumpyArray, size: int):
         if groups is None:
             logging.info("groups is not specified: i.i.d. samples assumed")
             groups = np.arange(size)
         return groups
 
-    def _run_outer_loop(self, input_data, data_splitter, outer_split):
-        rfe = RecursiveFeatureEliminator(
-            n_features=input_data.n_features,
-            dropout_rate=self.features_dropout_rate,
-        )
+    def _run_outer_loop(
+        self, input_data: InputData, data_splitter: DataSplitter, outer_split: Split
+    ) -> OuterLoopResults:
 
         feature_elimination_results = {}
+        feature_set = np.arange(input_data.n_features)
 
-        for feature_set in rfe.iter_features():
+        while len(feature_set) > self._minimum_features:
             inner_results = []
 
             for inner_split in data_splitter.iter_inner_splits(outer_split):
                 inner_loop_data = input_data.split_data(inner_split, feature_set)
                 inner_results.append(
-                    self.feature_evaluator.evaluate_features(inner_loop_data)
+                    self.feature_evaluator.evaluate_features(inner_loop_data, feature_set)
                 )
 
             feature_elimination_results[feature_set] = inner_results
-            rfe.remove_features(inner_results)
+            feature_set = self._remove_features(feature_set, inner_results)
 
         outer_loop_results = self.compute_outer_loop_results(
             feature_elimination_results, input_data, outer_split
@@ -109,7 +106,21 @@ class FeatureSelector:
 
         return outer_loop_results
 
+    def _remove_features(self, features: NumpyArray, results: InnerLoopResults):
+        features_to_keep = np.floor(len(features) * self.keep_fraction)
+        features = self._select_n_best(results, features_to_keep)
+        return features
+
+    @staticmethod
+    def _select_n_best(inner_loop_result: InnerLoopResults, keep_n: int) -> List[int]:
+        if keep_n < 1:
+            return []
+        ranks = [r.ranks for r in inner_loop_result]
+        avg_ranks = average_ranks(ranks)
+        return get_best_n_features(avg_ranks, keep_n)
+
     def compute_outer_loop_results(self, feature_elimination_results, input_data, outer_split):
+        # TODO: call postprocessor in here and leave the logic there
         n_feats_to_score = self._compute_score_curve(feature_elimination_results)
         best_features = self._select_best_features(feature_elimination_results, n_feats_to_score)
         outer_loop_data_min_feats = input_data.split_data(outer_split, best_features.min_feats)

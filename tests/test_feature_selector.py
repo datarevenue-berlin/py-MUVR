@@ -1,9 +1,34 @@
+from unittest.mock import Mock
+
 import pytest
 from concurrent.futures import ProcessPoolExecutor
-from omigami.feature_selector import FeatureSelector
-from omigami.outer_loop import OuterLoop
+
+from data_models import InputData, FeatureEvaluationResults, FeatureRanks
+from data_splitter import DataSplitter
+from feature_selector import FeatureSelector
 import numpy as np
 from sklearn.linear_model import LinearRegression
+
+
+@pytest.fixture()
+def fs():
+    lr = LinearRegression()
+    fs = FeatureSelector(
+        n_outer=8, repetitions=8, random_state=0, estimator=lr, metric="MISS"
+    )
+    return fs
+
+
+@pytest.fixture
+def inner_loop_results():
+    return [
+        FeatureEvaluationResults(
+            ranks=FeatureRanks(features=[1, 2, 3, 4], ranks=[3, 2, 1, 4]), test_score=0.2,
+        ),
+        FeatureEvaluationResults(
+            ranks=FeatureRanks(features=[1, 2, 3, 4], ranks=[1.5, 1.5, 3, 4]), test_score=0.2,
+        ),
+    ]
 
 
 def test_feature_selector():
@@ -20,17 +45,52 @@ def test_feature_selector():
     assert fs.n_inner == 7
 
 
-def test_fit():
+def test_fit(fs):
     X = np.random.rand(10, 10)
     y = np.array([np.random.choice([0, 1]) for _ in range(10)])
-    lr = LinearRegression()
-    fs = FeatureSelector(
-        n_outer=8, repetitions=8, random_state=0, estimator=lr, metric="MISS"
-    )
     fitted_fs = fs.fit(X, y)
     assert fitted_fs is fs
     assert fs.selected_features
     assert fs.is_fit
+
+
+def test_get_groups(fs):
+    predefined_group = [1, 2 ,3]
+    generated_groups = fs.get_groups(None, 5)
+
+    assert all(generated_groups == [0, 1, 2, 3, 4])
+    assert fs.get_groups(predefined_group, 5) == predefined_group
+
+
+def test_run_outer_loop(fs):
+    fs.feature_evaluator.evaluate_features = Mock(
+        spec=fs.feature_evaluator.evaluate_features, return_value="res"
+    )
+    input_data = Mock(spec=InputData)
+    data_splitter = Mock(spec=DataSplitter)
+    fs.compute_outer_loop_results = Mock(
+        spec=fs.compute_outer_loop_results, return_value="outer_loop_res"
+    )
+
+    olr = fs._run_outer_loop(input_data, data_splitter, "outer_split")
+
+    assert olr == "outer_loop_res"
+    assert False
+
+
+def test_remove_features(fs, inner_loop_results):
+    features=np.array([1, 2, 3, 4])
+    fs.keep_fraction = 0.75
+    features = fs._remove_features(features, inner_loop_results)
+    assert len(features) == 3
+    assert features == [2, 3, 1]
+
+
+def test_select_n_best(fs, inner_loop_results):
+    keep = 2
+    n_best = fs._select_n_best(inner_loop_results, keep)
+
+    assert n_best == [2, 3]
 
 
 def test_deferred_fit():

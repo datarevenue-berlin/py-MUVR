@@ -3,7 +3,7 @@ from sklearn.metrics import SCORERS, get_scorer
 from typing import Union
 from sklearn.base import BaseEstimator, clone
 from sklearn.ensemble import RandomForestClassifier
-from omigami.types import MetricFunction, Estimator, RandomState, NumpyArray
+from omigami.data_types import MetricFunction, Estimator, RandomState, NumpyArray
 
 
 class ModelTrainer:
