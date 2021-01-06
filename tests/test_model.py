@@ -64,3 +64,11 @@ def test_estimator_clone(est, dataset):
     with pytest.raises(NotFittedError):
         y_pred = cloned.predict(dataset.X)
 
+
+@pytest.mark.parametrize(
+    "est", ["RFC", SVC(), Pipeline([("norm", Normalizer()), ("model", SVC())])]
+)
+def test_train_model(est, dataset):
+    estimator = make_estimator(est, 0)
+    trained_estimator = estimator.train_model(dataset.X, dataset.y)
+    assert estimator is not trained_estimator
