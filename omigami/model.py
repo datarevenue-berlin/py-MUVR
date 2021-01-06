@@ -57,7 +57,7 @@ class ScikitLearnEstimator(Estimator):
 class ScikitLearnPipeline(Estimator):
     @property
     def feature_importances(self):
-        for _, step in self._estimator:
+        for _, step in self._estimator.steps:
             if hasattr(step, "feature_importances_"):
                 return step.feature_importances_
             if hasattr(step, "coef_"):

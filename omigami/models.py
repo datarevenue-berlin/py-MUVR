@@ -3,6 +3,7 @@
 from typing import Iterable, List
 from dataclasses import dataclass
 from omigami.types import NumpyArray
+from omigami.model import Estimator
 
 
 @dataclass
@@ -70,6 +71,7 @@ class FeatureRanks:
 class FeatureEvaluationResults:
     ranks: FeatureRanks
     test_score: float
+    model: Estimator
 
 
 @dataclass

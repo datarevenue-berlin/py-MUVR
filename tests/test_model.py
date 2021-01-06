@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC
 from sklearn.exceptions import NotFittedError
@@ -72,3 +73,20 @@ def test_train_model(est, dataset):
     estimator = make_estimator(est, 0)
     trained_estimator = estimator.train_model(dataset.X, dataset.y)
     assert estimator is not trained_estimator
+
+
+@pytest.mark.parametrize(
+    "estimator",
+    [
+        SVC(kernel="linear", random_state=0),
+        RandomForestClassifier(random_state=0),
+        Pipeline([("N", Normalizer()), ("C", SVC(kernel="linear", random_state=0))]),
+    ],
+)
+def test_get_feature_importancres(estimator, dataset):
+    estimator = make_estimator(estimator, 0)
+    estimator.fit(dataset.X, dataset.y)
+    feature_importances = estimator.feature_importances
+    assert any(feature_importances)
+    assert all(feature_importances > 0)
+    assert len(feature_importances) == 12

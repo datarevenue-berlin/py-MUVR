@@ -5,8 +5,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from omigami.models import InputData, FeatureRanks
+from omigami.models import InputData, FeatureRanks, Split
 from omigami.feature_evaluator import FeatureEvaluator, miss_score
+from omigami.model import ScikitLearnEstimator
 
 
 @pytest.fixture
@@ -19,19 +20,13 @@ def dataset():
 @pytest.fixture
 def feature_evaluator(dataset):
     fe = FeatureEvaluator(
-        n_inner=3,
-        n_outer=4,
-        estimator="RFC",
-        metric="MISS",
-        input_data=dataset,
-        random_state=0,
+        estimator="RFC", metric="MISS", input_data=dataset, random_state=0,
     )
     return fe
 
 
 def test_feature_evaluator(feature_evaluator):
     assert feature_evaluator
-    assert feature_evaluator._splitter.is_fit
     assert feature_evaluator._model_trainer
     assert hasattr(feature_evaluator._metric, "__call__")
     assert feature_evaluator._n_features == 12
@@ -42,14 +37,11 @@ def test_evaluate_features(dataset):
         [("normalizer", Normalizer()), ("model", SVC(kernel="linear", random_state=0))]
     )
     fe = FeatureEvaluator(
-        n_inner=3,
-        n_outer=4,
-        estimator=pipeline,
-        metric="MISS",
-        input_data=dataset,
-        random_state=0,
+        estimator=pipeline, metric="MISS", input_data=dataset, random_state=0,
     )
-    evaluation = fe.evaluate_features([0, 4, 6], 0, 0)
+    split = Split(None, [1, 2, 3], [0, 4, 5, 6, 7, 8, 9, 10, 11])
+    evaluation_data = dataset.split_data(split)
+    evaluation = fe.evaluate_features(evaluation_data, [0, 4, 6])
     assert evaluation
     assert evaluation.test_score
     assert evaluation.ranks
@@ -61,28 +53,18 @@ def test_evaluate_features(dataset):
         _ = evaluation.ranks[100]
 
 
-@pytest.mark.parametrize(
-    "estimator",
-    [
-        SVC(kernel="linear", random_state=0),
-        RandomForestClassifier(random_state=0),
-        Pipeline([("N", Normalizer()), ("C", SVC(kernel="linear", random_state=0))]),
-    ],
-)
-def test_get_feature_importancres(estimator, dataset, feature_evaluator):
-    estimator.fit(dataset.X, dataset.y)
-    feature_importances = feature_evaluator._get_feature_importances(estimator)
-    assert any(feature_importances)
-    assert all(feature_importances > 0)
-    assert len(feature_importances) == 12
-
-
 class EstimatorWithFI:
     feature_importances_ = None
+
+    def set_params(*args, **kwargs):
+        pass
 
 
 class EstimatorWithCoeffs:
     feature_coef_ = None
+
+    def set_params(*args, **kwargs):
+        pass
 
 
 @pytest.mark.parametrize(
@@ -98,8 +80,9 @@ class EstimatorWithCoeffs:
 )
 def test_get_feature_rank(estimator, attribute, values, dataset, feature_evaluator):
     setattr(estimator, attribute, values)
+    model = ScikitLearnEstimator(estimator, None)
     features = [1, 7, 8, 9, 10, 11]
-    ranks = feature_evaluator._get_feature_ranks(estimator, features)
+    ranks = feature_evaluator._get_feature_ranks(model, features)
 
     assert ranks[1] == 1.5
     assert ranks[7] == 4

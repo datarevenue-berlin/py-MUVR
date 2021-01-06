@@ -11,7 +11,7 @@ from omigami.model import make_estimator
 class FeatureEvaluator:
     def __init__(
         self,
-        input_data: InputData,
+        n_features: int,
         estimator: Estimator,
         metric: Union[str, MetricFunction],
         random_state: Union[int, RandomState],
@@ -19,7 +19,7 @@ class FeatureEvaluator:
         self._model_trainer = make_estimator(estimator, random_state)
         self._metric = self._make_metric(metric)
         self._random_state = random_state
-        self._n_features = input_data.X.shape[1]
+        self._n_features = n_features
 
     def evaluate_features(self, evaluation_data, features) -> FeatureEvaluationResults:
         X_train = evaluation_data.train_data.X
