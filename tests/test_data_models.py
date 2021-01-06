@@ -5,7 +5,7 @@ from omigami.models import InputData, Split
 
 @pytest.fixture
 def dataset():
-    X = np.zeros((10, 10))
+    X = np.zeros((10, 12))
     y = np.zeros(10)
     return InputData(X=X, y=y, groups=np.arange(10))
 
@@ -25,3 +25,7 @@ def test_split_data(dataset):
     assert split_data.test_data.y.size == 4
     assert split_data.train_data.X.shape == (3, 3)
     assert split_data.train_data.y.size == 3
+
+
+def test_n_features(dataset):
+    assert dataset.n_features == 12

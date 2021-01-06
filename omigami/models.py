@@ -19,6 +19,10 @@ class InputData:
     y: NumpyArray
     groups: NumpyArray
 
+    @property
+    def n_features(self):
+        return self.X.shape[1]
+
     def split_data(self, split, features=None):
         return TrainTestData(
             train_data=self._slice_data(indices=split.train_indices, features=features),

@@ -20,7 +20,7 @@ def dataset():
 @pytest.fixture
 def feature_evaluator(dataset):
     fe = FeatureEvaluator(
-        estimator="RFC", metric="MISS", input_data=dataset, random_state=0,
+        estimator="RFC", metric="MISS", n_features=dataset.n_features, random_state=0,
     )
     return fe
 
@@ -37,7 +37,10 @@ def test_evaluate_features(dataset):
         [("normalizer", Normalizer()), ("model", SVC(kernel="linear", random_state=0))]
     )
     fe = FeatureEvaluator(
-        estimator=pipeline, metric="MISS", input_data=dataset, random_state=0,
+        estimator=pipeline,
+        metric="MISS",
+        n_features=dataset.n_features,
+        random_state=0,
     )
     split = Split(None, [1, 2, 3], [0, 4, 5, 6, 7, 8, 9, 10, 11])
     evaluation_data = dataset.split_data(split)
