@@ -4,13 +4,10 @@ from typing import Union
 from sklearn.base import BaseEstimator, clone
 from sklearn.ensemble import RandomForestClassifier
 from omigami.types import MetricFunction, Estimator, RandomState, NumpyArray
-from model import make_estimator
+from omigami.model import make_estimator
 
 
 class ModelTrainer:
-
-    RFC = "RFC"
-
     def __init__(
         self, estimator: Union[str, Estimator], random_state: Union[int, RandomState]
     ):
