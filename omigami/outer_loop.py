@@ -41,7 +41,7 @@ class OuterLoop:
             min_eval=min_eval,
             max_eval=max_eval,
             mid_eval=mid_eval,
-            score_vs_feats=elimination_res.score_vs_feats,
+            score_vs_feats=elimination_res.n_features_to_score_map,
         )
 
     def refresh_splits(self):

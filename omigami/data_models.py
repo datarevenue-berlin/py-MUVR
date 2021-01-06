@@ -1,6 +1,6 @@
 # TODO: rename as data_models
 
-from typing import Iterable, List, Dict
+from typing import Iterable, List, Dict, Union
 from dataclasses import dataclass
 from omigami.data_types import NumpyArray
 
@@ -80,7 +80,17 @@ class FeatureEvaluationResults:
 InnerLoopResults = List[FeatureEvaluationResults]
 
 
-FeatureEliminationResults = Dict[NumpyArray, InnerLoopResults]
+@dataclass
+class SelectedFeatures:
+    min_feats: Union[List[int], NumpyArray]
+    max_feats: Union[List[int], NumpyArray]
+    mid_feats: Union[List[int], NumpyArray]
+
+
+@dataclass
+class FeatureEliminationResults:
+    n_features_to_score_map: Dict[int, float]
+    best_features: SelectedFeatures
 
 
 @dataclass
@@ -88,14 +98,7 @@ class OuterLoopResults:
     min_eval: FeatureEvaluationResults
     max_eval: FeatureEvaluationResults
     mid_eval: FeatureEvaluationResults
-    score_vs_feats: dict  # TODO: find a better name and signature
-
-
-@dataclass
-class SelectedFeatures:
-    min_feats: Iterable[int]
-    max_feats: Iterable[int]
-    mid_feats: Iterable[int]
+    n_features_to_score_map: Dict[int, float]
 
 
 @dataclass

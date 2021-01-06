@@ -37,4 +37,4 @@ def testexecute_loop(feature_evaluator):
     results = out_loop.execute_loop(0)
     assert results
     assert isinstance(results, OuterLoopResults)
-    assert len(results.score_vs_feats) == 4
+    assert len(results.n_features_to_score_map) == 4

@@ -1,8 +1,14 @@
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Tuple
 from concurrent.futures import Future
 from scipy.stats import gmean
+import numpy as np
 from omigami.outer_loop import OuterLoopResults
-from omigami.data_models import SelectedFeatures, ScoreCurve
+from omigami.data_models import (
+    SelectedFeatures,
+    ScoreCurve,
+    FeatureEliminationResults,
+    InnerLoopResults,
+)
 from omigami.utils import (
     average_ranks,
     average_scores,
@@ -59,14 +65,14 @@ class PostProcessor:
     def _get_repetition_avg_scores(results: FeatureSelectionResults) -> List:
         avg_scores = []
         for outer_loops_results in results:
-            scores = [ol.score_vs_feats for ol in outer_loops_results]
+            scores = [ol.n_features_to_score_map for ol in outer_loops_results]
             avg_scores.append(average_scores(scores))
         return avg_scores
 
     def get_validation_curves(self, results: FeatureSelectionResults) -> Dict:
         results = self._fetch_results(results)
         flat_results = [r for repetition in results for r in repetition]
-        outer_loop_scores = [r.score_vs_feats for r in flat_results]
+        outer_loop_scores = [r.n_features_to_score_map for r in flat_results]
         avg_scores_per_loop = self._get_repetition_avg_scores(results)
         avg_scores = average_scores(avg_scores_per_loop)
         return {
@@ -79,3 +85,51 @@ class PostProcessor:
     def _score_to_score_curve(scores: Dict[int, float]) -> ScoreCurve:
         n_features, score_values = zip(*sorted(scores.items()))
         return ScoreCurve(n_features=n_features, scores=score_values)
+
+    def process_feature_elim_results(self, raw_results: Dict[tuple, InnerLoopResults]):
+        n_feats_to_score = self._compute_score_curve(raw_results)
+        best_features = self._select_best_outer_features(raw_results, n_feats_to_score)
+
+        return FeatureEliminationResults(n_feats_to_score, best_features)
+
+    @staticmethod
+    def _compute_score_curve(
+        elimination_results: Dict[tuple, InnerLoopResults]
+    ) -> Dict[int, float]:
+        avg_scores = {}
+        for features, in_loop_res in elimination_results.items():
+            n_feats = len(features)
+            test_scores = [r.test_score for r in in_loop_res]
+            avg_scores[n_feats] = np.average(test_scores)
+        return avg_scores
+
+    def _select_best_outer_features(
+        self,
+        elimination_results: Dict[tuple, InnerLoopResults],
+        avg_scores: Dict[int, float],
+    ) -> SelectedFeatures:
+        n_to_features = self._compute_n_features_map(elimination_results)
+        norm_score = normalize_score(avg_scores)
+        n_feats_close_to_min = [
+            n for n, s in norm_score.items() if s <= self.robust_minimum
+        ]
+        max_feats = max(n_feats_close_to_min)
+        min_feats = min(n_feats_close_to_min)
+        mid_feats = gmean([max_feats, min_feats])
+        mid_feats = min(avg_scores.keys(), key=lambda x: abs(x - mid_feats))
+
+        return SelectedFeatures(
+            mid_feats=n_to_features[mid_feats],
+            min_feats=n_to_features[min_feats],
+            max_feats=n_to_features[max_feats],
+        )
+
+    @staticmethod
+    def _compute_n_features_map(
+        elimination_results: Dict[tuple, InnerLoopResults]
+    ) -> Dict[int, Tuple[int]]:
+        n_to_features = {}
+        for features, in_loop_res in elimination_results.items():
+            n_feats = len(features)
+            n_to_features[n_feats] = features
+        return n_to_features
