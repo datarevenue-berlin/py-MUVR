@@ -20,16 +20,13 @@ class FeatureEvaluator:
         self._random_state = random_state
         self._n_features = input_data.X.shape[1]
 
-    def evaluate_features(
-        self, evaluation_data
-    ) -> FeatureEvaluationResults:
-
-        X_train = self._X[train_idx, :][:, features]
-        y_train = self._y[train_idx]
+    def evaluate_features(self, evaluation_data, features) -> FeatureEvaluationResults:
+        X_train = evaluation_data.train_data.X
+        y_train = evaluation_data.train_data.y
         estimator = self._model_trainer.train_model(X_train, y_train)
 
-        X_test = self._X[test_idx, :][:, features]
-        y_test = self._y[test_idx]
+        X_test = evaluation_data.test_data.X
+        y_test = evaluation_data.test_data.y
         y_pred = estimator.predict(X_test)
 
         score = -self._metric(y_test, y_pred)
