@@ -3,6 +3,7 @@
 from typing import Iterable, List, Dict, Union
 from dataclasses import dataclass
 from omigami.data_types import NumpyArray
+from omigami.model import Estimator
 
 
 @dataclass
@@ -75,6 +76,7 @@ class FeatureRanks:
 class FeatureEvaluationResults:
     ranks: FeatureRanks
     test_score: float
+    model: Estimator
 
 
 InnerLoopResults = List[FeatureEvaluationResults]
