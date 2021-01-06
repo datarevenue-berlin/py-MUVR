@@ -86,9 +86,9 @@ class FeatureSelector:
     ) -> OuterLoopResults:
 
         feature_elimination_results = {}
-        feature_set = np.arange(input_data.n_features)
+        feature_set = list(range(input_data.n_features))
 
-        while len(feature_set) > self._minimum_features:
+        while len(feature_set) >= self._minimum_features:
             inner_results = []
 
             for inner_split in data_splitter.iter_inner_splits(outer_split):
@@ -97,7 +97,7 @@ class FeatureSelector:
                     self.feature_evaluator.evaluate_features(inner_loop_data, feature_set)
                 )
 
-            feature_elimination_results[feature_set] = inner_results
+            feature_elimination_results[tuple(feature_set)] = inner_results
             feature_set = self._remove_features(feature_set, inner_results)
 
         outer_loop_results = self.compute_outer_loop_results(

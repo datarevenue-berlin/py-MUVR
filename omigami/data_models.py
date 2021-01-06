@@ -20,7 +20,8 @@ class InputData:
     n_features: int = None
 
     def __post_init__(self):
-        self.n_features = self.X.shape[1]
+        if self.n_features is None:
+            self.n_features = self.X.shape[1]
 
     def split_data(self, split, features=None):
         return TrainTestData(

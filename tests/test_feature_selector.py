@@ -63,19 +63,32 @@ def test_get_groups(fs):
 
 
 def test_run_outer_loop(fs):
-    fs.feature_evaluator.evaluate_features = Mock(
-        spec=fs.feature_evaluator.evaluate_features, return_value="res"
-    )
-    input_data = Mock(spec=InputData)
+    x = np.array([[2, 3]])
+    input_data = InputData(x, "y", "groups", 3)
+    input_data.split_data = Mock(spec=input_data.split_data, return_value="split")
+
     data_splitter = Mock(spec=DataSplitter)
+    data_splitter.iter_inner_splits = Mock(data_splitter.iter_inner_splits, return_value=[1, 2])
+
+    fs._remove_features = Mock(return_value=[])
     fs.compute_outer_loop_results = Mock(
         spec=fs.compute_outer_loop_results, return_value="outer_loop_res"
     )
+    fs.feature_evaluator.evaluate_features = Mock(
+        spec=fs.feature_evaluator.evaluate_features, return_value="res"
+    )
+    inner_results = ["res", "res"]
+    features = [0, 1, 2]
+    feature_elim_results = {tuple(features): inner_results}
 
     olr = fs._run_outer_loop(input_data, data_splitter, "outer_split")
 
     assert olr == "outer_loop_res"
-    assert False
+    data_splitter.iter_inner_splits.assert_called_with("outer_split")
+    input_data.split_data.assert_called_with(2, features)
+    fs._remove_features.assert_called_once_with(features, inner_results)
+    fs.feature_evaluator.evaluate_features.assert_called_with("split", features)
+    fs.compute_outer_loop_results.assert_called_with(feature_elim_results, input_data, "outer_split")
 
 
 def test_remove_features(fs, inner_loop_results):
