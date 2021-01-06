@@ -3,7 +3,7 @@ from sklearn.metrics import SCORERS, get_scorer
 from scipy.stats import rankdata
 import numpy as np
 from omigami.data_types import Estimator, MetricFunction, RandomState, NumpyArray
-from omigami.data_models import FeatureEvaluationResults, FeatureRanks
+from omigami.data_models import FeatureEvaluationResults, FeatureRanks, TrainTestData
 from omigami.estimator import ModelTrainer
 
 
@@ -17,8 +17,9 @@ class FeatureEvaluator:
         self._model_trainer = ModelTrainer(estimator, random_state=random_state)
         self._metric = self._make_metric(metric)
         self._random_state = random_state
+        self.n_initial_features = None
 
-    def evaluate_features(self, evaluation_data, features) -> FeatureEvaluationResults:
+    def evaluate_features(self, evaluation_data: TrainTestData, features: List[int]) -> FeatureEvaluationResults:
         X_train = evaluation_data.train_data.X
         y_train = evaluation_data.train_data.y
         estimator = self._model_trainer.train_model(X_train, y_train)
@@ -71,7 +72,7 @@ class FeatureEvaluator:
         the `coef_` attribute."""
         feature_importances = self._get_feature_importances(estimator)
         ranks = rankdata(-feature_importances)
-        return FeatureRanks(features=features, ranks=ranks, n_feats=len(features))
+        return FeatureRanks(features=features, ranks=ranks, n_feats=self.n_initial_features)
 
 
 def miss_score(y_true: NumpyArray, y_pred: NumpyArray):
