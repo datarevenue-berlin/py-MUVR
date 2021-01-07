@@ -1,13 +1,6 @@
 import pytest
 import numpy as np
-from omigami.data import InputDataset, DataSplitter
-
-
-@pytest.fixture
-def dataset():
-    X = np.zeros((10, 10))
-    y = np.zeros(10)
-    return InputDataset(X=X, y=y, groups=np.arange(10))
+from omigami.data import InputDataset, DataSplitter, Split
 
 
 @pytest.fixture
@@ -32,12 +25,12 @@ def test_make_splits(dataset):
     train_idx = split.train_indices
     test_idx = split.test_indices
     assert len(train_idx) == 6
-    assert len(test_idx) == 2
+    assert len(test_idx) == 3
     split = ds._splits[(0, None)]
     train_idx = split.train_indices
     test_idx = split.test_indices
-    assert len(train_idx) == 8
-    assert len(test_idx) == 2
+    assert len(train_idx) == 9
+    assert len(test_idx) == 3
     assert not set(train_idx).intersection(test_idx)
 
 
@@ -51,8 +44,8 @@ def test_split_separation(dataset):
                 + list(inner_split.test_indices)
                 + list(inner_split.train_indices)
             )
-            assert len(all_indeces) == 10
-            assert sorted(all_indeces) == list(range(10))
+            assert len(all_indeces) == 12
+            assert sorted(all_indeces) == list(range(12))
             out_train = list(inner_split.test_indices) + list(inner_split.train_indices)
             assert sorted(out_train) == sorted(outer_split.train_indices)
 
@@ -109,3 +102,22 @@ def test_non_randomness(dataset):
         sorted(ds._splits[k].train_indices) == sorted(ds2._splits[k].train_indices)
         for k in ds._splits
     )
+
+
+def test_input_data_slice(dataset):
+    ds = DataSplitter(n_outer=5, n_inner=4, random_state=0, input_data=dataset)
+    sliced = ds._slice_data(dataset, indices=[0, 1, 2], features=[0, 1, 2])
+    X = sliced.X
+    y = sliced.y
+    assert np.all(X == dataset.X[[0, 1, 2], :][:, [0, 1, 2]])
+    assert np.all(y == dataset.y[[0, 1, 2]])
+
+
+def test_split_data(dataset):
+    ds = DataSplitter(n_outer=5, n_inner=4, random_state=0, input_data=dataset)
+    split = Split(0, [0, 1, 2], [3, 4, 5, 6])
+    split_data = ds.split_data(dataset, split, features=[0, 1, 2])
+    assert split_data.test_data.X.shape == (4, 3)
+    assert split_data.test_data.y.size == 4
+    assert split_data.train_data.X.shape == (3, 3)
+    assert split_data.train_data.y.size == 3

@@ -21,24 +21,6 @@ class InputDataset:
     def n_features(self):
         return self.X.shape[1]
 
-    def split_data(self, split, features=None):
-        return TrainTestData(
-            train_data=self._slice_data(indices=split.train_indices, features=features),
-            test_data=self._slice_data(indices=split.test_indices, features=features),
-        )
-
-    def _slice_data(self, indices=None, features=None):
-        X_sliced = self.X
-        y_sliced = self.y
-        g_sliced = self.groups
-        if indices is not None:
-            X_sliced = X_sliced[indices, :]
-            y_sliced = y_sliced[indices]
-            g_sliced = g_sliced[indices]
-        if features is not None:
-            X_sliced = X_sliced[:, features]
-        return InputDataset(X=X_sliced, y=y_sliced, groups=g_sliced)
-
 
 @dataclass
 class TrainTestData:

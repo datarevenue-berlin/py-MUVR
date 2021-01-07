@@ -1,5 +1,6 @@
-from typing import Union, Dict
-from omigami.data import RandomState, InputDataset, Split
+from typing import Union, Dict, List
+
+from omigami.data import RandomState, InputDataset, Split, TrainTestData, NumpyArray
 from sklearn.model_selection import GroupShuffleSplit
 
 
@@ -57,3 +58,32 @@ class DataSplitter:
         outer_idx = outer_split.id
         for inner_idx in range(self.n_inner):
             yield self._splits[(outer_idx, inner_idx)]
+
+    def split_data(
+        self, input_data: InputDataset, split: Split, features: List[int] = None
+    ) -> TrainTestData:
+        return TrainTestData(
+            train_data=self._slice_data(
+                input_data, indices=split.train_indices, features=features
+            ),
+            test_data=self._slice_data(
+                input_data, indices=split.test_indices, features=features
+            ),
+        )
+
+    def _slice_data(
+        self,
+        input_data: InputDataset,
+        indices: NumpyArray = None,
+        features: List[int] = None,
+    ) -> InputDataset:
+        X_sliced = input_data.X
+        y_sliced = input_data.y
+        g_sliced = input_data.groups
+        if indices is not None:
+            X_sliced = X_sliced[indices, :]
+            y_sliced = y_sliced[indices]
+            g_sliced = g_sliced[indices]
+        if features is not None:
+            X_sliced = X_sliced[:, features]
+        return InputDataset(X=X_sliced, y=y_sliced, groups=g_sliced)

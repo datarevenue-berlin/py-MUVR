@@ -55,6 +55,7 @@ class FeatureSelector:
         self._results = None
         self._minimum_features = 1
         self.post_processor = PostProcessor(robust_minimum)
+        self.data_splitter = None
 
     def fit(
         self,
@@ -71,13 +72,16 @@ class FeatureSelector:
         repetition_results = []
 
         for _ in range(self.repetitions):
-            data_splitter = DataSplitter(
-                self.n_outer, self.n_inner, input_data, self.random_state,
+            self.data_splitter = DataSplitter(
+                self.n_outer,
+                self.n_inner,
+                input_data,
+                self.random_state,
             )
             olrs = []
-            for outer_split in data_splitter.iter_outer_splits():
+            for outer_split in self.data_splitter.iter_outer_splits():
                 outer_loop_results = self._deferred_run_outer_loop(
-                    input_data, data_splitter, outer_split, executor=executor
+                    input_data, outer_split, executor=executor
                 )
                 olrs.append(outer_loop_results)
             repetition_results.append(olrs)
@@ -94,7 +98,7 @@ class FeatureSelector:
         return groups
 
     def _run_outer_loop(
-        self, input_data: InputDataset, data_splitter: DataSplitter, outer_split: Split
+        self, input_data: InputDataset, outer_split: Split
     ) -> OuterLoopResults:
 
         raw_feature_elim_results = {}
@@ -103,8 +107,10 @@ class FeatureSelector:
         while len(feature_set) >= self._minimum_features:
             inner_results = []
 
-            for inner_split in data_splitter.iter_inner_splits(outer_split):
-                inner_loop_data = input_data.split_data(inner_split, feature_set)
+            for inner_split in self.data_splitter.iter_inner_splits(outer_split):
+                inner_loop_data = self.data_splitter.split_data(
+                    input_data, inner_split, feature_set
+                )
                 inner_results.append(
                     self.feature_evaluator.evaluate_features(
                         inner_loop_data, feature_set
@@ -143,7 +149,9 @@ class FeatureSelector:
         outer_split: Split,
     ) -> OuterLoopResults:
         min_eval, mid_eval, max_eval = self.evaluate_min_mid_and_max_features(
-            input_data, feature_elimination_results.best_features, outer_split,
+            input_data,
+            feature_elimination_results.best_features,
+            outer_split,
         )
         outer_loop_results = OuterLoopResults(
             min_eval=min_eval,
@@ -154,13 +162,22 @@ class FeatureSelector:
         return outer_loop_results
 
     def evaluate_min_mid_and_max_features(
-        self, input_data: InputDataset, best_features: SelectedFeatures, split: Split,
+        self,
+        input_data: InputDataset,
+        best_features: SelectedFeatures,
+        split: Split,
     ) -> Tuple[
         FeatureEvaluationResults, FeatureEvaluationResults, FeatureEvaluationResults
     ]:
-        outer_loop_data_min_feats = input_data.split_data(split)
-        outer_loop_data_max_feats = input_data.split_data(split)
-        outer_loop_data_mid_feats = input_data.split_data(split)
+        outer_loop_data_min_feats = self.data_splitter.split_data(
+            input_data, split, best_features.min_feats
+        )
+        outer_loop_data_max_feats = self.data_splitter.split_data(
+            input_data, split, best_features.max_feats
+        )
+        outer_loop_data_mid_feats = self.data_splitter.split_data(
+            input_data, split, best_features.mid_feats
+        )
         min_eval = self.feature_evaluator.evaluate_features(
             outer_loop_data_min_feats, best_features.min_feats
         )
@@ -177,13 +194,10 @@ class FeatureSelector:
 
     def _deferred_run_outer_loop(
         self,
-        input_data: InputData,
-        data_splitter: DataSplitter,
+        input_data: InputDataset,
         outer_split: Split,
         executor: Executor,
-    ) -> Executor:
+    ) -> Union[Future, OuterLoopResults]:
         if executor is None:
-            return self.run_outer_loop(input_data, data_splitter, outer_split)
-        return executor.submit(
-            self.run_outer_loop, input_data, data_splitter, outer_split
-        )
+            return self._run_outer_loop(input_data, outer_split)
+        return executor.submit(self._run_outer_loop, input_data, outer_split)
