@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from sklearn.metrics import SCORERS
-from models.metrics import make_metric, _make_metric_from_string, miss_score
+from omigami.models.metrics import make_metric, _make_metric_from_string, miss_score
 
 
 def test_make_metric():

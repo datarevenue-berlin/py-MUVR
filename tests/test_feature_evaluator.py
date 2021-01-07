@@ -5,7 +5,7 @@ from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC
 from omigami.data import FeatureRanks, Split
 from omigami.feature_evaluator import FeatureEvaluator
-from models.model import ScikitLearnEstimator
+from omigami.models.model import ScikitLearnEstimator
 
 
 @pytest.fixture

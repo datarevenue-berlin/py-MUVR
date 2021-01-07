@@ -9,8 +9,8 @@ from omigami.data import (
     FeatureRanks,
     TrainTestData,
 )
-from models.metrics import make_metric
-from models.model import make_estimator
+from omigami.models.metrics import make_metric
+from omigami.models.model import make_estimator
 
 
 class FeatureEvaluator:

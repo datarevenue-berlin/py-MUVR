@@ -1,7 +1,7 @@
 from typing import Iterable, List, Dict, Union
 from dataclasses import dataclass
 from omigami.data import NumpyArray
-from models.model import Estimator
+from omigami.models.model import Estimator
 
 
 @dataclass

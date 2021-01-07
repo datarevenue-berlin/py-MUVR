@@ -1,6 +1,6 @@
 import pytest
 from sklearn import datasets
-from models.estimator import ModelTrainer
+from omigami.models.estimator import ModelTrainer
 
 
 @pytest.fixture

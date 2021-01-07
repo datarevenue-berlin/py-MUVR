@@ -1,7 +1,7 @@
 # TODO: remove this class, probably saving some tests
 from typing import Union
 from omigami.data import Estimator, RandomState, NumpyArray
-from models.model import make_estimator
+from omigami.models.model import make_estimator
 
 
 class ModelTrainer:
