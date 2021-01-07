@@ -34,7 +34,6 @@ class FeatureSelector:
         n_inner: int = None,
         repetitions: int = 8,
         random_state: int = None,
-        executor: Executor = None,
     ):
         self.is_fit = False
         self.random_state = None if random_state is None else RandomState(random_state)
@@ -49,16 +48,20 @@ class FeatureSelector:
             n_inner = n_outer - 1
         self.n_inner = n_inner
 
-        self.n_features = None
         self.selected_features = None
         self.outer_loop_aggregation = None
         self._results = None
         self._minimum_features = 1
         self.post_processor = PostProcessor(robust_minimum)
-        self.executor = executor
 
-    def fit(self, X: NumpyArray, y: NumpyArray, groups: NumpyArray = None):
-        size, n_features = X.shape[0], X.shape[1]
+    def fit(
+        self,
+        X: NumpyArray,
+        y: NumpyArray,
+        groups: NumpyArray = None,
+        executor: Executor = None,
+    ):
+        size, n_features = X.shape
         groups = self.get_groups(groups, size)
         input_data = InputData(X=X, y=y, groups=groups, n_features=n_features)
         self.feature_evaluator.n_initial_features = n_features
@@ -71,25 +74,25 @@ class FeatureSelector:
             )
             olrs = []
             for outer_split in data_splitter.iter_outer_splits():
-                outer_loop_results = self._run_outer_loop(
-                    input_data, data_splitter, outer_split
+                outer_loop_results = self._deferred_run_outer_loop(
+                    input_data, data_splitter, outer_split, executor=executor
                 )
                 olrs.append(outer_loop_results)
             repetition_results.append(olrs)
-        # outer_loop = self._make_outer_loop(input_data)
-        # self._results = self._execute_repetitions(outer_loop)
+
         self._results = repetition_results
         self.selected_features = self.post_processor.select_features(repetition_results)
         self.is_fit = True
         return self
 
-    def get_groups(self, groups: NumpyArray, size: int):
+    @staticmethod
+    def get_groups(groups: NumpyArray, size: int):
         if groups is None:
             logging.info("groups is not specified: i.i.d. samples assumed")
             groups = np.arange(size)
         return groups
 
-    def _run_outer_loop(
+    def run_outer_loop(
         self, input_data: InputData, data_splitter: DataSplitter, outer_split: Split
     ) -> OuterLoopResults:
 
@@ -168,22 +171,18 @@ class FeatureSelector:
         )
         return min_eval, mid_eval, max_eval
 
-    # def _execute_repetitions(self, outer_loop: OuterLoop) -> List[Repetition]:
-    #     results = []
-    #     for _ in range(self.repetitions):
-    #         outer_loop.refresh_splits()
-    #         result = outer_loop.run(executor=self.executor)
-    #         results.append(result)
-    #     return results
-    #
-    # def _make_outer_loop(self, input_data: InputData) -> OuterLoop:
-    #     feature_evaluator = self._make_feature_evaluator(input_data)
-    #     return OuterLoop(
-    #         self.n_outer,
-    #         feature_evaluator,
-    #         self.features_dropout_rate,
-    #         self.robust_minimum,
-    #     )
-
     def get_validation_curves(self) -> Dict[str, List]:
         return self.post_processor.get_validation_curves(self._results)
+
+    def _deferred_run_outer_loop(
+        self,
+        input_data: InputData,
+        data_splitter: DataSplitter,
+        outer_split: Split,
+        executor: Executor,
+    ) -> Executor:
+        if executor is None:
+            return self.run_outer_loop(input_data, data_splitter, outer_split)
+        return executor.submit(
+            self.run_outer_loop, input_data, data_splitter, outer_split
+        )
