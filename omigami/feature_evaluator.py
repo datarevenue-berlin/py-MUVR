@@ -23,7 +23,10 @@ class FeatureEvaluator:
         self._model_trainer = make_estimator(estimator, random_state)
         self._metric = make_metric(metric)
         self._random_state = random_state
-        self.n_initial_features = None
+        self._n_initial_features = 0
+
+    def set_n_initial_features(self, n_initial_features: int):
+        self._n_initial_features = n_initial_features
 
     def evaluate_features(
         self, evaluation_data: TrainTestData, features: List[int]
@@ -32,7 +35,7 @@ class FeatureEvaluator:
         y_train = evaluation_data.train_data.y
         X_test = evaluation_data.test_data.X
         y_test = evaluation_data.test_data.y
-        
+
         estimator = self._model_trainer.train_model(X_train, y_train)
         y_pred = estimator.predict(X_test)
 
@@ -43,8 +46,10 @@ class FeatureEvaluator:
     def _get_feature_ranks(
         self, estimator: Estimator, features: Union[List[int], NumpyArray]
     ) -> FeatureRanks:
+        if self._n_initial_features == 0:
+            raise ValueError("Call set_n_initial_features first")
         feature_importances = estimator.feature_importances
         ranks = rankdata(-feature_importances)
         return FeatureRanks(
-            features=features, ranks=ranks, n_feats=self.n_initial_features
+            features=features, ranks=ranks, n_feats=self._n_initial_features
         )

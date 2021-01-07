@@ -67,7 +67,7 @@ class FeatureSelector:
         size, n_features = X.shape
         groups = self.get_groups(groups, size)
         input_data = InputDataset(X=X, y=y, groups=groups)
-        self.feature_evaluator.n_initial_features = n_features
+        self.feature_evaluator.set_n_initial_features(n_features)
 
         repetition_results = []
 
@@ -161,24 +161,18 @@ class FeatureSelector:
     ) -> Tuple[
         FeatureEvaluationResults, FeatureEvaluationResults, FeatureEvaluationResults
     ]:
-        outer_loop_data_min_feats = self.data_splitter.split_data(
-            input_data, split, best_features.min_feats
-        )
-        outer_loop_data_max_feats = self.data_splitter.split_data(
-            input_data, split, best_features.max_feats
-        )
-        outer_loop_data_mid_feats = self.data_splitter.split_data(
-            input_data, split, best_features.mid_feats
-        )
-        min_eval = self.feature_evaluator.evaluate_features(
-            outer_loop_data_min_feats, best_features.min_feats
-        )
-        mid_eval = self.feature_evaluator.evaluate_features(
-            outer_loop_data_mid_feats, best_features.mid_feats
-        )
-        max_eval = self.feature_evaluator.evaluate_features(
-            outer_loop_data_max_feats, best_features.max_feats
-        )
+        min_feats = best_features.min_feats
+        mid_feats = best_features.mid_feats
+        max_feats = best_features.max_feats
+
+        data_min_feats = self.data_splitter.split_data(input_data, split, min_feats)
+        data_mid_feats = self.data_splitter.split_data(input_data, split, mid_feats)
+        data_max_feats = self.data_splitter.split_data(input_data, split, max_feats)
+
+        min_eval = self.feature_evaluator.evaluate_features(data_min_feats, min_feats)
+        mid_eval = self.feature_evaluator.evaluate_features(data_mid_feats, mid_feats)
+        max_eval = self.feature_evaluator.evaluate_features(data_max_feats, max_feats)
+
         return min_eval, mid_eval, max_eval
 
     def get_validation_curves(self) -> Dict[str, List]:

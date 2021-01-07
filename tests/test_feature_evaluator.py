@@ -11,7 +11,7 @@ from omigami.models.model import ScikitLearnEstimator
 @pytest.fixture
 def feature_evaluator():
     fe = FeatureEvaluator(estimator="RFC", metric="MISS", random_state=0,)
-    fe.n_initial_features = 12
+    fe.set_n_initial_features(12)
     return fe
 
 
@@ -27,7 +27,7 @@ def test_evaluate_features(dataset):
         [("normalizer", Normalizer()), ("model", SVC(kernel="linear", random_state=0))]
     )
     fe = FeatureEvaluator(estimator=pipeline, metric="MISS", random_state=0,)
-    fe.n_initial_features = 12
+    fe.set_n_initial_features(12)
     split = Split(None, [1, 2, 3], [0, 4, 5, 6, 7, 8, 9, 10, 11])
     evaluation_data = dataset.split_data(split)
     evaluation = fe.evaluate_features(evaluation_data, [0, 4, 6])
