@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
-from omigami.outer_loop import OuterLoop, OuterLoopResults
-from omigami.feature_evaluator import FeatureEvaluator, FeatureEvaluationResults
-from omigami.data_models import InputDataset
+from omigami.old.outer_loop import OuterLoop
+from omigami.feature_evaluator import FeatureEvaluator
+from omigami.data import InputDataset, OuterLoopResults
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
 import logging
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
-from omigami.omigami import FeatureSelector
+from omigami.feature_selector import FeatureSelector
 from omigami.utils import average_scores, MIN, MAX, MID
 
 

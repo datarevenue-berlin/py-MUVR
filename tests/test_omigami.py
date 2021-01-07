@@ -2,8 +2,7 @@ import collections
 import pytest
 import pandas as pd
 from sklearn import datasets
-from omigami.omigami import FeatureSelector
-from omigami.outer_looper import OuterLoopModelTrainResults, OuterLoopResults
+from omigami.feature_selector import FeatureSelector
 
 Dataset = collections.namedtuple("Dataset", "X y groups")
 

@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from omigami.data_models import InputDataset, Split
+from omigami.data import InputDataset, Split
 
 
 @pytest.fixture

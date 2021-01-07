@@ -1,7 +1,6 @@
 import pytest
 import numpy as np
-from omigami.data_models import InputDataset
-from omigami.data_splitter import DataSplitter
+from omigami.data import InputDataset, DataSplitter
 
 
 @pytest.fixture
