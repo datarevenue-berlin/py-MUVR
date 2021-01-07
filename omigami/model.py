@@ -1,10 +1,10 @@
 # TODO: rename
 import numpy as np
 from typing import Any
-from data_types import RandomState
 from sklearn.base import BaseEstimator, clone
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
+from omigami.data_types import RandomState
 
 
 class Estimator:
@@ -48,7 +48,10 @@ class ScikitLearnEstimator(Estimator):
         raise ValueError("The estimator provided has no feature importances")
 
     def set_random_state(self, random_state: RandomState):
-        self._estimator.set_params(random_state=random_state)
+        try:
+            self._estimator.set_params(random_state=random_state)
+        except ValueError:
+            pass  # not all models have a random_state param (e.g. LinearRegression)
 
     def _clone_estimator(self):
         return clone(self._estimator)

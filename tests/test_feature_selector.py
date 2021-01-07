@@ -1,15 +1,14 @@
 from unittest.mock import Mock
-
 import pytest
 from concurrent.futures import ProcessPoolExecutor
 
-from data_models import InputData, SelectedFeatures
-from data_splitter import DataSplitter
-from feature_selector import FeatureSelector
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-from post_processor import PostProcessor
+from omigami.post_processor import PostProcessor
+from omigami.data_models import InputData, SelectedFeatures
+from omigami.data_splitter import DataSplitter
+from omigami.feature_selector import FeatureSelector
 
 
 @pytest.fixture()
@@ -45,7 +44,7 @@ def test_fit(fs):
 
 
 def test_get_groups(fs):
-    predefined_group = [1, 2 ,3]
+    predefined_group = [1, 2, 3]
     generated_groups = fs.get_groups(None, 5)
 
     assert all(generated_groups == [0, 1, 2, 3, 4])
@@ -58,7 +57,9 @@ def test_run_outer_loop(fs):
     input_data.split_data = Mock(spec=input_data.split_data, return_value="split")
 
     data_splitter = Mock(spec=DataSplitter)
-    data_splitter.iter_inner_splits = Mock(data_splitter.iter_inner_splits, return_value=[1, 2])
+    data_splitter.iter_inner_splits = Mock(
+        data_splitter.iter_inner_splits, return_value=[1, 2]
+    )
 
     fs._remove_features = Mock(return_value=[])
     fs.create_outer_loop_results = Mock(
@@ -78,11 +79,13 @@ def test_run_outer_loop(fs):
     input_data.split_data.assert_called_with(2, features)
     fs._remove_features.assert_called_once_with(features, inner_results)
     fs.feature_evaluator.evaluate_features.assert_called_with("split", features)
-    fs.create_outer_loop_results.assert_called_with(feature_elim_results, input_data, "outer_split")
+    fs.create_outer_loop_results.assert_called_with(
+        feature_elim_results, input_data, "outer_split"
+    )
 
 
 def test_remove_features(fs, inner_loop_results):
-    features=np.array([1, 2, 3, 4])
+    features = np.array([1, 2, 3, 4])
     fs.keep_fraction = 0.75
     features = fs._remove_features(features, inner_loop_results)
     assert len(features) == 3

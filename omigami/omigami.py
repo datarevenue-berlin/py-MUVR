@@ -1,2 +1,2 @@
-from feature_selector import FeatureSelector
-from post_processor import PostProcessor
+from omigami.feature_selector import FeatureSelector
+from omigami.post_processor import PostProcessor

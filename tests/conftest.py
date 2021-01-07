@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from data_models import FeatureEvaluationResults, FeatureRanks, InputData
+from omigami.data_models import FeatureEvaluationResults, FeatureRanks, InputData
 from omigami.outer_looper import OuterLoopResults, OuterLoopModelTrainResults
 from omigami.model_trainer import TrainingTestingResult, FeatureRanks
 

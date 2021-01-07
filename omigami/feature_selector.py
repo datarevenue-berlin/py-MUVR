@@ -5,7 +5,7 @@ import numpy as np
 from numpy.random import RandomState
 from scipy.stats import gmean
 
-from data_models import FeatureEvaluationResults
+from omigami.data_models import FeatureEvaluationResults
 from omigami.data_splitter import DataSplitter
 from omigami.data_types import MetricFunction, Estimator, NumpyArray
 from omigami.data_models import (
@@ -67,10 +67,7 @@ class FeatureSelector:
 
         for _ in range(self.repetitions):
             data_splitter = DataSplitter(
-                self.n_outer,
-                self.n_inner,
-                input_data,
-                self.random_state,
+                self.n_outer, self.n_inner, input_data, self.random_state,
             )
 
             for outer_split in data_splitter.iter_outer_splits():
@@ -141,9 +138,7 @@ class FeatureSelector:
         outer_split: Split,
     ) -> OuterLoopResults:
         min_eval, mid_eval, max_eval = self.evaluate_min_mid_and_max_features(
-            input_data,
-            feature_elimination_results.best_features,
-            outer_split,
+            input_data, feature_elimination_results.best_features, outer_split,
         )
         outer_loop_results = OuterLoopResults(
             min_eval=min_eval,
@@ -154,10 +149,7 @@ class FeatureSelector:
         return outer_loop_results
 
     def evaluate_min_mid_and_max_features(
-        self,
-        input_data: InputData,
-        best_features: SelectedFeatures,
-        split: Split,
+        self, input_data: InputData, best_features: SelectedFeatures, split: Split,
     ) -> Tuple[
         FeatureEvaluationResults, FeatureEvaluationResults, FeatureEvaluationResults
     ]:

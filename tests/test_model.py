@@ -6,7 +6,7 @@ from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC
 from sklearn.exceptions import NotFittedError
 from omigami.model import Estimator, make_estimator
-from omigami.models import InputData
+from omigami.data_models import InputData
 
 
 @pytest.fixture

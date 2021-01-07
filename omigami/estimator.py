@@ -4,7 +4,7 @@ from typing import Union
 from sklearn.base import BaseEstimator, clone
 from sklearn.ensemble import RandomForestClassifier
 from omigami.data_types import MetricFunction, Estimator, RandomState, NumpyArray
-from model import make_estimator
+from omigami.model import make_estimator
 
 
 class ModelTrainer:
