@@ -5,23 +5,19 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from omigami.models import InputData, FeatureRanks, Split
+from omigami.data_models import FeatureRanks
 from omigami.feature_evaluator import FeatureEvaluator, miss_score
 from omigami.model import ScikitLearnEstimator
 
 
 @pytest.fixture
-def dataset():
-    X = np.random.rand(12, 12)
-    y = np.random.choice([0, 1], 12)
-    return InputData(X=X, y=y, groups=np.arange(12))
-
-
-@pytest.fixture
-def feature_evaluator(dataset):
+def feature_evaluator():
     fe = FeatureEvaluator(
-        estimator="RFC", metric="MISS", n_features=dataset.n_features, random_state=0,
+        estimator="RFC",
+        metric="MISS",
+        random_state=0,
     )
+    fe.n_initial_features = 12
     return fe
 
 
@@ -29,9 +25,10 @@ def test_feature_evaluator(feature_evaluator):
     assert feature_evaluator
     assert feature_evaluator._model_trainer
     assert hasattr(feature_evaluator._metric, "__call__")
-    assert feature_evaluator._n_features == 12
+    assert feature_evaluator.n_initial_features == 12
 
 
+# TODO: this test is not passing because the pipeline has no attribute random_state
 def test_evaluate_features(dataset):
     pipeline = Pipeline(
         [("normalizer", Normalizer()), ("model", SVC(kernel="linear", random_state=0))]
@@ -39,9 +36,10 @@ def test_evaluate_features(dataset):
     fe = FeatureEvaluator(
         estimator=pipeline,
         metric="MISS",
-        n_features=dataset.n_features,
         random_state=0,
     )
+    fe.n_initial_features = 12
+    evaluation = fe.evaluate_features([0, 4, 6], 0, 0)
     split = Split(None, [1, 2, 3], [0, 4, 5, 6, 7, 8, 9, 10, 11])
     evaluation_data = dataset.split_data(split)
     evaluation = fe.evaluate_features(evaluation_data, [0, 4, 6])

@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from omigami.models import InputData
+from omigami.data_models import InputData
 from omigami.data_splitter import DataSplitter
 
 

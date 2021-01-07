@@ -1,7 +1,6 @@
 from concurrent.futures import Executor, Future
 from omigami.feature_evaluator import FeatureEvaluator
-from omigami.recursive_feature_eliminator import RecursiveFeatureEliminator
-from omigami.models import OuterLoopResults
+from omigami.data_models import OuterLoopResults
 
 
 class OuterLoop:
@@ -42,7 +41,7 @@ class OuterLoop:
             min_eval=min_eval,
             max_eval=max_eval,
             mid_eval=mid_eval,
-            score_vs_feats=elimination_res.score_vs_feats,
+            score_vs_feats=elimination_res.n_features_to_score_map,
         )
 
     def refresh_splits(self):

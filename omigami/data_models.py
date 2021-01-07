@@ -1,8 +1,8 @@
 # TODO: rename as data_models
 
-from typing import Iterable, List
+from typing import Iterable, List, Dict, Union
 from dataclasses import dataclass
-from omigami.types import NumpyArray
+from omigami.data_types import NumpyArray
 from omigami.model import Estimator
 
 
@@ -18,10 +18,11 @@ class InputData:
     X: NumpyArray
     y: NumpyArray
     groups: NumpyArray
+    n_features: int = None
 
-    @property
-    def n_features(self):
-        return self.X.shape[1]
+    def __post_init__(self):
+        if self.n_features is None:
+            self.n_features = self.X.shape[1]
 
     def split_data(self, split, features=None):
         return TrainTestData(
@@ -78,25 +79,28 @@ class FeatureEvaluationResults:
     model: Estimator
 
 
+InnerLoopResults = List[FeatureEvaluationResults]
+
+
+@dataclass
+class SelectedFeatures:
+    min_feats: Union[List[int], NumpyArray]
+    max_feats: Union[List[int], NumpyArray]
+    mid_feats: Union[List[int], NumpyArray]
+
+
+@dataclass
+class FeatureEliminationResults:
+    n_features_to_score_map: Dict[int, float]
+    best_features: SelectedFeatures
+
+
 @dataclass
 class OuterLoopResults:
     min_eval: FeatureEvaluationResults
     max_eval: FeatureEvaluationResults
     mid_eval: FeatureEvaluationResults
-    score_vs_feats: dict  # TODO: find a better name and signature
-
-
-@dataclass
-class SelectedFeatures:
-    min_feats: Iterable[int]
-    max_feats: Iterable[int]
-    mid_feats: Iterable[int]
-
-
-@dataclass
-class RecursiveFeatureEliminationResults:
-    score_vs_feats: dict  # TODO: find a better name and signature
-    best_feats: SelectedFeatures
+    n_features_to_score_map: Dict[int, float]
 
 
 @dataclass

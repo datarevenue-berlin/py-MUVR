@@ -5,13 +5,13 @@ from omigami.model_trainer import ModelTrainer, miss_score
 
 
 @pytest.fixture
-def dataset():
+def train_dataset():
     return datasets.make_classification(n_samples=200, n_features=5, random_state=42)
 
 
 @pytest.fixture
-def model_trainer(dataset):
-    X, y = dataset
+def model_trainer(train_dataset):
+    X, y = train_dataset
     return ModelTrainer(
         X=X,
         y=y,

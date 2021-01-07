@@ -1,9 +1,9 @@
-from typing import Union, Iterable
+from typing import Union, List
 from sklearn.metrics import SCORERS, get_scorer
 from scipy.stats import rankdata
 import numpy as np
-from omigami.types import Estimator, MetricFunction, RandomState, NumpyArray
-from omigami.models import InputData, FeatureEvaluationResults, FeatureRanks
+from omigami.data_types import Estimator, MetricFunction, RandomState, NumpyArray
+from omigami.data_models import FeatureEvaluationResults, FeatureRanks, TrainTestData
 from omigami.estimator import ModelTrainer
 from omigami.model import make_estimator
 
@@ -11,7 +11,6 @@ from omigami.model import make_estimator
 class FeatureEvaluator:
     def __init__(
         self,
-        n_features: int,
         estimator: Estimator,
         metric: Union[str, MetricFunction],
         random_state: Union[int, RandomState],
@@ -19,9 +18,9 @@ class FeatureEvaluator:
         self._model_trainer = make_estimator(estimator, random_state)
         self._metric = self._make_metric(metric)
         self._random_state = random_state
-        self._n_features = n_features
+        self.n_initial_features = None
 
-    def evaluate_features(self, evaluation_data, features) -> FeatureEvaluationResults:
+    def evaluate_features(self, evaluation_data: TrainTestData, features: List[int]) -> FeatureEvaluationResults:
         X_train = evaluation_data.train_data.X
         y_train = evaluation_data.train_data.y
         estimator = self._model_trainer.train_model(X_train, y_train)
@@ -33,9 +32,6 @@ class FeatureEvaluator:
         score = -self._metric(y_test, y_pred)
         ranks = self._get_feature_ranks(estimator, features)
         return FeatureEvaluationResults(test_score=score, ranks=ranks, model=estimator)
-
-    def get_n_features(self):
-        return self._n_features
 
     def _make_metric(self, metric: Union[str, MetricFunction]) -> MetricFunction:
         """Build metric function using the input `metric`. If a metric is a string
@@ -58,11 +54,11 @@ class FeatureEvaluator:
         raise ValueError("Input metric is not a valid string")
 
     def _get_feature_ranks(
-        self, estimator: Estimator, features: Iterable[int]
+        self, estimator: Estimator, features: Union[List[int], NumpyArray]
     ) -> FeatureRanks:
         feature_importances = estimator.feature_importances
         ranks = rankdata(-feature_importances)
-        return FeatureRanks(features=features, ranks=ranks, n_feats=self._n_features)
+        return FeatureRanks(features=features, ranks=ranks, n_feats=self.n_initial_features)
 
 
 def miss_score(y_true: NumpyArray, y_pred: NumpyArray):

@@ -1,7 +1,7 @@
 # TODO: rename
 import numpy as np
 from typing import Any
-from omigami.types import RandomState
+from data_types import RandomState
 from sklearn.base import BaseEstimator, clone
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
