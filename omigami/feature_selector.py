@@ -15,9 +15,9 @@ from data.data_models import (
     InnerLoopResults,
     Split,
 )
-from old.omigami import FeatureEvaluator
-from old.omigami import PostProcessor
-from old.omigami import get_best_n_features, average_ranks
+from omigami.feature_evaluator import FeatureEvaluator
+from omigami.post_processor import PostProcessor
+from omigami.utils import get_best_n_features, average_ranks
 
 Repetition = List[Union[OuterLoopResults, Future]]
 

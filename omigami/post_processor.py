@@ -9,7 +9,7 @@ from data.data_models import (
     FeatureEliminationResults,
     InnerLoopResults,
 )
-from old.omigami import (
+from omigami.utils import (
     average_ranks,
     average_scores,
     normalize_score,
