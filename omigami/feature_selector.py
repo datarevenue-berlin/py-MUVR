@@ -177,13 +177,13 @@ class FeatureSelector:
 
     def _deferred_run_outer_loop(
         self,
-        input_data: InputData,
+        input_data: InputDataset,
         data_splitter: DataSplitter,
         outer_split: Split,
         executor: Executor,
     ) -> Executor:
         if executor is None:
-            return self.run_outer_loop(input_data, data_splitter, outer_split)
+            return self._run_outer_loop(input_data, data_splitter, outer_split)
         return executor.submit(
-            self.run_outer_loop, input_data, data_splitter, outer_split
+            self._run_outer_loop, input_data, data_splitter, outer_split
         )
