@@ -3,13 +3,12 @@ from typing import Union, List, Dict, Tuple
 from concurrent.futures import Executor, Future
 import numpy as np
 from numpy.random import RandomState
-from scipy.stats import gmean
 
 from omigami.data_models import FeatureEvaluationResults
 from omigami.data_splitter import DataSplitter
 from omigami.data_types import MetricFunction, Estimator, NumpyArray
 from omigami.data_models import (
-    InputData,
+    InputDataset,
     SelectedFeatures,
     FeatureEliminationResults,
     OuterLoopResults,
@@ -60,7 +59,7 @@ class FeatureSelector:
     def fit(self, X: NumpyArray, y: NumpyArray, groups: NumpyArray = None):
         size, n_features = X.shape[0], X.shape[1]
         groups = self.get_groups(groups, size)
-        input_data = InputData(X=X, y=y, groups=groups, n_features=n_features)
+        input_data = InputDataset(X=X, y=y, groups=groups)
         self.feature_evaluator.n_initial_features = n_features
 
         repetition_results = []
@@ -76,7 +75,6 @@ class FeatureSelector:
                 )
                 olrs.append(outer_loop_results)
             repetition_results.append(olrs)
-        # outer_loop = self._make_outer_loop(input_data)
         # self._results = self._execute_repetitions(outer_loop)
         self.selected_features = self.post_processor.select_features(repetition_results)
         self.is_fit = True
@@ -89,7 +87,7 @@ class FeatureSelector:
         return groups
 
     def _run_outer_loop(
-        self, input_data: InputData, data_splitter: DataSplitter, outer_split: Split
+        self, input_data: InputDataset, data_splitter: DataSplitter, outer_split: Split
     ) -> OuterLoopResults:
 
         raw_feature_elim_results = {}
@@ -134,7 +132,7 @@ class FeatureSelector:
     def create_outer_loop_results(
         self,
         feature_elimination_results: FeatureEliminationResults,
-        input_data: InputData,
+        input_data: InputDataset,
         outer_split: Split,
     ) -> OuterLoopResults:
         min_eval, mid_eval, max_eval = self.evaluate_min_mid_and_max_features(
@@ -149,7 +147,7 @@ class FeatureSelector:
         return outer_loop_results
 
     def evaluate_min_mid_and_max_features(
-        self, input_data: InputData, best_features: SelectedFeatures, split: Split,
+        self, input_data: InputDataset, best_features: SelectedFeatures, split: Split,
     ) -> Tuple[
         FeatureEvaluationResults, FeatureEvaluationResults, FeatureEvaluationResults
     ]:

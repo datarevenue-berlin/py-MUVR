@@ -1,9 +1,12 @@
 import numpy as np
 import pytest
 
-from omigami.data_models import FeatureEvaluationResults, FeatureRanks, InputData
-from omigami.outer_looper import OuterLoopResults, OuterLoopModelTrainResults
-from omigami.model_trainer import TrainingTestingResult, FeatureRanks
+from omigami.data_models import (
+    FeatureEvaluationResults,
+    FeatureRanks,
+    InputDataset,
+    OuterLoopResults,
+)
 
 
 @pytest.fixture(scope="session")
@@ -145,4 +148,4 @@ def rfe_raw_results(inner_loop_results, inner_loop_results_2, inner_loop_results
 def dataset():
     X = np.random.rand(12, 12)
     y = np.random.choice([0, 1], 12)
-    return InputData(X=X, y=y, groups=np.arange(12))
+    return InputDataset(X=X, y=y, groups=np.arange(12))

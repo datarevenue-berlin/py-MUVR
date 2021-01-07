@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from omigami.data_models import InputData
+from omigami.data_models import InputDataset
 from omigami.data_splitter import DataSplitter
 
 
@@ -8,7 +8,7 @@ from omigami.data_splitter import DataSplitter
 def dataset():
     X = np.zeros((10, 10))
     y = np.zeros(10)
-    return InputData(X=X, y=y, groups=np.arange(10))
+    return InputDataset(X=X, y=y, groups=np.arange(10))
 
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def grouped_dataset():
     X = np.zeros((10, 10))
     y = np.arange(10)
     groups = y // 2
-    return InputData(X=X, y=y, groups=groups)
+    return InputDataset(X=X, y=y, groups=groups)
 
 
 def test_data_splitter(dataset):

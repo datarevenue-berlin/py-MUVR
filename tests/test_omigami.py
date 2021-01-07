@@ -3,7 +3,6 @@ import pytest
 import pandas as pd
 from sklearn import datasets
 from omigami.omigami import FeatureSelector
-from omigami.model_trainer import FeatureRanks, TrainingTestingResult
 from omigami.outer_looper import OuterLoopModelTrainResults, OuterLoopResults
 
 Dataset = collections.namedtuple("Dataset", "X y groups")

@@ -2,14 +2,14 @@ import pytest
 import numpy as np
 from omigami.outer_loop import OuterLoop, OuterLoopResults
 from omigami.feature_evaluator import FeatureEvaluator, FeatureEvaluationResults
-from omigami.data_models import InputData
+from omigami.data_models import InputDataset
 
 
 @pytest.fixture
 def dataset():
     X = np.random.rand(12, 12)
     y = np.random.choice([0, 1], 12)
-    return InputData(X=X, y=y, groups=np.arange(12))
+    return InputDataset(X=X, y=y, groups=np.arange(12))
 
 
 @pytest.fixture

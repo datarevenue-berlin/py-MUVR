@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 from omigami.post_processor import PostProcessor
-from omigami.data_models import InputData, SelectedFeatures
+from omigami.data_models import InputDataset, SelectedFeatures
 from omigami.data_splitter import DataSplitter
 from omigami.feature_selector import FeatureSelector
 
@@ -52,8 +52,8 @@ def test_get_groups(fs):
 
 
 def test_run_outer_loop(fs):
-    x = np.array([[2, 3]])
-    input_data = InputData(x, "y", "groups", 3)
+    x = np.array([[2, 3, 4], [2, 3, 4]])
+    input_data = InputDataset(x, "y", "groups")
     input_data.split_data = Mock(spec=input_data.split_data, return_value="split")
 
     data_splitter = Mock(spec=DataSplitter)
@@ -135,6 +135,7 @@ def test_deferred_fit():
     assert fs.is_fit
 
 
+@pytest.mark.xfail(reason="Not implemented atm.")
 def test_execute_repetitions():
     class MockOuterLoop:
         refresh_count = 0

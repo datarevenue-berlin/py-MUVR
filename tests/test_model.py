@@ -6,14 +6,14 @@ from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC
 from sklearn.exceptions import NotFittedError
 from omigami.model import Estimator, make_estimator
-from omigami.data_models import InputData
+from omigami.data_models import InputDataset
 
 
 @pytest.fixture
 def dataset():
     X = np.random.rand(12, 12)
     y = np.random.choice([0, 1], 12)
-    return InputData(X=X, y=y, groups=np.arange(12))
+    return InputDataset(X=X, y=y, groups=np.arange(12))
 
 
 @pytest.mark.parametrize(
