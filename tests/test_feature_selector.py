@@ -52,11 +52,13 @@ def test_get_groups(fs):
 def test_run_outer_loop(fs):
     x = np.array([[2, 3, 4], [2, 3, 4]])
     input_data = InputDataset(x, "y", "groups")
-    input_data.split_data = Mock(spec=input_data.split_data, return_value="split")
+    fs.data_splitter = Mock(DataSplitter)
+    fs.data_splitter.split_data = Mock(
+        spec=fs.data_splitter.split_data, return_value="split"
+    )
 
-    data_splitter = Mock(spec=DataSplitter)
-    data_splitter.iter_inner_splits = Mock(
-        data_splitter.iter_inner_splits, return_value=[1, 2]
+    fs.data_splitter.iter_inner_splits = Mock(
+        fs.data_splitter.iter_inner_splits, return_value=[1, 2]
     )
 
     fs._remove_features = Mock(return_value=[])
@@ -67,18 +69,17 @@ def test_run_outer_loop(fs):
         spec=fs.feature_evaluator.evaluate_features, return_value="res"
     )
     fs.post_processor.process_feature_elim_results = Mock(
-        fs.post_processor.process_feature_elim_results,
-        return_value="processed_results"
+        fs.post_processor.process_feature_elim_results, return_value="processed_results"
     )
     inner_results = ["res", "res"]
     features = [0, 1, 2]
     raw_results = {tuple(features): inner_results}
 
-    olr = fs._run_outer_loop(input_data, data_splitter, "outer_split")
+    olr = fs._run_outer_loop(input_data, "outer_split")
 
     assert olr == "outer_loop_res"
-    data_splitter.iter_inner_splits.assert_called_with("outer_split")
-    input_data.split_data.assert_called_with(2, features)
+    fs.data_splitter.iter_inner_splits.assert_called_with("outer_split")
+    fs.data_splitter.split_data.assert_called_with(input_data, 2, features)
     fs._remove_features.assert_called_once_with(features, inner_results)
     fs.feature_evaluator.evaluate_features.assert_called_with("split", features)
     fs.post_processor.process_feature_elim_results.assert_called_with(raw_results)
@@ -113,12 +114,17 @@ def test_evaluate_min_mid_and_max_features(fs, dataset, rfe_raw_results):
     fs.feature_evaluator.evaluate_features = Mock(
         spec=fs.feature_evaluator.evaluate_features, side_effect=["min", "mid", "max"]
     )
-    dataset.split_data = Mock(spec=dataset.split_data, return_value="data")
+    fs.data_splitter = Mock(DataSplitter)
+    fs.data_splitter.split_data = Mock(
+        spec=fs.data_splitter.split_data, return_value="data"
+    )
 
     res = fs.evaluate_min_mid_and_max_features(dataset, best_features, "split")
 
     assert res == ("min", "mid", "max")
-    dataset.split_data.assert_called_with("split")
+    fs.data_splitter.split_data.assert_called_with(
+        dataset, "split", best_features.mid_feats
+    )
     assert fs.feature_evaluator.evaluate_features.call_count == 3
 
 

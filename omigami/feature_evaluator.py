@@ -30,10 +30,10 @@ class FeatureEvaluator:
     ) -> FeatureEvaluationResults:
         X_train = evaluation_data.train_data.X
         y_train = evaluation_data.train_data.y
-        estimator = self._model_trainer.train_model(X_train, y_train)
-
         X_test = evaluation_data.test_data.X
         y_test = evaluation_data.test_data.y
+        
+        estimator = self._model_trainer.train_model(X_train, y_train)
         y_pred = estimator.predict(X_test)
 
         score = -self._metric(y_test, y_pred)
