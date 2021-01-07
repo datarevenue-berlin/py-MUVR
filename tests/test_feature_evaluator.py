@@ -6,6 +6,7 @@ from sklearn.svm import SVC
 from omigami.data import FeatureRanks, Split
 from omigami.feature_evaluator import FeatureEvaluator
 from omigami.models.model import ScikitLearnEstimator
+from omigami.data import DataSplitter
 
 
 @pytest.fixture
@@ -19,7 +20,7 @@ def test_feature_evaluator(feature_evaluator):
     assert feature_evaluator
     assert feature_evaluator._model_trainer
     assert hasattr(feature_evaluator._metric, "__call__")
-    assert feature_evaluator.n_initial_features == 12
+    assert feature_evaluator._n_initial_features == 12
 
 
 def test_evaluate_features(dataset):
@@ -28,11 +29,12 @@ def test_evaluate_features(dataset):
     )
     fe = FeatureEvaluator(estimator=pipeline, metric="MISS", random_state=0,)
     fe.set_n_initial_features(12)
-    split = Split(None, [1, 2, 3], [0, 4, 5, 6, 7, 8, 9, 10, 11])
-    evaluation_data = dataset.split_data(split)
+    ds = DataSplitter(n_outer=5, n_inner=4, random_state=0, input_data=dataset)
+    split = ds.iter_outer_splits().__next__()
+    evaluation_data = ds.split_data(dataset, split)
     evaluation = fe.evaluate_features(evaluation_data, [0, 4, 6])
     assert evaluation
-    assert evaluation.test_score
+    assert evaluation.test_score >= 0
     assert evaluation.ranks
     assert isinstance(evaluation.ranks, FeatureRanks)
     assert evaluation.ranks.n_feats == 12

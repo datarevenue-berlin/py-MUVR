@@ -123,7 +123,7 @@ def test_evaluate_min_mid_and_max_features(fs, dataset, rfe_raw_results):
 
     assert res == ("min", "mid", "max")
     fs.data_splitter.split_data.assert_called_with(
-        dataset, "split", best_features.mid_feats
+        dataset, "split", best_features.max_feats
     )
     assert fs.feature_evaluator.evaluate_features.call_count == 3
 
@@ -133,14 +133,10 @@ def test_deferred_fit():
     y = np.array([np.random.choice([0, 1]) for _ in range(10)])
     lr = LinearRegression()
     fs = FeatureSelector(
-        n_outer=8,
-        repetitions=8,
-        random_state=0,
-        estimator=lr,
-        metric="MISS",
-        executor=ProcessPoolExecutor(),
+        n_outer=8, repetitions=8, random_state=0, estimator=lr, metric="MISS",
     )
-    fitted_fs = fs.fit(X, y)
+    executor = ProcessPoolExecutor()
+    fitted_fs = fs.fit(X, y, executor=executor)
     assert fitted_fs is fs
     assert fs.selected_features
     assert fs.is_fit
