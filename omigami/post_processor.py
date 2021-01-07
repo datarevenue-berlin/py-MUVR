@@ -7,7 +7,7 @@ from omigami.data import (
     ScoreCurve,
     FeatureEliminationResults,
     InnerLoopResults,
-    OuterLoopResults
+    OuterLoopResults,
 )
 from omigami.utils import (
     average_ranks,
@@ -24,7 +24,6 @@ class PostProcessor:
         self.robust_minimum = robust_minimum
 
     def select_features(self, results: FeatureSelectionResults) -> SelectedFeatures:
-        results = self._fetch_results(results)
         flat_results = [r for repetition in results for r in repetition]
         average_ranks_min = average_ranks([r.min_eval.ranks for r in flat_results])
         average_ranks_mid = average_ranks([r.mid_eval.ranks for r in flat_results])
@@ -37,7 +36,7 @@ class PostProcessor:
         )
 
     @staticmethod
-    def _fetch_results(results: FeatureSelectionResults) -> FeatureSelectionResults:
+    def fetch_results(results: FeatureSelectionResults) -> FeatureSelectionResults:
         fetched_results = []
         for repetition in results:
             fetched_repetition = []
@@ -70,7 +69,6 @@ class PostProcessor:
         return avg_scores
 
     def get_validation_curves(self, results: FeatureSelectionResults) -> Dict:
-        results = self._fetch_results(results)
         flat_results = [r for repetition in results for r in repetition]
         outer_loop_scores = [r.n_features_to_score_map for r in flat_results]
         avg_scores_per_loop = self._get_repetition_avg_scores(results)

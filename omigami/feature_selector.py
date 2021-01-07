@@ -82,8 +82,8 @@ class FeatureSelector:
                 )
                 olrs.append(outer_loop_results)
             repetition_results.append(olrs)
-        self._results = repetition_results
-        self.selected_features = self.post_processor.select_features(repetition_results)
+        self._results = self.post_processor.fetch_results(repetition_results)
+        self.selected_features = self.post_processor.select_features(self._results)
         self.is_fit = True
         return self
 

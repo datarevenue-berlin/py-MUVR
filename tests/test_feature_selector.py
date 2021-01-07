@@ -4,6 +4,8 @@ from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
+from loky import get_reusable_executor
+from dask.distributed import Client
 
 from omigami.data import InputDataset, SelectedFeatures, DataSplitter
 from omigami.feature_selector import FeatureSelector
@@ -128,14 +130,17 @@ def test_evaluate_min_mid_and_max_features(fs, dataset, rfe_raw_results):
     assert fs.feature_evaluator.evaluate_features.call_count == 3
 
 
-def test_deferred_fit():
+@pytest.mark.parametrize(
+    "executor",
+    [ProcessPoolExecutor(), Client().get_executor(), get_reusable_executor()],
+)
+def test_deferred_fit(executor):
     X = np.random.rand(10, 10)
     y = np.array([np.random.choice([0, 1]) for _ in range(10)])
     lr = LinearRegression()
     fs = FeatureSelector(
         n_outer=8, repetitions=8, random_state=0, estimator=lr, metric="MISS",
     )
-    executor = ProcessPoolExecutor()
     fitted_fs = fs.fit(X, y, executor=executor)
     assert fitted_fs is fs
     assert fs.selected_features
