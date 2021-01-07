@@ -63,19 +63,19 @@ class FeatureSelector:
         input_data = InputData(X=X, y=y, groups=groups, n_features=n_features)
         self.feature_evaluator.n_initial_features = n_features
 
-        repetition_results = Repetition()
+        repetition_results = []
 
         for _ in range(self.repetitions):
             data_splitter = DataSplitter(
                 self.n_outer, self.n_inner, input_data, self.random_state,
             )
-
+            olrs = []
             for outer_split in data_splitter.iter_outer_splits():
                 outer_loop_results = self._run_outer_loop(
                     input_data, data_splitter, outer_split
                 )
-                repetition_results.append(outer_loop_results)
-
+                olrs.append(outer_loop_results)
+            repetition_results.append(olrs)
         # outer_loop = self._make_outer_loop(input_data)
         # self._results = self._execute_repetitions(outer_loop)
         self.selected_features = self.post_processor.select_features(repetition_results)
