@@ -6,7 +6,7 @@ from sklearn.preprocessing import Normalizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from omigami.data_models import FeatureRanks, Split
-from omigami.feature_evaluator import FeatureEvaluator, miss_score
+from omigami.feature_evaluator import FeatureEvaluator
 from omigami.model import ScikitLearnEstimator
 
 
@@ -81,26 +81,3 @@ def test_get_feature_rank(estimator, attribute, values, dataset, feature_evaluat
     assert ranks[9] == 5.5
     assert ranks[10] == 5.5
     assert ranks[11] == 3
-
-
-def test_make_metric(feature_evaluator):
-    assert feature_evaluator._metric
-    assert feature_evaluator._metric is miss_score
-
-
-def test_miss_score():
-    y_pred = np.array([1, 0, 0, 1])
-    y_true = np.array([0, 1, 1, 0])
-    assert miss_score(y_true, y_pred) == -4
-    y_true = np.array([1, 0, 0, 1])
-    assert miss_score(y_true, y_pred) == 0
-    y_true = np.array([1, 0, 1, 0])
-    assert miss_score(y_true, y_pred) == -2
-
-
-def test_make_metric_from_string(feature_evaluator):
-    for metric_id in SCORERS:
-        assert feature_evaluator._make_metric_from_string(metric_id)
-    assert feature_evaluator._make_metric_from_string("MISS") is miss_score
-    with pytest.raises(ValueError):
-        feature_evaluator._make_metric_from_string("yo")
