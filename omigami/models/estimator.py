@@ -1,10 +1,7 @@
 # TODO: remove this class, probably saving some tests
-from sklearn.metrics import SCORERS, get_scorer
 from typing import Union
-from sklearn.base import BaseEstimator, clone
-from sklearn.ensemble import RandomForestClassifier
-from omigami.data_types import MetricFunction, Estimator, RandomState, NumpyArray
-from omigami.model import make_estimator
+from data.data_types import Estimator, RandomState, NumpyArray
+from models.model import make_estimator
 
 
 class ModelTrainer:

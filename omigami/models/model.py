@@ -4,7 +4,7 @@ from typing import Any
 from sklearn.base import BaseEstimator, clone
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
-from omigami.data_types import RandomState
+from data.data_types import RandomState
 
 
 class Estimator:

@@ -5,8 +5,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC
 from sklearn.exceptions import NotFittedError
-from omigami.model import Estimator, make_estimator
-from omigami.data_models import InputDataset
+from models.model import Estimator, make_estimator
+from data.data_models import InputDataset
 
 
 @pytest.fixture

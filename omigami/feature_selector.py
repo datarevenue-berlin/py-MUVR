@@ -4,10 +4,10 @@ from concurrent.futures import Executor, Future
 import numpy as np
 from numpy.random import RandomState
 
-from omigami.data_models import FeatureEvaluationResults
-from omigami.data_splitter import DataSplitter
-from omigami.data_types import MetricFunction, Estimator, NumpyArray
-from omigami.data_models import (
+from data.data_models import FeatureEvaluationResults
+from data.data_splitter import DataSplitter
+from data.data_types import MetricFunction, Estimator, NumpyArray
+from data.data_models import (
     InputDataset,
     SelectedFeatures,
     FeatureEliminationResults,
@@ -15,9 +15,9 @@ from omigami.data_models import (
     InnerLoopResults,
     Split,
 )
-from omigami.feature_evaluator import FeatureEvaluator
-from omigami.post_processor import PostProcessor
-from omigami.utils import normalize_score, get_best_n_features, average_ranks
+from old.omigami import FeatureEvaluator
+from old.omigami import PostProcessor
+from old.omigami import get_best_n_features, average_ranks
 
 Repetition = List[Union[OuterLoopResults, Future]]
 

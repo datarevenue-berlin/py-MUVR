@@ -1,5 +1,5 @@
 from omigami.plot_utils import plot_validation_curves
-from omigami.omigami import FeatureSelector
+from old.omigami import FeatureSelector
 
 
 def test_plot_validation_curves(results):

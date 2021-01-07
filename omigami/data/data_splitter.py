@@ -1,6 +1,6 @@
 from typing import Union, Dict
-from omigami.data_types import RandomState
-from omigami.data_models import InputDataset, Split
+from data.data_types import RandomState
+from data.data_models import InputDataset, Split
 from sklearn.model_selection import GroupShuffleSplit
 
 

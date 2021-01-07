@@ -2,14 +2,14 @@ from typing import List, Union, Dict, Tuple
 from concurrent.futures import Future
 from scipy.stats import gmean
 import numpy as np
-from omigami.outer_loop import OuterLoopResults
-from omigami.data_models import (
+from old.outer_loop import OuterLoopResults
+from data.data_models import (
     SelectedFeatures,
     ScoreCurve,
     FeatureEliminationResults,
     InnerLoopResults,
 )
-from omigami.utils import (
+from old.omigami import (
     average_ranks,
     average_scores,
     normalize_score,

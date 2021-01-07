@@ -1,9 +1,9 @@
 import pytest
 
 from omigami.post_processor import PostProcessor
-from omigami.outer_loop import OuterLoopResults
+from old.outer_loop import OuterLoopResults
 from omigami.feature_evaluator import FeatureEvaluationResults
-from omigami.data_models import FeatureRanks, ScoreCurve
+from data.data_models import FeatureRanks, ScoreCurve
 
 
 @pytest.fixture

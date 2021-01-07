@@ -2,7 +2,7 @@ from typing import List, Dict, Iterable
 from scipy.stats import gmean
 import pandas as pd
 import numpy as np
-from omigami.data_models import FeatureRanks
+from data.data_models import FeatureRanks
 
 MIN = "min"
 MAX = "max"

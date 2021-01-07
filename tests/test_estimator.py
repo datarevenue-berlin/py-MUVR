@@ -1,9 +1,6 @@
 import pytest
 from sklearn import datasets
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.svm import SVC
-from sklearn.utils.validation import check_is_fitted
-from omigami.estimator import ModelTrainer
+from models.estimator import ModelTrainer
 
 
 @pytest.fixture
