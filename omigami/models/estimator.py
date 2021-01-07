@@ -1,6 +1,6 @@
 # TODO: remove this class, probably saving some tests
 from typing import Union
-from data.data_types import Estimator, RandomState, NumpyArray
+from omigami.data import Estimator, RandomState, NumpyArray
 from models.model import make_estimator
 
 

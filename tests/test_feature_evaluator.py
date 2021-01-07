@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC
-from data.data_models import FeatureRanks, Split
+from omigami.data import FeatureRanks, Split
 from omigami.feature_evaluator import FeatureEvaluator
 from models.model import ScikitLearnEstimator
 

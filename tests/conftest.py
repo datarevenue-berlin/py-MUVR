@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from data.data_models import (
+from omigami.data import (
     FeatureEvaluationResults,
     FeatureRanks,
     InputDataset,

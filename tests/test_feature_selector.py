@@ -5,8 +5,7 @@ from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-from data.data_models import InputDataset, SelectedFeatures
-from data.data_splitter import DataSplitter
+from omigami.data import InputDataset, SelectedFeatures, DataSplitter
 from omigami.feature_selector import FeatureSelector
 
 

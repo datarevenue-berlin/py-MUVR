@@ -2,7 +2,7 @@ import collections
 import pytest
 import pandas as pd
 from sklearn import datasets
-from old.omigami import FeatureSelector
+from omigami.feature_selector import FeatureSelector
 
 Dataset = collections.namedtuple("Dataset", "X y groups")
 

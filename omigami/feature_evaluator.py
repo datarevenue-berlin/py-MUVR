@@ -1,7 +1,14 @@
 from typing import Union, List
 from scipy.stats import rankdata
-from data.data_types import Estimator, MetricFunction, RandomState, NumpyArray
-from data.data_models import FeatureEvaluationResults, FeatureRanks, TrainTestData
+from omigami.data import (
+    Estimator,
+    MetricFunction,
+    RandomState,
+    NumpyArray,
+    FeatureEvaluationResults,
+    FeatureRanks,
+    TrainTestData,
+)
 from models.metrics import make_metric
 from models.model import make_estimator
 

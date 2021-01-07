@@ -1,6 +1,6 @@
 import pytest
 from omigami import utils
-from data.data_models import FeatureRanks
+from omigami.data import FeatureRanks
 
 
 @pytest.fixture

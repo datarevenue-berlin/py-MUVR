@@ -1,8 +1,8 @@
 import logging
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
-from old.omigami import FeatureSelector
-from old.omigami import average_scores, MIN, MAX, MID
+from omigami.feature_selector import FeatureSelector
+from omigami.utils import average_scores, MIN, MAX, MID
 
 
 def plot_validation_curves(feature_selector: FeatureSelector) -> Axes:

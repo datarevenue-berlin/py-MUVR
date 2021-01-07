@@ -12,6 +12,7 @@ from omigami.data.data_models import (
     FeatureRanks,
     FeatureEvaluationResults,
     InnerLoopResults,
+    SelectedFeatures,
     FeatureEliminationResults,
     OuterLoopResults,
     ScoreCurve,
