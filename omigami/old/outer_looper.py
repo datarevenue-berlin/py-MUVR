@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict, List
 import dask
-from omigami.inner_looper import InnerLooper, InnerLoopResults
-from omigami.model_trainer import TrainingTestingResult, ModelTrainer
 import omigami.utils as utils
 from omigami.utils import MIN, MAX, MID
 

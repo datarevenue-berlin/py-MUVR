@@ -1,13 +1,11 @@
 import pytest
 import numpy as np
-from sklearn.metrics import SCORERS
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from omigami.data_models import FeatureRanks, Split
+from omigami.data import FeatureRanks, Split
 from omigami.feature_evaluator import FeatureEvaluator
-from omigami.model import ScikitLearnEstimator
+from omigami.models.model import ScikitLearnEstimator
 
 
 @pytest.fixture

@@ -1,6 +1,5 @@
 from typing import Union, Dict
-from omigami.data_types import RandomState
-from omigami.data_models import InputData, Split
+from omigami.data import RandomState, InputDataset, Split
 from sklearn.model_selection import GroupShuffleSplit
 
 
@@ -9,7 +8,7 @@ class DataSplitter:
         self,
         n_outer: int,
         n_inner: int,
-        input_data: InputData,
+        input_data: InputDataset,
         random_state: Union[int, RandomState],
     ):
         self.n_outer = n_outer
@@ -17,7 +16,7 @@ class DataSplitter:
         self.random_state = random_state
         self._splits = self._make_splits(input_data)
 
-    def _make_splits(self, input_data: InputData) -> Dict[tuple, Split]:
+    def _make_splits(self, input_data: InputDataset) -> Dict[tuple, Split]:
         """Create a dictionary of split indexes for i`input_data`,
          according to self.n_outer and self.n_inner and `input_data.groups`.
         The groups are split first in `n_outer` test and train segments. Then each

@@ -1,6 +1,6 @@
 from concurrent.futures import Executor, Future
 from omigami.feature_evaluator import FeatureEvaluator
-from omigami.data_models import OuterLoopResults
+from omigami.data import OuterLoopResults
 
 
 class OuterLoop:

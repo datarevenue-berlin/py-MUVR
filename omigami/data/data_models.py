@@ -1,9 +1,7 @@
-# TODO: rename as data_models
-
 from typing import Iterable, List, Dict, Union
 from dataclasses import dataclass
-from omigami.data_types import NumpyArray
-from omigami.model import Estimator
+from omigami.data import NumpyArray
+from omigami.models.model import Estimator
 
 
 @dataclass
@@ -14,15 +12,14 @@ class Split:
 
 
 @dataclass
-class InputData:
+class InputDataset:
     X: NumpyArray
     y: NumpyArray
     groups: NumpyArray
-    n_features: int = None
 
-    def __post_init__(self):
-        if self.n_features is None:
-            self.n_features = self.X.shape[1]
+    @property
+    def n_features(self):
+        return self.X.shape[1]
 
     def split_data(self, split, features=None):
         return TrainTestData(
@@ -40,13 +37,13 @@ class InputData:
             g_sliced = g_sliced[indices]
         if features is not None:
             X_sliced = X_sliced[:, features]
-        return InputData(X=X_sliced, y=y_sliced, groups=g_sliced)
+        return InputDataset(X=X_sliced, y=y_sliced, groups=g_sliced)
 
 
 @dataclass
 class TrainTestData:
-    train_data: InputData
-    test_data: InputData
+    train_data: InputDataset
+    test_data: InputDataset
 
 
 @dataclass

@@ -3,7 +3,6 @@ from typing import List, Tuple, Union, TypeVar
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
-from omigami.model_trainer import TrainingTestingResult, ModelTrainer
 
 NumpyArray = np.ndarray
 GenericEstimator = TypeVar("GenericEstimator")

@@ -1,13 +1,13 @@
 import pytest
 import numpy as np
-from omigami.data_models import InputData, Split
+from omigami.data import InputDataset, Split
 
 
 @pytest.fixture
 def dataset():
     X = np.zeros((10, 12))
     y = np.zeros(10)
-    return InputData(X=X, y=y, groups=np.arange(10))
+    return InputDataset(X=X, y=y, groups=np.arange(10))
 
 
 def test_input_data_slice(dataset):
