@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from old.outer_loop import OuterLoop
+from omigami.old.outer_loop import OuterLoop
 from omigami.feature_evaluator import FeatureEvaluator
 from omigami.data import InputDataset, OuterLoopResults
 
