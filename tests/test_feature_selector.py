@@ -15,7 +15,7 @@ from omigami.feature_selector import FeatureSelector
 def fs():
     lr = LinearRegression()
     fs = FeatureSelector(
-        n_outer=8, repetitions=8, random_state=0, estimator=lr, metric="MISS"
+        n_outer=8, n_repetitions=8, random_state=0, estimator=lr, metric="MISS"
     )
     return fs
 
@@ -27,7 +27,7 @@ def test_feature_selector():
         estimator="RFC",
         features_dropout_rate=0.05,
         robust_minimum=0.05,
-        repetitions=8,
+        n_repetitions=8,
         random_state=0,
     )
     assert fs
@@ -139,7 +139,7 @@ def test_deferred_fit(executor):
     y = np.array([np.random.choice([0, 1]) for _ in range(10)])
     lr = LinearRegression()
     fs = FeatureSelector(
-        n_outer=8, repetitions=8, random_state=0, estimator=lr, metric="MISS",
+        n_outer=8, n_repetitions=8, random_state=0, estimator=lr, metric="MISS",
     )
     fitted_fs = fs.fit(X, y, executor=executor)
     assert fitted_fs is fs

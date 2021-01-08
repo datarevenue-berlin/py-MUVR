@@ -34,7 +34,7 @@ class FeatureSelector:
         features_dropout_rate: float = 0.05,
         robust_minimum: float = 0.05,
         n_inner: int = None,
-        repetitions: int = 8,
+        n_repetitions: int = 8,
         random_state: int = None,
     ):
         self.is_fit = False
@@ -42,7 +42,7 @@ class FeatureSelector:
         self.n_outer = n_outer
         self.keep_fraction = 1 - features_dropout_rate
         self.robust_minimum = robust_minimum
-        self.repetitions = repetitions
+        self.n_repetitions = n_repetitions
         self.feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
 
         if not n_inner:
@@ -71,7 +71,7 @@ class FeatureSelector:
 
         repetition_results = []
 
-        for _ in range(self.repetitions):
+        for _ in range(self.n_repetitions):
             self.data_splitter = DataSplitter(
                 self.n_outer, self.n_inner, input_data, self.random_state,
             )
