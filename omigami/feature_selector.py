@@ -74,10 +74,7 @@ class FeatureSelector:
 
         for _ in range(self.n_repetitions):
             data_splitter = DataSplitter(
-                self.n_outer,
-                self.n_inner,
-                input_data,
-                self.random_state,
+                self.n_outer, self.n_inner, input_data, self.random_state,
             )
 
             outer_loop_results = []
@@ -86,12 +83,12 @@ class FeatureSelector:
                     input_data,
                     outer_split,
                     executor=executor,
-                    data_splitter=data_splitter
+                    data_splitter=data_splitter,
                 )
                 outer_loop_results.append(outer_loop_result)
             repetition_results.append(outer_loop_results)
 
-        self.selected_features = self._select_best_features(repetition_results)
+        self._selected_features = self._select_best_features(repetition_results)
         self.is_fit = True
         return self
 
@@ -210,13 +207,12 @@ class FeatureSelector:
     def _select_best_features(
         self, repetition_results: FeatureSelectionResults
     ) -> SelectedFeatures:
-        self._results = self.post_processor.fetch_results(repetition_results)
-        selected_features = self.post_processor.select_features(self._results)
+        self.results = self.post_processor.fetch_results(repetition_results)
+        selected_features = self.post_processor.select_features(self.results)
         return selected_features
 
     def get_validation_curves(self) -> Dict[str, List]:
         return self.post_processor.get_validation_curves(self.results)
-
 
     def get_selected_features(self, feature_names: List[str] = None):
 
