@@ -31,9 +31,20 @@ def average_ranks(ranks: Iterable[FeatureRanks]) -> FeatureRanks:
 
 
 def get_best_n_features(ranks: FeatureRanks, n: int) -> List[int]:
-    # TODO: improve efficiency of range(avg_ranks.n_feats including an items
-    # method to FeatureRanks so that we don't have to go through all n_feats
-    # (those that are not there are useless, since they are the highest ranks)
-    best_ranks = sorted([(ranks[f], f) for f in range(ranks.n_feats)])
-    best_ranks = best_ranks[: int(n)]
-    return [f for _, f in best_ranks]
+    ranks_data = ranks.get_data()
+    sorted_data = sorted(ranks_data.items(), key=lambda x: x[1])
+    feats = [feat for feat, _ in sorted_data[0:n]]
+
+    if len(feats) == n:
+        return feats
+
+    # pad with non-present features, scrumble to not introduce a bias
+    all_feats = np.arange(ranks.n_feats)
+    np.random.shuffle(all_feats)
+    for f in all_feats:
+        if f not in ranks_data:
+            feats.append(f)
+            if len(feats) == n:
+                return feats
+
+    raise ValueError("Impossible to return so many best features")

@@ -15,7 +15,7 @@ from omigami.feature_selector import FeatureSelector
 def fs():
     lr = LinearRegression()
     fs = FeatureSelector(
-        n_outer=8, repetitions=8, random_state=0, estimator=lr, metric="MISS"
+        n_outer=8, n_repetitions=8, random_state=0, estimator=lr, metric="MISS"
     )
     return fs
 
@@ -27,7 +27,7 @@ def test_feature_selector():
         estimator="RFC",
         features_dropout_rate=0.05,
         robust_minimum=0.05,
-        repetitions=8,
+        n_repetitions=8,
         random_state=0,
     )
     assert fs
@@ -54,13 +54,11 @@ def test_get_groups(fs):
 def test_run_outer_loop(fs):
     x = np.array([[2, 3, 4], [2, 3, 4]])
     input_data = InputDataset(x, "y", "groups")
-    fs.data_splitter = Mock(DataSplitter)
-    fs.data_splitter.split_data = Mock(
-        spec=fs.data_splitter.split_data, return_value="split"
-    )
+    data_splitter = Mock(DataSplitter)
+    data_splitter.split_data = Mock(spec=data_splitter.split_data, return_value="split")
 
-    fs.data_splitter.iter_inner_splits = Mock(
-        fs.data_splitter.iter_inner_splits, return_value=[1, 2]
+    data_splitter.iter_inner_splits = Mock(
+        data_splitter.iter_inner_splits, return_value=[1, 2]
     )
 
     fs._remove_features = Mock(return_value=[])
@@ -77,16 +75,16 @@ def test_run_outer_loop(fs):
     features = [0, 1, 2]
     raw_results = {tuple(features): inner_results}
 
-    olr = fs._run_outer_loop(input_data, "outer_split")
+    olr = fs._run_outer_loop(input_data, "outer_split", data_splitter)
 
     assert olr == "outer_loop_res"
-    fs.data_splitter.iter_inner_splits.assert_called_with("outer_split")
-    fs.data_splitter.split_data.assert_called_with(input_data, 2, features)
+    data_splitter.iter_inner_splits.assert_called_with("outer_split")
+    data_splitter.split_data.assert_called_with(input_data, 2, features)
     fs._remove_features.assert_called_once_with(features, inner_results)
     fs.feature_evaluator.evaluate_features.assert_called_with("split", features)
     fs.post_processor.process_feature_elim_results.assert_called_with(raw_results)
     fs.create_outer_loop_results.assert_called_with(
-        "processed_results", input_data, "outer_split"
+        "processed_results", input_data, "outer_split", data_splitter
     )
 
 
@@ -116,15 +114,15 @@ def test_evaluate_min_mid_and_max_features(fs, dataset, rfe_raw_results):
     fs.feature_evaluator.evaluate_features = Mock(
         spec=fs.feature_evaluator.evaluate_features, side_effect=["min", "mid", "max"]
     )
-    fs.data_splitter = Mock(DataSplitter)
-    fs.data_splitter.split_data = Mock(
-        spec=fs.data_splitter.split_data, return_value="data"
+    data_splitter = Mock(DataSplitter)
+    data_splitter.split_data = Mock(spec=data_splitter.split_data, return_value="data")
+
+    res = fs.evaluate_min_mid_and_max_features(
+        dataset, best_features, "split", data_splitter
     )
 
-    res = fs.evaluate_min_mid_and_max_features(dataset, best_features, "split")
-
     assert res == ("min", "mid", "max")
-    fs.data_splitter.split_data.assert_called_with(
+    data_splitter.split_data.assert_called_with(
         dataset, "split", best_features.max_feats
     )
     assert fs.feature_evaluator.evaluate_features.call_count == 3
@@ -139,7 +137,7 @@ def test_deferred_fit(executor):
     y = np.array([np.random.choice([0, 1]) for _ in range(10)])
     lr = LinearRegression()
     fs = FeatureSelector(
-        n_outer=8, repetitions=8, random_state=0, estimator=lr, metric="MISS",
+        n_outer=8, n_repetitions=8, random_state=0, estimator=lr, metric="MISS",
     )
     fitted_fs = fs.fit(X, y, executor=executor)
     assert fitted_fs is fs
@@ -156,3 +154,16 @@ def test_select_best_features(fs):
     assert selected_features == "features"
     fs.post_processor.fetch_results.assert_called_once_with("rep results")
     fs.post_processor.select_features.assert_called_once_with("results")
+
+
+def test_get_selected_features(fs, mosquito):
+    X = mosquito.X[:, 0:10]
+    y = np.array([1] + [0, 1] * 14)
+    fs.fit(X, y)
+    selected_features = fs.get_selected_features()
+    assert selected_features.min_feats == fs._selected_features.min_feats
+    assert selected_features.min_feats == [0]
+    feature_names = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"]
+    assert len(feature_names) == X.shape[1]
+    selected_features_names = fs.get_selected_features(feature_names=feature_names)
+    assert selected_features_names.min_feats == ["A"]

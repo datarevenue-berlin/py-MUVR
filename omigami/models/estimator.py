@@ -3,7 +3,15 @@ from typing import Any
 from sklearn.base import BaseEstimator, clone
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
 from omigami.data import RandomState
+from omigami.models.pls_classifier import PLSClassifier
+
+
+class ESTIMATORS:
+    RFC = "RFC"
+    XGBC = "XGBC"
+    PLSC = "PLSC"
 
 
 class Estimator:
@@ -85,7 +93,13 @@ def make_estimator(estimator: Any, random_state: RandomState) -> Estimator:
 
 
 def _make_estimator_from_string(estimator: str, random_state: RandomState) -> Estimator:
-    if estimator == "RFC":
+    if estimator == ESTIMATORS.RFC:
         rfc = RandomForestClassifier(n_estimators=150)
         return ScikitLearnEstimator(rfc, random_state)
+    if estimator == ESTIMATORS.PLSC:
+        plsc = PLSClassifier()
+        return ScikitLearnEstimator(plsc, random_state)
+    if estimator == ESTIMATORS.XGBC:
+        xgbc = XGBClassifier()
+        return ScikitLearnEstimator(xgbc, random_state)
     raise ValueError("Unknown type of estimator")
