@@ -71,7 +71,7 @@ def test_estimator_clone(est, dataset):
 )
 def test_train_model(est, dataset):
     estimator = make_estimator(est, 0)
-    trained_estimator = estimator.train_model(dataset.X, dataset.y)
+    trained_estimator = estimator.clone().fit(dataset.X, dataset.y)
     assert estimator is not trained_estimator
 
 

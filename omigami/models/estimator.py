@@ -33,9 +33,6 @@ class Estimator:
         estimator_clone = self._clone_estimator()
         return self.__class__(estimator_clone, self._random_state)
 
-    def train_model(self, X, y):
-        return self.clone().fit(X, y)
-
 
 class ScikitLearnEstimator(Estimator):
     @property

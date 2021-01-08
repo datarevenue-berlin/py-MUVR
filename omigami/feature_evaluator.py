@@ -20,7 +20,7 @@ class FeatureEvaluator:
         metric: Union[str, MetricFunction],
         random_state: Union[int, RandomState],
     ):
-        self._model_trainer = make_estimator(estimator, random_state)
+        self._estimator = make_estimator(estimator, random_state)
         self._metric = make_metric(metric)
         self._random_state = random_state
         self._n_initial_features = 0
@@ -36,7 +36,7 @@ class FeatureEvaluator:
         X_test = evaluation_data.test_data.X
         y_test = evaluation_data.test_data.y
 
-        estimator = self._model_trainer.train_model(X_train, y_train)
+        estimator = self._estimator.clone().fit(X_train, y_train)
         y_pred = estimator.predict(X_test)
 
         score = -self._metric(y_test, y_pred)
