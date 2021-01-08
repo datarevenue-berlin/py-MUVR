@@ -46,7 +46,7 @@ class FeatureSelector:
         self.feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
 
         if not n_inner:
-            logging.warning("n_inner is not specified, setting it to n_outer - 1")
+            logging.info("n_inner is not specified, setting it to n_outer - 1")
             n_inner = n_outer - 1
         self.n_inner = n_inner
 
