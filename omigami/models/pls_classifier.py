@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.preprocessing import OneHotEncoder
@@ -49,6 +50,13 @@ class PLSClassifier(PLSRegression):
     feature_importances_ = None
 
     def fit(self, X, Y):
+        if self.n_components > X.shape[1]:
+            # there might be occasions in which the loops try to fit on a metrix
+            # with n_features, a PLS with n_components > n_features. The recursive
+            # feature elimination where we stop at n_features = 1 is a clear case
+            # of this
+            logging.info("Lowering PLSC n_components to %d during fit", X.shape[1])
+            self.set_params(n_components=X.shape[1])
         self.encoder = OneHotEncoder().fit(Y.reshape(-1, 1))
         encoded_y = self.encoder.transform(Y.reshape(-1, 1)).toarray()
         super().fit(X, encoded_y)
