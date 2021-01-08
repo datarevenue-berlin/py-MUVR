@@ -82,7 +82,7 @@ class FeatureSelector:
                 olrs.append(outer_loop_results)
             repetition_results.append(olrs)
         self.results = self.post_processor.fetch_results(repetition_results)
-        self.selected_features = self.post_processor.select_features(self.results)
+        self._selected_features = self.post_processor.select_features(self.results)
         self.is_fit = True
         return self
 
@@ -197,3 +197,22 @@ class FeatureSelector:
         return executor.submit(
             self._run_outer_loop, input_data, outer_split, data_splitter
         )
+
+    def get_selected_features(self, feature_names: List[str] = None):
+
+        if not self.is_fit:
+            # TODO: custom exception
+            raise RuntimeError("The feature selector is not fit yet")
+
+        if feature_names is not None:
+            min_names = [feature_names[f] for f in self._selected_features.min_feats]
+            mid_names = [feature_names[f] for f in self._selected_features.mid_feats]
+            max_names = [feature_names[f] for f in self._selected_features.max_feats]
+
+            return SelectedFeatures(
+                min_feats=min_names, max_feats=max_names, mid_feats=mid_names,
+            )
+
+        # TODO: in one case we return a "copy" in this case we return a reference.
+        # maybe it's better to always return a copy
+        return self._selected_features

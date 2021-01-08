@@ -143,3 +143,16 @@ def test_deferred_fit(executor):
     assert fitted_fs is fs
     assert fs.selected_features
     assert fs.is_fit
+
+
+def test_get_selected_features(fs, mosquito):
+    X = mosquito.X[:, 0:10]
+    y = np.array([1] + [0, 1] * 14)
+    fs.fit(X, y)
+    selected_features = fs.get_selected_features()
+    assert selected_features.min_feats == fs._selected_features.min_feats
+    assert selected_features.min_feats == [0]
+    feature_names = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"]
+    assert len(feature_names) == X.shape[1]
+    selected_features_names = fs.get_selected_features(feature_names=feature_names)
+    assert selected_features_names.min_feats == ["A"]

@@ -66,9 +66,9 @@ InnerLoopResults = List[FeatureEvaluationResults]
 
 @dataclass
 class SelectedFeatures:
-    min_feats: Union[List[int], NumpyArray]
-    max_feats: Union[List[int], NumpyArray]
-    mid_feats: Union[List[int], NumpyArray]
+    min_feats: Union[List[int], NumpyArray, List[str]]
+    max_feats: Union[List[int], NumpyArray, List[str]]
+    mid_feats: Union[List[int], NumpyArray, List[str]]
 
 
 @dataclass
