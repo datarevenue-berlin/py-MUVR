@@ -88,9 +88,8 @@ def plot_feature_rank(feature_selector, model, feature_names=None):
 
     if feature_names is not None:
         feature_numbers = range(len(feature_names))
-        selected_ranks.rename(
-            columns=dict(zip(feature_numbers, feature_names)), inplace=True,
-        )
+        numbers_to_names = dict(zip(feature_numbers, feature_names))
+        selected_ranks.rename(columns=numbers_to_names, inplace=True)
 
     selected_ranks.notna().mean().plot.bar(
         figsize=figsize, facecolor=color_notnan, ax=ax_notnan, alpha=0.7
