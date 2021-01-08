@@ -145,25 +145,3 @@ def test_deferred_fit(executor):
     assert fitted_fs is fs
     assert fs.selected_features
     assert fs.is_fit
-
-
-@pytest.mark.xfail(reason="Not implemented atm.")
-def test_execute_repetitions():
-    class MockOuterLoop:
-        refresh_count = 0
-        run_count = 0
-
-        def refresh_splits(self):
-            self.refresh_count += 1
-
-        def run(self, executor=None):
-            self.run_count += 1
-            return self.run_count
-
-    outer_loop = MockOuterLoop()
-    fs = FeatureSelector(n_outer=8, repetitions=8, estimator="RFC", metric="MISS")
-    reps = fs._execute_repetitions(outer_loop)
-    assert len(reps) == 8
-    assert outer_loop.refresh_count == 8
-    assert outer_loop.run_count == 8
-    assert sorted(reps) == [1, 2, 3, 4, 5, 6, 7, 8]

@@ -18,7 +18,6 @@ def feature_evaluator():
 
 def test_feature_evaluator(feature_evaluator):
     assert feature_evaluator
-    assert feature_evaluator._model_trainer
     assert hasattr(feature_evaluator._metric, "__call__")
     assert feature_evaluator._n_initial_features == 12
 
