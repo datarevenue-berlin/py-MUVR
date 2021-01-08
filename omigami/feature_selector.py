@@ -52,7 +52,7 @@ class FeatureSelector:
 
         self.selected_features = None
         self.outer_loop_aggregation = None
-        self._results = None
+        self.results = None
         self._minimum_features = 1
         self.post_processor = PostProcessor(robust_minimum)
         self.data_splitter = None
@@ -82,8 +82,8 @@ class FeatureSelector:
                 )
                 olrs.append(outer_loop_results)
             repetition_results.append(olrs)
-        self._results = self.post_processor.fetch_results(repetition_results)
-        self.selected_features = self.post_processor.select_features(self._results)
+        self.results = self.post_processor.fetch_results(repetition_results)
+        self.selected_features = self.post_processor.select_features(self.results)
         self.is_fit = True
         return self
 
@@ -127,7 +127,7 @@ class FeatureSelector:
         return outer_loop_results
 
     def _remove_features(self, features: List[int], results: InnerLoopResults):
-        features_to_keep = np.floor(len(features) * self.keep_fraction)
+        features_to_keep = int(np.floor(len(features) * self.keep_fraction))
         features = self._select_n_best(results, features_to_keep)
         return features
 
@@ -176,7 +176,7 @@ class FeatureSelector:
         return min_eval, mid_eval, max_eval
 
     def get_validation_curves(self) -> Dict[str, List]:
-        return self.post_processor.get_validation_curves(self._results)
+        return self.post_processor.get_validation_curves(self.results)
 
     def _deferred_run_outer_loop(
         self, input_data: InputDataset, outer_split: Split, executor: Executor,

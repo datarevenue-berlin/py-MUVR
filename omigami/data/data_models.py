@@ -50,6 +50,9 @@ class FeatureRanks:
             )
         return self._data.get(feature, self.n_feats)
 
+    def get_data(self):
+        return self._data.copy()
+
 
 @dataclass
 class FeatureEvaluationResults:
