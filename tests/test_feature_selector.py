@@ -145,3 +145,14 @@ def test_deferred_fit(executor):
     assert fitted_fs is fs
     assert fs.selected_features
     assert fs.is_fit
+
+
+def test_select_best_features(fs):
+    fs.post_processor.fetch_results = Mock(fs.post_processor.fetch_results, return_value="results")
+    fs.post_processor.select_features = Mock(fs.post_processor.select_features, return_value="features")
+
+    selected_features = fs._select_best_features("rep results")
+
+    assert selected_features == "features"
+    fs.post_processor.fetch_results.assert_called_once_with("rep results")
+    fs.post_processor.select_features.assert_called_once_with("results")
