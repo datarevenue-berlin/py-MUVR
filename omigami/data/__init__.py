@@ -16,5 +16,6 @@ from omigami.data.data_models import (
     FeatureEliminationResults,
     OuterLoopResults,
     ScoreCurve,
+    FeatureSelectionResults
 )
 from omigami.data.data_splitter import DataSplitter

@@ -1,4 +1,4 @@
-from typing import List, Union, Dict, Tuple
+from typing import List, Dict, Tuple
 from concurrent.futures import Future
 from scipy.stats import gmean
 import numpy as np
@@ -7,7 +7,7 @@ from omigami.data import (
     ScoreCurve,
     FeatureEliminationResults,
     InnerLoopResults,
-    OuterLoopResults,
+    FeatureSelectionResults
 )
 from omigami.utils import (
     average_ranks,
@@ -15,8 +15,6 @@ from omigami.utils import (
     normalize_score,
     get_best_n_features,
 )
-
-FeatureSelectionResults = List[List[Union[OuterLoopResults, Future]]]
 
 
 class PostProcessor:

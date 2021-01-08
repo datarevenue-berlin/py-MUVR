@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from concurrent.futures import Executor, Future
 from typing import Union, List, Dict, Tuple
@@ -17,6 +19,7 @@ from omigami.data import (
     MetricFunction,
     Estimator,
     NumpyArray,
+    FeatureSelectionResults,
 )
 from omigami.feature_evaluator import FeatureEvaluator
 from omigami.post_processor import PostProcessor
@@ -41,7 +44,6 @@ class FeatureSelector:
         self.random_state = None if random_state is None else RandomState(random_state)
         self.n_outer = n_outer
         self.keep_fraction = 1 - features_dropout_rate
-        self.robust_minimum = robust_minimum
         self.n_repetitions = n_repetitions
         self.feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
 
@@ -62,7 +64,7 @@ class FeatureSelector:
         y: NumpyArray,
         groups: NumpyArray = None,
         executor: Executor = None,
-    ):
+    ) -> FeatureSelector:
         size, n_features = X.shape
         groups = self.get_groups(groups, size)
         input_data = InputDataset(X=X, y=y, groups=groups)
@@ -72,26 +74,46 @@ class FeatureSelector:
 
         for _ in range(self.n_repetitions):
             data_splitter = DataSplitter(
-                self.n_outer, self.n_inner, input_data, self.random_state,
+                self.n_outer,
+                self.n_inner,
+                input_data,
+                self.random_state,
             )
-            olrs = []
+
+            outer_loop_results = []
             for outer_split in data_splitter.iter_outer_splits():
-                outer_loop_results = self._deferred_run_outer_loop(
-                    input_data, outer_split, data_splitter, executor=executor
+                outer_loop_result = self._deferred_run_outer_loop(
+                    input_data,
+                    outer_split,
+                    executor=executor,
+                    data_splitter=data_splitter
                 )
-                olrs.append(outer_loop_results)
-            repetition_results.append(olrs)
-        self.results = self.post_processor.fetch_results(repetition_results)
-        self._selected_features = self.post_processor.select_features(self.results)
+                outer_loop_results.append(outer_loop_result)
+            repetition_results.append(outer_loop_results)
+
+        self.selected_features = self._select_best_features(repetition_results)
         self.is_fit = True
         return self
 
     @staticmethod
-    def get_groups(groups: NumpyArray, size: int):
+    def get_groups(groups: NumpyArray, size: int) -> NumpyArray:
         if groups is None:
             logging.info("groups is not specified: i.i.d. samples assumed")
             groups = np.arange(size)
         return groups
+
+    def _deferred_run_outer_loop(
+        self,
+        input_data: InputDataset,
+        outer_split: Split,
+        data_splitter: DataSplitter,
+        executor: Executor,
+    ) -> Union[Future, OuterLoopResults]:
+        if executor is None:
+            return self._run_outer_loop(input_data, outer_split, data_splitter)
+        return executor.submit(
+            self._run_outer_loop, input_data, outer_split, data_splitter
+        )
 
     def _run_outer_loop(
         self, input_data: InputDataset, outer_split: Split, data_splitter: DataSplitter,
@@ -107,11 +129,12 @@ class FeatureSelector:
                 inner_loop_data = data_splitter.split_data(
                     input_data, inner_split, feature_set
                 )
-                inner_results.append(
-                    self.feature_evaluator.evaluate_features(
-                        inner_loop_data, feature_set
-                    )
+
+                feature_evaluation_results = self.feature_evaluator.evaluate_features(
+                    inner_loop_data, feature_set
                 )
+
+                inner_results.append(feature_evaluation_results)
 
             raw_feature_elim_results[tuple(feature_set)] = inner_results
             feature_set = self._remove_features(feature_set, inner_results)
@@ -125,7 +148,9 @@ class FeatureSelector:
 
         return outer_loop_results
 
-    def _remove_features(self, features: List[int], results: InnerLoopResults):
+    def _remove_features(
+        self, features: List[int], results: InnerLoopResults
+    ) -> List[int]:
         features_to_keep = int(np.floor(len(features) * self.keep_fraction))
         features = self._select_n_best(results, features_to_keep)
         return features
@@ -182,21 +207,16 @@ class FeatureSelector:
 
         return min_eval, mid_eval, max_eval
 
+    def _select_best_features(
+        self, repetition_results: FeatureSelectionResults
+    ) -> SelectedFeatures:
+        self._results = self.post_processor.fetch_results(repetition_results)
+        selected_features = self.post_processor.select_features(self._results)
+        return selected_features
+
     def get_validation_curves(self) -> Dict[str, List]:
         return self.post_processor.get_validation_curves(self.results)
 
-    def _deferred_run_outer_loop(
-        self,
-        input_data: InputDataset,
-        outer_split: Split,
-        data_splitter: DataSplitter,
-        executor: Executor,
-    ) -> Union[Future, OuterLoopResults]:
-        if executor is None:
-            return self._run_outer_loop(input_data, outer_split, data_splitter)
-        return executor.submit(
-            self._run_outer_loop, input_data, outer_split, data_splitter
-        )
 
     def get_selected_features(self, feature_names: List[str] = None):
 

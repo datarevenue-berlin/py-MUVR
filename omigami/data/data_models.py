@@ -1,3 +1,4 @@
+from concurrent.futures._base import Future
 from typing import Iterable, List, Dict, Union
 from dataclasses import dataclass
 from omigami.data import NumpyArray
@@ -89,3 +90,6 @@ class OuterLoopResults:
 class ScoreCurve:
     n_features: List[int]
     scores: List[float]
+
+
+FeatureSelectionResults = List[List[Union[OuterLoopResults, Future]]]
