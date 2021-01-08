@@ -55,7 +55,6 @@ class FeatureSelector:
         self.results = None
         self._minimum_features = 1
         self.post_processor = PostProcessor(robust_minimum)
-        self.data_splitter = None
 
     def fit(
         self,
@@ -72,13 +71,13 @@ class FeatureSelector:
         repetition_results = []
 
         for _ in range(self.n_repetitions):
-            self.data_splitter = DataSplitter(
+            data_splitter = DataSplitter(
                 self.n_outer, self.n_inner, input_data, self.random_state,
             )
             olrs = []
-            for outer_split in self.data_splitter.iter_outer_splits():
+            for outer_split in data_splitter.iter_outer_splits():
                 outer_loop_results = self._deferred_run_outer_loop(
-                    input_data, outer_split, executor=executor
+                    input_data, outer_split, data_splitter, executor=executor
                 )
                 olrs.append(outer_loop_results)
             repetition_results.append(olrs)
@@ -95,7 +94,7 @@ class FeatureSelector:
         return groups
 
     def _run_outer_loop(
-        self, input_data: InputDataset, outer_split: Split
+        self, input_data: InputDataset, outer_split: Split, data_splitter: DataSplitter,
     ) -> OuterLoopResults:
 
         raw_feature_elim_results = {}
@@ -104,8 +103,8 @@ class FeatureSelector:
         while len(feature_set) >= self._minimum_features:
             inner_results = []
 
-            for inner_split in self.data_splitter.iter_inner_splits(outer_split):
-                inner_loop_data = self.data_splitter.split_data(
+            for inner_split in data_splitter.iter_inner_splits(outer_split):
+                inner_loop_data = data_splitter.split_data(
                     input_data, inner_split, feature_set
                 )
                 inner_results.append(
@@ -121,7 +120,7 @@ class FeatureSelector:
             raw_feature_elim_results
         )
         outer_loop_results = self.create_outer_loop_results(
-            feature_elimination_results, input_data, outer_split
+            feature_elimination_results, input_data, outer_split, data_splitter
         )
 
         return outer_loop_results
@@ -144,9 +143,13 @@ class FeatureSelector:
         feature_elimination_results: FeatureEliminationResults,
         input_data: InputDataset,
         outer_split: Split,
+        data_splitter: DataSplitter,
     ) -> OuterLoopResults:
         min_eval, mid_eval, max_eval = self.evaluate_min_mid_and_max_features(
-            input_data, feature_elimination_results.best_features, outer_split,
+            input_data,
+            feature_elimination_results.best_features,
+            outer_split,
+            data_splitter,
         )
         outer_loop_results = OuterLoopResults(
             min_eval=min_eval,
@@ -157,7 +160,11 @@ class FeatureSelector:
         return outer_loop_results
 
     def evaluate_min_mid_and_max_features(
-        self, input_data: InputDataset, best_features: SelectedFeatures, split: Split,
+        self,
+        input_data: InputDataset,
+        best_features: SelectedFeatures,
+        split: Split,
+        data_splitter: DataSplitter,
     ) -> Tuple[
         FeatureEvaluationResults, FeatureEvaluationResults, FeatureEvaluationResults
     ]:
@@ -165,9 +172,9 @@ class FeatureSelector:
         mid_feats = best_features.mid_feats
         max_feats = best_features.max_feats
 
-        data_min_feats = self.data_splitter.split_data(input_data, split, min_feats)
-        data_mid_feats = self.data_splitter.split_data(input_data, split, mid_feats)
-        data_max_feats = self.data_splitter.split_data(input_data, split, max_feats)
+        data_min_feats = data_splitter.split_data(input_data, split, min_feats)
+        data_mid_feats = data_splitter.split_data(input_data, split, mid_feats)
+        data_max_feats = data_splitter.split_data(input_data, split, max_feats)
 
         min_eval = self.feature_evaluator.evaluate_features(data_min_feats, min_feats)
         mid_eval = self.feature_evaluator.evaluate_features(data_mid_feats, mid_feats)
@@ -179,8 +186,14 @@ class FeatureSelector:
         return self.post_processor.get_validation_curves(self.results)
 
     def _deferred_run_outer_loop(
-        self, input_data: InputDataset, outer_split: Split, executor: Executor,
+        self,
+        input_data: InputDataset,
+        outer_split: Split,
+        data_splitter: DataSplitter,
+        executor: Executor,
     ) -> Union[Future, OuterLoopResults]:
         if executor is None:
-            return self._run_outer_loop(input_data, outer_split)
-        return executor.submit(self._run_outer_loop, input_data, outer_split)
+            return self._run_outer_loop(input_data, outer_split, data_splitter)
+        return executor.submit(
+            self._run_outer_loop, input_data, outer_split, data_splitter
+        )
