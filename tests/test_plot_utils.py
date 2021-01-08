@@ -8,7 +8,7 @@ def fit_feature_selector(results):
     fs = FeatureSelector(n_outer=5, metric="MISS", estimator="RFC")
     fs.results = results
     fs.is_fit = True
-    fs.selected_features = fs.post_processor.select_features(results)
+    fs._selected_features = fs.post_processor.select_features(results)
     return fs
 
 

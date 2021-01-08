@@ -50,7 +50,7 @@ class FeatureSelector:
             n_inner = n_outer - 1
         self.n_inner = n_inner
 
-        self.selected_features = None
+        self._selected_features = None
         self.outer_loop_aggregation = None
         self.results = None
         self._minimum_features = 1

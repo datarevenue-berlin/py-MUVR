@@ -24,10 +24,18 @@ def plot_validation_curves(feature_selector: FeatureSelector) -> Axes:
         plt.semilogx(curve.n_features, curve.scores, c="k", label=label)
 
     min_y, max_y = plt.gca().get_ylim()
+    selected_features = feature_selector.get_selected_features()
     for attribute in ["min_feats", "max_feats", "mid_feats"]:
-        n_feats = len(getattr(feature_selector.selected_features, attribute))
+        n_feats = len(getattr(selected_features, attribute))
         plt.vlines(
-            n_feats, min_y, max_y, linestyle="--", colors="grey", lw=2, label=attribute,
+            n_feats,
+            min_y,
+            max_y,
+            linestyle="--",
+            colors="grey",
+            lw=2,
+            label=attribute,
+            zorder=100000,
         )
 
     plt.xlabel("# features")
@@ -50,7 +58,8 @@ def plot_feature_rank(feature_selector, model, feature_names=None):
             ranks_raw_data = getattr(ol, eval_attr).ranks.get_data()
             ranks.append(ranks_raw_data)
 
-    best = getattr(feature_selector.selected_features, feats_attr)
+    selected_features = feature_selector.get_selected_features()
+    best = getattr(selected_features, feats_attr)
     selected_ranks = pd.DataFrame(r for r in ranks)[best]
 
     sorted_feats = selected_ranks.mean().sort_values().index

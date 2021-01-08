@@ -39,7 +39,7 @@ def test_fit(fs):
     y = np.array([np.random.choice([0, 1]) for _ in range(10)])
     fitted_fs = fs.fit(X, y)
     assert fitted_fs is fs
-    assert fs.selected_features
+    assert fs.get_selected_features()
     assert fs.is_fit
 
 
@@ -141,7 +141,7 @@ def test_deferred_fit(executor):
     )
     fitted_fs = fs.fit(X, y, executor=executor)
     assert fitted_fs is fs
-    assert fs.selected_features
+    assert fs.get_selected_features()
     assert fs.is_fit
 
 
