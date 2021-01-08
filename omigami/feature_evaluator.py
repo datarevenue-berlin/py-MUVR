@@ -10,7 +10,7 @@ from omigami.data import (
     TrainTestData,
 )
 from omigami.models.metrics import make_metric
-from omigami.models.model import make_estimator
+from omigami.models.estimator import make_estimator
 
 
 class FeatureEvaluator:

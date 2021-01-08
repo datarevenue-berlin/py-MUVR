@@ -127,7 +127,7 @@ class PostProcessor:
         elimination_results: Dict[tuple, InnerLoopResults]
     ) -> Dict[int, Tuple[int]]:
         n_to_features = {}
-        for features, in_loop_res in elimination_results.items():
+        for features in elimination_results.keys():
             n_feats = len(features)
             n_to_features[n_feats] = features
         return n_to_features
