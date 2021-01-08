@@ -22,7 +22,6 @@ class FeatureEvaluator:
     ):
         self._estimator = make_estimator(estimator, random_state)
         self._metric = make_metric(metric)
-        self._random_state = random_state
         self._n_initial_features = 0
 
     def set_n_initial_features(self, n_initial_features: int):
