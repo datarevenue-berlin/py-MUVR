@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 
 from omigami.data import (
@@ -165,3 +166,13 @@ def dataset():
     X = np.random.rand(12, 12)
     y = np.random.choice([0, 1], 12)
     return InputDataset(X=X, y=y, groups=np.arange(12))
+
+
+@pytest.fixture
+def mosquito():
+    df = pd.read_csv("tests/assets/mosquito.csv").set_index("Unnamed: 0")
+    df = df.sample(frac=1)
+    X = df.drop(columns=["Yotu"]).values
+    y = df.Yotu.values
+    groups = df.index
+    return InputDataset(X=X, y=y, groups=groups)

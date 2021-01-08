@@ -4,13 +4,20 @@ from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
 from sklearn.exceptions import NotFittedError
 from omigami.models.estimator import Estimator, make_estimator
 
+models = [
+    "RFC",
+    "XGBC",
+    "PLSC",
+    SVC(),
+    Pipeline([("norm", Normalizer()), ("model", SVC())]),
+]
 
-@pytest.mark.parametrize(
-    "est", ["RFC", SVC(), Pipeline([("norm", Normalizer()), ("model", SVC())])]
-)
+
+@pytest.mark.parametrize("est", models)
 def test_make_estimator(est):
     estimator = make_estimator(est, 0)
     assert estimator
@@ -23,9 +30,7 @@ def test_make_estimator_errors(est):
         estimator = make_estimator(est, 0)
 
 
-@pytest.mark.parametrize(
-    "est", ["RFC", SVC(), Pipeline([("norm", Normalizer()), ("model", SVC())])]
-)
+@pytest.mark.parametrize("est", models)
 def test_estimator_fit(est, dataset):
     estimator = make_estimator(est, 0)
     fit_estimator = estimator.fit(dataset.X, dataset.y)
@@ -33,7 +38,14 @@ def test_estimator_fit(est, dataset):
 
 
 @pytest.mark.parametrize(
-    "est", ["RFC", SVC(), Pipeline([("norm", Normalizer()), ("model", SVC())])]
+    "est",
+    [
+        "RFC",
+        "XGBC",
+        "PLSC",
+        SVC(),
+        Pipeline([("norm", Normalizer()), ("model", SVC())]),
+    ],
 )
 def test_estimator_predict(est, dataset):
     estimator = make_estimator(est, 0)
@@ -46,9 +58,7 @@ def test_estimator_predict(est, dataset):
     assert y.shape == dataset.y.shape
 
 
-@pytest.mark.parametrize(
-    "est", ["RFC", SVC(), Pipeline([("norm", Normalizer()), ("model", SVC())])]
-)
+@pytest.mark.parametrize("est", models)
 def test_estimator_clone(est, dataset):
     estimator = make_estimator(est, 0)
     estimator = estimator.fit(dataset.X, dataset.y)
@@ -58,9 +68,7 @@ def test_estimator_clone(est, dataset):
         y_pred = cloned.predict(dataset.X)
 
 
-@pytest.mark.parametrize(
-    "est", ["RFC", SVC(), Pipeline([("norm", Normalizer()), ("model", SVC())])]
-)
+@pytest.mark.parametrize("est", models)
 def test_train_model(est, dataset):
     estimator = make_estimator(est, 0)
     trained_estimator = estimator.clone().fit(dataset.X, dataset.y)
@@ -70,9 +78,13 @@ def test_train_model(est, dataset):
 @pytest.mark.parametrize(
     "estimator",
     [
+        "PLSC",
+        "XGBC",
+        "RFC",
         SVC(kernel="linear", random_state=0),
         RandomForestClassifier(random_state=0),
         Pipeline([("N", Normalizer()), ("C", SVC(kernel="linear", random_state=0))]),
+        LogisticRegression(),
     ],
 )
 def test_get_feature_importancres(estimator, dataset):
@@ -80,5 +92,5 @@ def test_get_feature_importancres(estimator, dataset):
     estimator.fit(dataset.X, dataset.y)
     feature_importances = estimator.feature_importances
     assert any(feature_importances)
-    assert all(feature_importances > 0)
+    assert all(feature_importances >= 0)
     assert len(feature_importances) == 12
