@@ -23,6 +23,7 @@ from omigami.feature_evaluator import FeatureEvaluator
 from omigami.data_splitter import DataSplitter
 from omigami.post_processor import PostProcessor
 from omigami.utils import get_best_n_features, average_ranks
+from omigami.exceptions import NotFitException
 
 Repetition = List[Union[OuterLoopResults, Future]]
 
@@ -216,8 +217,7 @@ class FeatureSelector:
     def get_selected_features(self, feature_names: List[str] = None):
 
         if not self.is_fit:
-            # TODO: custom exception
-            raise RuntimeError("The feature selector is not fit yet")
+            raise NotFitException("The feature selector is not fit yet")
 
         if feature_names is not None:
             min_names = [feature_names[f] for f in self._selected_features.min_feats]
@@ -228,6 +228,8 @@ class FeatureSelector:
                 min_feats=min_names, max_feats=max_names, mid_feats=mid_names,
             )
 
-        # TODO: in one case we return a "copy" in this case we return a reference.
-        # maybe it's better to always return a copy
-        return self._selected_features
+        return SelectedFeatures(
+            min_feats=self._selected_features.min_feats[:],
+            max_feats=self._selected_features.max_feats[:],
+            mid_feats=self._selected_features.mid_feats[:],
+        )
