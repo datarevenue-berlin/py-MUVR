@@ -1,7 +1,6 @@
 from typing import Union, List
 from scipy.stats import rankdata
-from omigami.data import (
-    Estimator,
+from omigami.data_structures import (
     MetricFunction,
     RandomState,
     NumpyArray,
@@ -10,7 +9,7 @@ from omigami.data import (
     TrainTestData,
 )
 from omigami.models.metrics import make_metric
-from omigami.models.estimator import make_estimator
+from omigami.models.estimator import make_estimator, Estimator
 
 
 class FeatureEvaluator:

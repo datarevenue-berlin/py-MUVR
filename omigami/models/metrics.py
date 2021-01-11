@@ -1,6 +1,6 @@
 from typing import Union
 from sklearn.metrics import SCORERS, get_scorer
-from omigami.data import MetricFunction, NumpyArray
+from omigami.data_structures import MetricFunction, NumpyArray
 
 
 def make_metric(metric: Union[str, MetricFunction]) -> MetricFunction:

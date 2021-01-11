@@ -7,5 +7,5 @@ from sklearn.base import BaseEstimator
 NumpyArray = ndarray
 MetricFunction = Callable[[NumpyArray, NumpyArray], float]
 GenericEstimator = TypeVar("GenericEstimator")
-Estimator = Union[BaseEstimator, GenericEstimator]
+InputEstimator = Union[BaseEstimator, GenericEstimator]
 RandomState = type(RS)

@@ -1,6 +1,6 @@
 from typing import Union, Dict, List
 
-from omigami.data import RandomState, InputDataset, Split, TrainTestData, NumpyArray
+from omigami.data_structures import RandomState, InputDataset, Split, TrainTestData, NumpyArray
 from sklearn.model_selection import GroupShuffleSplit
 
 

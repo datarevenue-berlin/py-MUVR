@@ -2,7 +2,7 @@ from typing import List, Dict, Tuple
 from concurrent.futures import Future
 from scipy.stats import gmean
 import numpy as np
-from omigami.data import (
+from omigami.data_structures import (
     SelectedFeatures,
     ScoreCurve,
     FeatureEliminationResults,

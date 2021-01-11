@@ -1,11 +1,10 @@
-from omigami.data.data_types import (
+from omigami.data_structures.data_types import (
     NumpyArray,
-    Estimator,
     MetricFunction,
-    GenericEstimator,
+    InputEstimator,
     RandomState,
 )
-from omigami.data.data_models import (
+from omigami.data_structures.data_models import (
     Split,
     InputDataset,
     TrainTestData,
@@ -18,4 +17,3 @@ from omigami.data.data_models import (
     ScoreCurve,
     FeatureSelectionResults
 )
-from omigami.data.data_splitter import DataSplitter

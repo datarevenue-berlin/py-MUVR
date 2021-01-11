@@ -1,7 +1,7 @@
 from concurrent.futures._base import Future
 from typing import Iterable, List, Dict, Union
 from dataclasses import dataclass
-from omigami.data import NumpyArray
+from omigami.data_structures import NumpyArray
 from omigami.models.estimator import Estimator
 
 

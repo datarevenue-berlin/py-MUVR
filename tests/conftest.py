@@ -1,13 +1,18 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
 
-from omigami.data import (
+from omigami.data_structures import (
     FeatureEvaluationResults,
     FeatureRanks,
     InputDataset,
     OuterLoopResults,
 )
+
+
+ASSETS_DIR = Path(__file__).parent / "assets"
 
 
 @pytest.fixture(scope="session")
@@ -170,9 +175,10 @@ def dataset():
 
 @pytest.fixture
 def mosquito():
-    df = pd.read_csv("tests/assets/mosquito.csv").set_index("Unnamed: 0")
+    df = pd.read_csv(ASSETS_DIR / "mosquito.csv").set_index("Unnamed: 0")
     df = df.sample(frac=1)
     X = df.drop(columns=["Yotu"]).values
     y = df.Yotu.values
     groups = df.index
     return InputDataset(X=X, y=y, groups=groups)
+

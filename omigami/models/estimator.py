@@ -4,7 +4,7 @@ from sklearn.base import BaseEstimator, clone
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
-from omigami.data import RandomState
+from omigami.data_structures import RandomState
 from omigami.models.pls_classifier import PLSClassifier
 
 

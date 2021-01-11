@@ -7,7 +7,7 @@ from typing import Union, List, Dict, Tuple
 import numpy as np
 from numpy.random import RandomState
 
-from omigami.data import (
+from omigami.data_structures import (
     InputDataset,
     SelectedFeatures,
     FeatureEliminationResults,
@@ -15,13 +15,13 @@ from omigami.data import (
     InnerLoopResults,
     Split,
     FeatureEvaluationResults,
-    DataSplitter,
     MetricFunction,
-    Estimator,
+    InputEstimator,
     NumpyArray,
     FeatureSelectionResults,
 )
 from omigami.feature_evaluator import FeatureEvaluator
+from omigami.data_splitter import DataSplitter
 from omigami.post_processor import PostProcessor
 from omigami.utils import get_best_n_features, average_ranks
 
@@ -33,7 +33,7 @@ class FeatureSelector:
         self,
         n_outer: int,
         metric: Union[str, MetricFunction],
-        estimator: Union[str, Estimator],
+        estimator: Union[str, InputEstimator],
         features_dropout_rate: float = 0.05,
         robust_minimum: float = 0.05,
         n_inner: int = None,

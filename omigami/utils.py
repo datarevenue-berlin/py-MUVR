@@ -1,7 +1,7 @@
 from typing import List, Dict, Iterable
 import pandas as pd
 import numpy as np
-from omigami.data import FeatureRanks
+from omigami.data_structures import FeatureRanks
 
 
 def average_scores(scores: List[Dict]) -> Dict[int, float]:

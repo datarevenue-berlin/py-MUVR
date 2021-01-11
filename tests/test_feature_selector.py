@@ -7,7 +7,8 @@ from sklearn.linear_model import LinearRegression
 from loky import get_reusable_executor
 from dask.distributed import Client
 
-from omigami.data import InputDataset, SelectedFeatures, DataSplitter
+from omigami.data_structures import InputDataset, SelectedFeatures
+from omigami.data_splitter import DataSplitter
 from omigami.feature_selector import FeatureSelector
 
 

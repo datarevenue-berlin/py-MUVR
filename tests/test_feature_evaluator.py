@@ -3,10 +3,10 @@ import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC
-from omigami.data import FeatureRanks, Split
+from omigami.data_structures import FeatureRanks
 from omigami.feature_evaluator import FeatureEvaluator
 from omigami.models.estimator import ScikitLearnEstimator
-from omigami.data import DataSplitter
+from omigami.data_splitter import DataSplitter
 
 
 @pytest.fixture
