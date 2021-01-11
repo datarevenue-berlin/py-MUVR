@@ -1,5 +1,4 @@
 from typing import List, Dict, Tuple
-from concurrent.futures import Future
 from scipy.stats import gmean
 import numpy as np
 from omigami.data_structures import (
@@ -7,7 +6,7 @@ from omigami.data_structures import (
     ScoreCurve,
     FeatureEliminationResults,
     InnerLoopResults,
-    FeatureSelectionResults
+    FeatureSelectionResults,
 )
 from omigami.utils import (
     average_ranks,
@@ -37,11 +36,7 @@ class PostProcessor:
     def fetch_results(results: FeatureSelectionResults) -> FeatureSelectionResults:
         fetched_results = []
         for repetition in results:
-            fetched_repetition = []
-            for outer_iteration in repetition:
-                if isinstance(outer_iteration, Future):
-                    outer_iteration = outer_iteration.result()
-                fetched_repetition.append(outer_iteration)
+            fetched_repetition = [ol.result() for ol in repetition]
             fetched_results.append(fetched_repetition)
         return fetched_results
 

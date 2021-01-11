@@ -24,6 +24,8 @@ from omigami.data_splitter import DataSplitter
 from omigami.post_processor import PostProcessor
 from omigami.utils import get_best_n_features, average_ranks
 from omigami.exceptions import NotFitException
+from omigami.sync_executor import SyncExecutor
+
 
 Repetition = List[Union[OuterLoopResults, Future]]
 
@@ -65,6 +67,10 @@ class FeatureSelector:
         groups: NumpyArray = None,
         executor: Executor = None,
     ) -> FeatureSelector:
+
+        if executor is None:
+            executor = SyncExecutor()
+
         size, n_features = X.shape
         groups = self._get_groups(groups, size)
         input_data = InputDataset(X=X, y=y, groups=groups)
