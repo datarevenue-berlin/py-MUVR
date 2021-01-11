@@ -1,4 +1,5 @@
 import numpy as np
+from abc import ABC, abstractmethod
 from typing import Any
 from sklearn.base import BaseEstimator, clone
 from sklearn.pipeline import Pipeline
@@ -14,35 +15,35 @@ class ESTIMATORS:
     PLSC = "PLSC"
 
 
-class Estimator:
+class Estimator(ABC):
+    @property
+    @abstractmethod
+    def feature_importances(self):
+        pass
+
+    @abstractmethod
+    def set_random_state(self, random_state: RandomState):
+        pass
+
+    @abstractmethod
+    def clone(self):
+        pass
+
+    @abstractmethod
+    def fit(self, X, y):
+        pass
+
+    @abstractmethod
+    def predict(self, X):
+        pass
+
+
+class ScikitLearnEstimator(Estimator):
     def __init__(self, estimator: Any, random_state: RandomState):
         self._estimator = estimator
         self._random_state = random_state
         self.set_random_state(random_state)
 
-    def fit(self, X, y):
-        self._estimator.fit(X, y)
-        return self
-
-    def predict(self, X):
-        return self._estimator.predict(X)
-
-    @property
-    def feature_importances(self):
-        raise NotImplementedError("feature_importance is not implemented")
-
-    def set_random_state(self, random_state: RandomState):
-        raise NotImplementedError("set_random_state is not implemented")
-
-    def _clone_estimator(self):
-        raise NotImplementedError("_clone_estimator is not implemented")
-
-    def clone(self):
-        estimator_clone = self._clone_estimator()
-        return self.__class__(estimator_clone, self._random_state)
-
-
-class ScikitLearnEstimator(Estimator):
     @property
     def feature_importances(self):
         if hasattr(self._estimator, "feature_importances_"):
@@ -57,11 +58,19 @@ class ScikitLearnEstimator(Estimator):
         except ValueError:
             pass  # not all models have a random_state param (e.g. LinearRegression)
 
-    def _clone_estimator(self):
-        return clone(self._estimator)
+    def clone(self):
+        estimator_clone = clone(self._estimator)
+        return self.__class__(estimator_clone, self._random_state)
+
+    def fit(self, X, y):
+        self._estimator.fit(X, y)
+        return self
+
+    def predict(self, X):
+        return self._estimator.predict(X)
 
 
-class ScikitLearnPipeline(Estimator):
+class ScikitLearnPipeline(ScikitLearnEstimator):
     @property
     def feature_importances(self):
         for _, step in self._estimator.steps:
@@ -77,9 +86,6 @@ class ScikitLearnPipeline(Estimator):
                 step.set_params(random_state=random_state)
             except ValueError:
                 pass  # not all the elements of the pipeline have to be random
-
-    def _clone_estimator(self):
-        return clone(self._estimator)
 
 
 def make_estimator(estimator: Any, random_state: RandomState) -> Estimator:
