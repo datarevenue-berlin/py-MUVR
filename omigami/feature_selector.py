@@ -10,7 +10,6 @@ from numpy.random import RandomState
 from omigami.data_structures import (
     InputDataset,
     SelectedFeatures,
-    FeatureEliminationResults,
     OuterLoopResults,
     InnerLoopResults,
     Split,
@@ -66,7 +65,7 @@ class FeatureSelector:
         executor: Executor = None,
     ) -> FeatureSelector:
         size, n_features = X.shape
-        groups = self.get_groups(groups, size)
+        groups = self._get_groups(groups, size)
         input_data = InputDataset(X=X, y=y, groups=groups)
         self.feature_evaluator.set_n_initial_features(n_features)
 
@@ -93,7 +92,7 @@ class FeatureSelector:
         return self
 
     @staticmethod
-    def get_groups(groups: NumpyArray, size: int) -> NumpyArray:
+    def _get_groups(groups: NumpyArray, size: int) -> NumpyArray:
         if groups is None:
             logging.info("groups is not specified: i.i.d. samples assumed")
             groups = np.arange(size)
@@ -136,11 +135,8 @@ class FeatureSelector:
             raw_feature_elim_results[tuple(feature_set)] = inner_results
             feature_set = self._remove_features(feature_set, inner_results)
 
-        feature_elimination_results = self.post_processor.process_feature_elim_results(
-            raw_feature_elim_results
-        )
-        outer_loop_results = self.create_outer_loop_results(
-            feature_elimination_results, input_data, outer_split, data_splitter
+        outer_loop_results = self._create_outer_loop_results(
+            raw_feature_elim_results, input_data, outer_split, data_splitter
         )
 
         return outer_loop_results
@@ -160,14 +156,17 @@ class FeatureSelector:
         avg_ranks = average_ranks(ranks)
         return get_best_n_features(avg_ranks, keep_n)
 
-    def create_outer_loop_results(
+    def _create_outer_loop_results(
         self,
-        feature_elimination_results: FeatureEliminationResults,
+        raw_feature_elim_results: Dict[tuple, InnerLoopResults],
         input_data: InputDataset,
         outer_split: Split,
         data_splitter: DataSplitter,
     ) -> OuterLoopResults:
-        min_eval, mid_eval, max_eval = self.evaluate_min_mid_and_max_features(
+        feature_elimination_results = self.post_processor.process_feature_elim_results(
+            raw_feature_elim_results
+        )
+        min_eval, mid_eval, max_eval = self._evaluate_min_mid_and_max_features(
             input_data,
             feature_elimination_results.best_features,
             outer_split,
@@ -181,7 +180,7 @@ class FeatureSelector:
         )
         return outer_loop_results
 
-    def evaluate_min_mid_and_max_features(
+    def _evaluate_min_mid_and_max_features(
         self,
         input_data: InputDataset,
         best_features: SelectedFeatures,

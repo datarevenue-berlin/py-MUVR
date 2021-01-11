@@ -46,10 +46,10 @@ def test_fit(fs):
 
 def test_get_groups(fs):
     predefined_group = [1, 2, 3]
-    generated_groups = fs.get_groups(None, 5)
+    generated_groups = fs._get_groups(None, 5)
 
     assert all(generated_groups == [0, 1, 2, 3, 4])
-    assert fs.get_groups(predefined_group, 5) == predefined_group
+    assert fs._get_groups(predefined_group, 5) == predefined_group
 
 
 def test_run_outer_loop(fs):
@@ -63,8 +63,8 @@ def test_run_outer_loop(fs):
     )
 
     fs._remove_features = Mock(return_value=[])
-    fs.create_outer_loop_results = Mock(
-        spec=fs.create_outer_loop_results, return_value="outer_loop_res"
+    fs._create_outer_loop_results = Mock(
+        spec=fs._create_outer_loop_results, return_value="outer_loop_res"
     )
     fs.feature_evaluator.evaluate_features = Mock(
         spec=fs.feature_evaluator.evaluate_features, return_value="res"
@@ -83,9 +83,8 @@ def test_run_outer_loop(fs):
     data_splitter.split_data.assert_called_with(input_data, 2, features)
     fs._remove_features.assert_called_once_with(features, inner_results)
     fs.feature_evaluator.evaluate_features.assert_called_with("split", features)
-    fs.post_processor.process_feature_elim_results.assert_called_with(raw_results)
-    fs.create_outer_loop_results.assert_called_with(
-        "processed_results", input_data, "outer_split", data_splitter
+    fs._create_outer_loop_results.assert_called_with(
+        raw_results, input_data, "outer_split", data_splitter
     )
 
 
@@ -118,7 +117,7 @@ def test_evaluate_min_mid_and_max_features(fs, dataset, rfe_raw_results):
     data_splitter = Mock(DataSplitter)
     data_splitter.split_data = Mock(spec=data_splitter.split_data, return_value="data")
 
-    res = fs.evaluate_min_mid_and_max_features(
+    res = fs._evaluate_min_mid_and_max_features(
         dataset, best_features, "split", data_splitter
     )
 

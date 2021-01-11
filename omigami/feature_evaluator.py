@@ -29,6 +29,9 @@ class FeatureEvaluator:
     def evaluate_features(
         self, evaluation_data: TrainTestData, features: List[int]
     ) -> FeatureEvaluationResults:
+        if self._n_initial_features == 0:
+            raise ValueError("Call set_n_initial_features first")
+
         X_train = evaluation_data.train_data.X
         y_train = evaluation_data.train_data.y
         X_test = evaluation_data.test_data.X
@@ -44,8 +47,6 @@ class FeatureEvaluator:
     def _get_feature_ranks(
         self, estimator: Estimator, features: Union[List[int], NumpyArray]
     ) -> FeatureRanks:
-        if self._n_initial_features == 0:
-            raise ValueError("Call set_n_initial_features first")
         feature_importances = estimator.feature_importances
         ranks = rankdata(-feature_importances)
         return FeatureRanks(
