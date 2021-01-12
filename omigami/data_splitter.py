@@ -1,6 +1,11 @@
 from typing import Union, Dict, List
 
-from omigami.data_structures import RandomState, InputDataset, Split, TrainTestData, NumpyArray
+from omigami.data_structures import (
+    RandomState,
+    InputDataset,
+    Split,
+    TrainTestData,
+)
 from sklearn.model_selection import GroupShuffleSplit
 
 
@@ -21,6 +26,7 @@ class DataSplitter:
         a random state instance to control reproducibility
 
     """
+
     def __init__(
         self,
         n_outer: int,
@@ -34,12 +40,10 @@ class DataSplitter:
         self._splits = self._make_splits(input_data)
 
     def _make_splits(self, input_data: InputDataset) -> Dict[tuple, Split]:
-        """Create a dictionary of split indexes for i`input_data`,
-         according to self.n_outer and self.n_inner and `input_data.groups`.
-        The groups are split first in `n_outer` test and train segments. Then each
-        train segment is split in `n_inner` smaller test and train sub-segments.
-        The splits are keyed `(outer_index_split, n_inner_split)`.
-        Outer splits are simply keyed `(outer_index_split, None)`.
+        """Create inner and outer splits.
+
+        Creates nested splits of the input data. The outer training datasets
+        will be split again to provide validation and inner training datasets.
         """
         outer_splitter = self._make_random_splitter(self.n_outer)
         inner_splitter = self._make_random_splitter(self.n_inner)
@@ -97,8 +101,9 @@ class DataSplitter:
         for inner_idx in range(self.n_inner):
             yield self._splits[(outer_idx, inner_idx)]
 
+    @staticmethod
     def split_data(
-        self, input_data: InputDataset, split: Split, features: List[int] = None
+        input_data: InputDataset, split: Split, features: List[int] = None
     ) -> TrainTestData:
         """
         Splits the input dataset into train and test sets, optionally selecting a subset
