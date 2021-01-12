@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from concurrent.futures._base import Future
-from typing import Iterable, List, Dict, Union
+from typing import Iterable, List, Dict, Union, Tuple
 from dataclasses import dataclass
 from omigami.data_structures import NumpyArray
 from omigami.models.estimator import Estimator
@@ -21,6 +23,17 @@ class InputDataset:
     @property
     def n_features(self):
         return self.X.shape[1]
+
+    def __getitem__(self, data_slice: tuple) -> InputDataset:
+        rows, features = data_slice
+        sliced = InputDataset(
+            X=self.X[rows, :],
+            y=self.y[rows],
+            groups=self.groups[rows]
+        )
+        if features:
+            sliced.X = sliced.X[:, features]
+        return sliced
 
 
 @dataclass
@@ -67,9 +80,9 @@ InnerLoopResults = List[FeatureEvaluationResults]
 
 @dataclass
 class SelectedFeatures:
-    min_feats: Union[List[int], NumpyArray, List[str]]
-    max_feats: Union[List[int], NumpyArray, List[str]]
-    mid_feats: Union[List[int], NumpyArray, List[str]]
+    min_feats: Union[List[int], NumpyArray, List[str], Tuple[int]]
+    max_feats: Union[List[int], NumpyArray, List[str], Tuple[int]]
+    mid_feats: Union[List[int], NumpyArray, List[str], Tuple[int]]
 
 
 @dataclass

@@ -119,27 +119,6 @@ class DataSplitter:
             The sliced input data.
         """
         return TrainTestData(
-            train_data=self._slice_data(
-                input_data, indices=split.train_indices, features=features
-            ),
-            test_data=self._slice_data(
-                input_data, indices=split.test_indices, features=features
-            ),
+            train_data=input_data[split.train_indices, features],
+            test_data=input_data[split.test_indices, features],
         )
-
-    def _slice_data(
-        self,
-        input_data: InputDataset,
-        indices: NumpyArray = None,
-        features: List[int] = None,
-    ) -> InputDataset:
-        X_sliced = input_data.X
-        y_sliced = input_data.y
-        g_sliced = input_data.groups
-        if indices is not None:
-            X_sliced = X_sliced[indices, :]
-            y_sliced = y_sliced[indices]
-            g_sliced = g_sliced[indices]
-        if features is not None:
-            X_sliced = X_sliced[:, features]
-        return InputDataset(X=X_sliced, y=y_sliced, groups=g_sliced)

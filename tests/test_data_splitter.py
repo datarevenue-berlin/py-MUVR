@@ -105,15 +105,6 @@ def test_non_randomness(dataset):
     )
 
 
-def test_input_data_slice(dataset):
-    ds = DataSplitter(n_outer=5, n_inner=4, random_state=0, input_data=dataset)
-    sliced = ds._slice_data(dataset, indices=[0, 1, 2], features=[0, 1, 2])
-    X = sliced.X
-    y = sliced.y
-    assert np.all(X == dataset.X[[0, 1, 2], :][:, [0, 1, 2]])
-    assert np.all(y == dataset.y[[0, 1, 2]])
-
-
 def test_split_data(dataset):
     ds = DataSplitter(n_outer=5, n_inner=4, random_state=0, input_data=dataset)
     split = Split(0, [0, 1, 2], [3, 4, 5, 6])
