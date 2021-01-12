@@ -6,13 +6,20 @@ from sklearn.model_selection import GroupShuffleSplit
 
 class DataSplitter:
     """
+    Class used to create the inner and outer splits for the double cross-validation and
+    to slice the data using those splits and subsets of the features.
 
     Parameters
     ----------
-    n_outer
-    n_inner
-    input_data
-    random_state
+    n_outer: int
+        Number of outer splits to create
+    n_inner:
+        Number of inner splits to create
+    input_data: InputDataset
+        Object containing X, Y and groups attributes
+    random_state: RandomState
+        a random state instance to control reproducibility
+
     """
     def __init__(
         self,
@@ -61,23 +68,29 @@ class DataSplitter:
 
     def iter_outer_splits(self) -> Split:
         """
+        Iterates through the splits corresponding to the outer loops
 
         Returns
         -------
-
+        Outer loop split used to slice the input dataset
         """
         for outer_idx in range(self.n_outer):
             yield self._splits[(outer_idx, None)]
 
     def iter_inner_splits(self, outer_split: Split) -> Split:
         """
+        Given an outer split, iterates through the splits corresponding to the outer
+        split's inner loops.
 
         Parameters
         ----------
-        outer_split
+        outer_split: Split
+            Split from calling the iter_outer_splits method.
 
         Returns
         -------
+        Split:
+            Inner loop split used to slice the input dataset
 
         """
         outer_idx = outer_split.id
@@ -88,16 +101,22 @@ class DataSplitter:
         self, input_data: InputDataset, split: Split, features: List[int] = None
     ) -> TrainTestData:
         """
+        Splits the input dataset into train and test sets, optionally selecting a subset
+        of features.
 
         Parameters
         ----------
-        input_data
-        split
-        features
+        input_data: InputDataset
+            Object containing X, Y and groups attributes
+        split: Split
+            Split from calling the iter splits methods
+        features: List[int]
+            List of features to select from the input data
 
         Returns
         -------
-
+        TrainTestData:
+            The sliced input data.
         """
         return TrainTestData(
             train_data=self._slice_data(
