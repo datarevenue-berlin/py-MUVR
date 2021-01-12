@@ -31,19 +31,68 @@ Repetition = List[Union[OuterLoopResults, Future]]
 
 
 class FeatureSelector:
-    """
+    """Feature selection based on double cross validation and iterative feature
+    elimination.
+    This class is based on the feature selection algorithm proposed in
+    "Variable selection and validation in multivariate modelling", Shi L. et al.,
+    Bioinformatics 2019
+    https://academic.oup.com/bioinformatics/article/35/6/972/5085367
+
+    Perform recursive feature selection using nested cross validation to select
+    the optimal number of features explaining the relationship between `X` and `y`.
+    The algorithm outputs three sets of features, that can be accessed via
+    self.get_selected_features.
+
+    1. `min`: is the minimum number of feature that gives good predictive power
+    2. `max`: is the maximum number of feature that gives good predictive power
+    3. `mid`: is the set of features to build a model using a number of feature
+        that is the geometric mean of the minimum and the maximum number of features
+
+    The structure of the nested CV loops is the following:
+    - Repetitions
+        - Outer CV Loops
+            - Iterative Feature removal
+                - Inner CV loops
+
+    The inner loop are used to understand which feature to drop at each
+    iteration removal.
+    For each outer loop element, we have a score curve linking the fitness to the
+    number of features, and average ranks for each variable.
+    From the average of these curves, the number of variables for each "best" model
+    (MIN, MID and MAX) are extracted and the feature rank of the best models
+    are computed.
+
+    Averaging the results and the feature importances across repetitions, we select
+    the final set of features.
+
+    The actual feature selection is performed by the `fit` method which implements the
+    algorithm described in the original paper and developed in
+    https://gitlab.com/CarlBrunius/MUVR/-/tree/master/R
+
+    For additional informations about the algorithm, please check the original
+    paper linked above.
 
     Parameters
     ----------
-    n_outer
-    metric
-    estimator
-    features_dropout_rate
-    robust_minimum
-    n_inner
-    n_repetitions
-    random_state
+    n_outer: int
+        number of outer CV folds
+    metric: Union[str, MetricFunction]
+        metric to be used to assess estimator goodness
+    estimator: Union[str, InputEstimator]
+        estimator to be used for feature elimination
+    features_dropout_rate: float
+        fraction of features to drop at each elimination step
+    robust_minimum: float
+        maximum normalized-score value to be considered when computing the `min` and
+        `max` selected features
+    n_inner: int
+        number of inner CV folds, by default n_outer - 1
+    n_repetitions: int
+        number of repetitions of the double CV loops, by default 8
+    random_state: int
+        pass an int for reproducible output, by default None
     """
+
     def __init__(
         self,
         n_outer: int,
@@ -81,17 +130,31 @@ class FeatureSelector:
         executor: Executor = None,
     ) -> FeatureSelector:
         """
+        Implements the double CV feature selection algorithm. The method returns
+        the same FeatureSelector. If the samples are correlated, the `group` vector
+        can be used to encode arbitrary domain specific stratifications of the
+        samples as integers (e.g. patient_id, year of collection, etc.). If group
+        is not provided the samples are assumed to be i. i. d. variables.
+        To parallelize the CV repetition, an `executor` can be provided to split
+        the computation across processes or cluster nodes. So far, `loky` (joblib),
+        `dask`, and `concurrent` Executors are supported.
 
         Parameters
         ----------
-        X
-        y
-        groups
-        executor
+        X : NumpyArray
+            Predictor variables as numpy array
+        y : NumpyArray
+            Response vector (Dependent variable).
+        groups : NumpyArray, optional
+            Group labels for the samples used while splitting the dataset
+            into train/test set, by default None
+        executor : Executor, optional
+            executor instance for parallel computing, by default None
 
         Returns
         -------
-
+        FeatureSelector
+            the fit feature selector
         """
 
         if executor is None:
@@ -245,23 +308,33 @@ class FeatureSelector:
 
     def get_validation_curves(self) -> Dict[str, List]:
         """
-
-        Returns
-        -------
-
+        Refer to post_processor.PostProcessor.get_validation_curves for documentation
         """
         return self.post_processor.get_validation_curves(self.results)
 
-    def get_selected_features(self, feature_names: List[str] = None):
-        """
+    def get_selected_features(
+        self, feature_names: List[str] = None
+    ) -> SelectedFeatures:
+        """Retrieve the selected feature for the three models. Features are normally
+        returned as 0-based integer indices representing the columns of the input
+        predictor variables (X), however if a list of feature names is provided via
+        `feature_names`, the feature names are returned instead.
+
 
         Parameters
         ----------
-        feature_names
+        feature_names : List[str], optional
+            the name of every feature, by default None
 
         Returns
         -------
+        SelectedFeatures
+            The features selected by the double CV loops
 
+        Raises
+        ------
+        NotFitException
+            if the `fit` method was not called successfully already
         """
 
         if not self.is_fit:
