@@ -1,4 +1,4 @@
-from typing import Union, Dict, List
+from typing import Union, Dict, List, Iterable
 
 from omigami.data_structures import (
     RandomState,
@@ -70,7 +70,7 @@ class DataSplitter:
             n_splits, test_size=test_size, random_state=self.random_state
         )
 
-    def iter_outer_splits(self) -> Split:
+    def iter_outer_splits(self) -> Iterable[Split]:
         """
         Iterates through the splits corresponding to the outer loops
 
@@ -81,7 +81,7 @@ class DataSplitter:
         for outer_idx in range(self.n_outer):
             yield self._splits[(outer_idx, None)]
 
-    def iter_inner_splits(self, outer_split: Split) -> Split:
+    def iter_inner_splits(self, outer_split: Split) -> Iterable[Split]:
         """
         Given an outer split, iterates through the splits corresponding to the outer
         split's inner loops.
