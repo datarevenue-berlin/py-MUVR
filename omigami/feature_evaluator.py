@@ -14,12 +14,17 @@ from omigami.models import make_estimator, Estimator
 
 class FeatureEvaluator:
     """
+    This class is used to evaluate a set of features given an estimator, a scoring
+    metric and a random state.
 
     Parameters
     ----------
-    estimator
-    metric
-    random_state
+    estimator: Estimator
+        Model used to evaluate feature sets
+    metric: Union[str, MetricFunction]
+        Metric used to measure the performance of the model using the feature set.
+    random_state: Union[int, RandomState]
+        A random state instance to control reproducibility
     """
     def __init__(
         self,
@@ -33,13 +38,13 @@ class FeatureEvaluator:
 
     def set_n_initial_features(self, n_initial_features: int):
         """
+        Saves the initial number of features in an internal variable to be used to
+        compute the feature ranks from different feature subsets on the same reference.
 
         Parameters
         ----------
-        n_initial_features
-
-        Returns
-        -------
+        n_initial_features: int
+            The initial number of features to use as a reference for feature ranks.
 
         """
         self._n_initial_features = n_initial_features
@@ -48,14 +53,24 @@ class FeatureEvaluator:
         self, evaluation_data: TrainTestData, features: List[int]
     ) -> FeatureEvaluationResults:
         """
+        This method evaluates a feature set on an input data. This is done by training
+        the estimator on a train set, predicting for a validation set and computing the
+        score on the validation set based on the chosen metric.
 
         Parameters
         ----------
-        evaluation_data
-        features
+        evaluation_data: TrainTestData
+            Dataset object containing train/test X and y
+        features:
+            Feature set being used on the evaluation data
 
         Returns
         -------
+        FeatureEvaluationResults:
+            The results of the evaluation. It consists of:
+            - features: the feature set
+            - ranks: the ranking of the features
+            - model: the estimator used on evaluation
 
         """
         if self._n_initial_features == 0:
