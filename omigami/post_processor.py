@@ -17,13 +17,14 @@ from omigami.utils import (
 
 
 class PostProcessor:
-    """It contains several method that can process the results of the double CV loop
+    """Contains several method that can process the results of the double CV loop
     to perform the actual feature selection and extract data for the plot utils.
 
     Parameters
     ----------
     robust_minimum : float
-        the value of the normalized score that corresponds to the `min` and `max` models
+        maximum normalized-score value to be considered when computing the `min` and
+        `max` selected features
     """
 
     def __init__(self, robust_minimum: float):

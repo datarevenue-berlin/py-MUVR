@@ -138,7 +138,7 @@ class FeatureSelector:
         is not provided the samples are assumed to be i. i. d. variables.
         To parallelize the CV repetition, an `executor` can be provided to split
         the computation across processes or cluster nodes. So far, `loky` (joblib),
-        `dask`, and `concurrent` Executors are supported.
+        `dask`, and `concurrent` Executors are tested.
 
         Parameters
         ----------

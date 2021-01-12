@@ -30,19 +30,19 @@ class PLSClassifier(PLSRegression):
 
     The signaure is analogous to sklearn.cross_decomposition.PLSRegression:
 
-    Args:
-        n_components (int, optional): Number of components to keep. Defaults to 2.
-        scale (bool, optional): whether to scale the data. Defaults to True.
-        max_iter (int, optional): the maximum number of iterations of the NIPALS
-            inner loop. Defaults to 500.
-        tol (float, optional): tolerance used in the iterative algorithm.
-            Defaults to 1e-06.
-        copy (bool, optional):  Whether the deflation should be done on a copy.
-            Let the default value to True unless you don’t care about side effects.
-            Defaults to True.
-        regressor (PLSRegression, optional): the PLS regressor to be used.
-            Specifying this parameter will ignore all the others.
-            Leave None unless you have good reason not to. Defaults to None.
+    Parameters
+    ----------
+    n_components: int, optional
+        Number of components to keep, by default 2.
+    scale: bool, optional
+        whether to scale the data, by default True.
+    max_iter: int, optional
+        the maximum number of iterations of the NIPALS inner loop, by default 500.
+    tol: float, optional
+        tolerance used in the iterative algorithm, by default 1e-06.
+    copy: bool, optional
+        Whether the deflation should be done on a copy. Let the default value to True
+        unless you don’t care about side effects, by default True.
 
     """
 

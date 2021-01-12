@@ -7,14 +7,14 @@ from omigami.models.estimator import Estimator
 
 
 class ScikitLearnEstimator(Estimator):
-    """Wraps scikit-learn models. This class exposes the fit and predict method of
+    """Wraps scikit-learn models. This class exposes the fit` and `predict` methods of
     its input estimator. The estimator must be a scikit-learn model, such as
     RandomForestClassifier, LogisticRegression, etc.
-    Additionally it can clone itself with the method `clone`. This is useful
+    Additionally, it can clone itself with the method `clone`. This is useful
     if the class should remain state-less.
-    The input random state is helf for cloning purposes and it is used to replace the
-    random state if the input estimator.
-    The feature_importance exposed by this class depends on the input estimator:
+    The input random state is held for cloning purposes and it's used to override the
+    random state of the input estimator.
+    The `feature_importance` exposed by this class depends on the input estimator:
     If the estimator has a `feature_importance_` attribute, than it is returned,
     otherwise the absolute values of the `coef_[0]` vector are returned. This means
     that in the exotic case of an estimator implementing both, `feature_importance_` is
