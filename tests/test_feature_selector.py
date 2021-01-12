@@ -146,8 +146,12 @@ def test_deferred_fit(executor):
 
 
 def test_select_best_features(fs):
-    fs.post_processor.fetch_results = Mock(fs.post_processor.fetch_results, return_value="results")
-    fs.post_processor.select_features = Mock(fs.post_processor.select_features, return_value="features")
+    fs.post_processor.fetch_results = Mock(
+        fs.post_processor.fetch_results, return_value="results"
+    )
+    fs.post_processor.select_features = Mock(
+        fs.post_processor.select_features, return_value="features"
+    )
 
     selected_features = fs._select_best_features("rep results")
 
@@ -167,3 +171,5 @@ def test_get_selected_features(fs, mosquito):
     assert len(feature_names) == X.shape[1]
     selected_features_names = fs.get_selected_features(feature_names=feature_names)
     assert selected_features_names.min_feats == ["A"]
+    with pytest.raises(ValueError):
+        fs.get_selected_features(feature_names=["only-one-name"])
