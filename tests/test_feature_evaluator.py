@@ -5,7 +5,7 @@ from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC
 from omigami.data_structures import FeatureRanks
 from omigami.feature_evaluator import FeatureEvaluator
-from omigami.models.estimator import ScikitLearnEstimator
+from omigami.models.sklearn_estimator import ScikitLearnEstimator
 from omigami.data_splitter import DataSplitter
 
 

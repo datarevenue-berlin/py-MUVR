@@ -6,7 +6,8 @@ from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.exceptions import NotFittedError
-from omigami.models.estimator import Estimator, make_estimator
+from omigami.models.estimator import Estimator
+from omigami.models import make_estimator
 
 models = [
     "RFC",
