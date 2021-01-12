@@ -213,7 +213,7 @@ class FeatureSelector:
         self, input_data: InputDataset, outer_split: Split, data_splitter: DataSplitter,
     ) -> OuterLoopResults:
 
-        raw_feature_elim_results = {}
+        feature_elimination_results = {}
         feature_set = list(range(input_data.n_features))
 
         while len(feature_set) >= self._minimum_features:
@@ -230,11 +230,11 @@ class FeatureSelector:
 
                 inner_results.append(feature_evaluation_results)
 
-            raw_feature_elim_results[tuple(feature_set)] = inner_results
+            feature_elimination_results[tuple(feature_set)] = inner_results
             feature_set = self._remove_features(feature_set, inner_results)
 
         outer_loop_results = self._create_outer_loop_results(
-            raw_feature_elim_results, input_data, outer_split, data_splitter
+            feature_elimination_results, input_data, outer_split, data_splitter
         )
 
         return outer_loop_results

@@ -44,7 +44,7 @@ def test_estimator_fit(est, dataset):
         "RFC",
         "XGBC",
         "PLSC",
-        SVC(),
+        SVC(random_state=1),
         Pipeline([("norm", Normalizer()), ("model", SVC())]),
     ],
 )

@@ -38,8 +38,8 @@ class FeatureEvaluator:
 
     def set_n_initial_features(self, n_initial_features: int):
         """
-        Saves the initial number of features in an internal variable to be used to
-        compute the feature ranks from different feature subsets on the same reference.
+        Saves the initial number of features to be used as a reference to compute the
+        average of all feature ranks from different feature subsets.
 
         Parameters
         ----------
