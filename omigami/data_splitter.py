@@ -5,6 +5,15 @@ from sklearn.model_selection import GroupShuffleSplit
 
 
 class DataSplitter:
+    """
+
+    Parameters
+    ----------
+    n_outer
+    n_inner
+    input_data
+    random_state
+    """
     def __init__(
         self,
         n_outer: int,
@@ -51,10 +60,26 @@ class DataSplitter:
         )
 
     def iter_outer_splits(self) -> Split:
+        """
+
+        Returns
+        -------
+
+        """
         for outer_idx in range(self.n_outer):
             yield self._splits[(outer_idx, None)]
 
     def iter_inner_splits(self, outer_split: Split) -> Split:
+        """
+
+        Parameters
+        ----------
+        outer_split
+
+        Returns
+        -------
+
+        """
         outer_idx = outer_split.id
         for inner_idx in range(self.n_inner):
             yield self._splits[(outer_idx, inner_idx)]
@@ -62,6 +87,18 @@ class DataSplitter:
     def split_data(
         self, input_data: InputDataset, split: Split, features: List[int] = None
     ) -> TrainTestData:
+        """
+
+        Parameters
+        ----------
+        input_data
+        split
+        features
+
+        Returns
+        -------
+
+        """
         return TrainTestData(
             train_data=self._slice_data(
                 input_data, indices=split.train_indices, features=features

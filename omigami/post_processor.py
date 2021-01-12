@@ -17,10 +17,27 @@ from omigami.utils import (
 
 
 class PostProcessor:
+    """
+
+    Parameters
+    ----------
+    robust_minimum:
+
+    """
     def __init__(self, robust_minimum):
         self.robust_minimum = robust_minimum
 
     def select_features(self, results: FeatureSelectionResults) -> SelectedFeatures:
+        """
+
+        Parameters
+        ----------
+        results
+
+        Returns
+        -------
+
+        """
         flat_results = [r for repetition in results for r in repetition]
         average_ranks_min = average_ranks([r.min_eval.ranks for r in flat_results])
         average_ranks_mid = average_ranks([r.mid_eval.ranks for r in flat_results])
@@ -34,6 +51,16 @@ class PostProcessor:
 
     @staticmethod
     def fetch_results(results: FeatureSelectionResults) -> FeatureSelectionResults:
+        """
+
+        Parameters
+        ----------
+        results
+
+        Returns
+        -------
+
+        """
         fetched_results = []
         for repetition in results:
             fetched_repetition = [ol.result() for ol in repetition]
@@ -62,6 +89,16 @@ class PostProcessor:
         return avg_scores
 
     def get_validation_curves(self, results: FeatureSelectionResults) -> Dict:
+        """
+
+        Parameters
+        ----------
+        results
+
+        Returns
+        -------
+
+        """
         flat_results = [r for repetition in results for r in repetition]
         outer_loop_scores = [r.n_features_to_score_map for r in flat_results]
         avg_scores_per_loop = self._get_repetition_avg_scores(results)
@@ -78,6 +115,16 @@ class PostProcessor:
         return ScoreCurve(n_features=n_features, scores=score_values)
 
     def process_feature_elim_results(self, raw_results: Dict[tuple, InnerLoopResults]):
+        """
+
+        Parameters
+        ----------
+        raw_results
+
+        Returns
+        -------
+
+        """
         n_feats_to_score = self._compute_score_curve(raw_results)
         best_features = self._select_best_outer_features(raw_results, n_feats_to_score)
 

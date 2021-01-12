@@ -31,6 +31,19 @@ Repetition = List[Union[OuterLoopResults, Future]]
 
 
 class FeatureSelector:
+    """
+
+    Parameters
+    ----------
+    n_outer
+    metric
+    estimator
+    features_dropout_rate
+    robust_minimum
+    n_inner
+    n_repetitions
+    random_state
+    """
     def __init__(
         self,
         n_outer: int,
@@ -67,6 +80,19 @@ class FeatureSelector:
         groups: NumpyArray = None,
         executor: Executor = None,
     ) -> FeatureSelector:
+        """
+
+        Parameters
+        ----------
+        X
+        y
+        groups
+        executor
+
+        Returns
+        -------
+
+        """
 
         if executor is None:
             executor = SyncExecutor()
@@ -218,9 +244,25 @@ class FeatureSelector:
         return selected_features
 
     def get_validation_curves(self) -> Dict[str, List]:
+        """
+
+        Returns
+        -------
+
+        """
         return self.post_processor.get_validation_curves(self.results)
 
     def get_selected_features(self, feature_names: List[str] = None):
+        """
+
+        Parameters
+        ----------
+        feature_names
+
+        Returns
+        -------
+
+        """
 
         if not self.is_fit:
             raise NotFitException("The feature selector is not fit yet")

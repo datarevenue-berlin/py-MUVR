@@ -13,6 +13,14 @@ from omigami.models import make_estimator, Estimator
 
 
 class FeatureEvaluator:
+    """
+
+    Parameters
+    ----------
+    estimator
+    metric
+    random_state
+    """
     def __init__(
         self,
         estimator: Estimator,
@@ -24,11 +32,32 @@ class FeatureEvaluator:
         self._n_initial_features = 0
 
     def set_n_initial_features(self, n_initial_features: int):
+        """
+
+        Parameters
+        ----------
+        n_initial_features
+
+        Returns
+        -------
+
+        """
         self._n_initial_features = n_initial_features
 
     def evaluate_features(
         self, evaluation_data: TrainTestData, features: List[int]
     ) -> FeatureEvaluationResults:
+        """
+
+        Parameters
+        ----------
+        evaluation_data
+        features
+
+        Returns
+        -------
+
+        """
         if self._n_initial_features == 0:
             raise ValueError("Call set_n_initial_features first")
 
