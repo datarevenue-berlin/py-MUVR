@@ -1,35 +1,49 @@
-from typing import Union, Dict
-from omigami.types import Split, RandomState
-from omigami.models import InputData
+from typing import Union, Dict, List, Iterable
+
+from omigami.data_structures import (
+    RandomState,
+    InputDataset,
+    Split,
+    TrainTestData,
+)
 from sklearn.model_selection import GroupShuffleSplit
 
 
 class DataSplitter:
+    """
+    Class used to create the inner and outer splits for the double cross-validation and
+    to slice the data using those splits and subsets of the features.
+
+    Parameters
+    ----------
+    n_outer: int
+        Number of outer splits to create
+    n_inner:
+        Number of inner splits to create
+    input_data: InputDataset
+        Object containing X, Y and groups attributes
+    random_state: RandomState
+        a random state instance to control reproducibility
+
+    """
+
     def __init__(
-        self, n_outer: int, n_inner: int, random_state: Union[int, RandomState],
+        self,
+        n_outer: int,
+        n_inner: int,
+        input_data: InputDataset,
+        random_state: Union[int, RandomState],
     ):
         self.n_outer = n_outer
         self.n_inner = n_inner
         self.random_state = random_state
-        self._splits = None
-        self.is_fit = False
-
-    # TODO:
-    # on one side it make sense to have a `fit` method,
-    # but maybe the signature is odd because one relates it to fit(X, y). Maybe
-    # another name?
-    def fit(self, input_data: InputData):
         self._splits = self._make_splits(input_data)
-        self.is_fit = True
-        return self
 
-    def _make_splits(self, input_data: InputData) -> Dict[tuple, Split]:
-        """Create a dictionary of split indexes for i`input_data`,
-         according to self.n_outer and self.n_inner and `input_data.groups`.
-        The groups are split first in `n_outer` test and train segments. Then each
-        train segment is split in `n_inner` smaller test and train sub-segments.
-        The splits are keyed `(outer_index_split, n_inner_split)`.
-        Outer splits are simply keyed `(outer_index_split, None)`.
+    def _make_splits(self, input_data: InputDataset) -> Dict[tuple, Split]:
+        """Create inner and outer splits.
+
+        Creates nested splits of the input data. The outer training datasets
+        will be split again to provide validation and inner training datasets.
         """
         outer_splitter = self._make_random_splitter(self.n_outer)
         inner_splitter = self._make_random_splitter(self.n_inner)
@@ -40,13 +54,14 @@ class DataSplitter:
 
         splits = {}
         for out_idx, (out_train, out_test) in enumerate(outer_splits):
-            splits[(out_idx, None)] = out_train, out_test
+            splits[(out_idx, None)] = Split(out_idx, out_train, out_test)
             X_train = input_data.X[out_train, :]
             y_train = input_data.y[out_train]
             groups_train = input_data.groups[out_train]
             inner_splits = inner_splitter.split(X_train, y_train, groups_train)
             for in_idx, (in_train, in_test) in enumerate(inner_splits):
-                splits[(out_idx, in_idx)] = out_train[in_train], out_train[in_test]
+                inner_split = Split(in_idx, out_train[in_train], out_train[in_test])
+                splits[(out_idx, in_idx)] = inner_split
         return splits
 
     def _make_random_splitter(self, n_splits):
@@ -55,7 +70,60 @@ class DataSplitter:
             n_splits, test_size=test_size, random_state=self.random_state
         )
 
-    def get_split(self, outer_index, inner_index):
-        if not self.is_fit:
-            raise RuntimeError("You must run `fit` method first")
-        return self._splits[(outer_index, inner_index)]
+    def iter_outer_splits(self) -> Iterable[Split]:
+        """
+        Iterates through the splits corresponding to the outer loops
+
+        Returns
+        -------
+        Outer loop split used to slice the input dataset
+        """
+        for outer_idx in range(self.n_outer):
+            yield self._splits[(outer_idx, None)]
+
+    def iter_inner_splits(self, outer_split: Split) -> Iterable[Split]:
+        """
+        Given an outer split, iterates through the splits corresponding to the outer
+        split's inner loops.
+
+        Parameters
+        ----------
+        outer_split: Split
+            Split from calling the iter_outer_splits method.
+
+        Returns
+        -------
+        Split:
+            Inner loop split used to slice the input dataset
+
+        """
+        outer_idx = outer_split.id
+        for inner_idx in range(self.n_inner):
+            yield self._splits[(outer_idx, inner_idx)]
+
+    @staticmethod
+    def split_data(
+        input_data: InputDataset, split: Split, features: List[int] = None
+    ) -> TrainTestData:
+        """
+        Splits the input dataset into train and test sets, optionally selecting a subset
+        of features.
+
+        Parameters
+        ----------
+        input_data: InputDataset
+            Object containing X, Y and groups attributes
+        split: Split
+            Split from calling the iter splits methods
+        features: List[int]
+            List of features to select from the input data
+
+        Returns
+        -------
+        TrainTestData:
+            The sliced input data.
+        """
+        return TrainTestData(
+            train_data=input_data[split.train_indices, features],
+            test_data=input_data[split.test_indices, features],
+        )

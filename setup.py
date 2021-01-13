@@ -34,12 +34,12 @@ setup(
     ],
     description="Nested cross validation for feature selection in Python",
     install_requires=[
-        "dask[complete]>=2.30.0",
         "matplotlib>=3.3.2",
         "numpy>=1.19.2",
         "pandas>=1.1.3",
         "scipy>=1.5.2",
         "scikit-learn>=0.23.2",
+        "xgboost>=1.3.1",
     ],
     license="MIT license",
     long_description=readme + "\n\n" + history,

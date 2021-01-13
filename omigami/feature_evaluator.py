@@ -1,105 +1,98 @@
-from typing import Union, Iterable
-from sklearn.metrics import SCORERS, get_scorer
+from typing import Union, List
 from scipy.stats import rankdata
-import numpy as np
-from omigami.types import Estimator, MetricFunction, RandomState, NumpyArray
-from omigami.models import InputData, FeatureEvaluationResults, FeatureRanks
-from omigami.data_splitter import DataSplitter
-from omigami.estimator import ModelTrainer
+from omigami.data_structures import (
+    MetricFunction,
+    RandomState,
+    NumpyArray,
+    FeatureEvaluationResults,
+    FeatureRanks,
+    TrainTestData,
+)
+from omigami.models.metrics import make_metric
+from omigami.models import make_estimator, Estimator
 
 
 class FeatureEvaluator:
+    """
+    This class is used to evaluate a set of features given an estimator, a scoring
+    metric and a random state.
+
+    Parameters
+    ----------
+    estimator: Estimator
+        Model used to evaluate feature sets
+    metric: Union[str, MetricFunction]
+        Metric used to measure the performance of the model using the feature set.
+    random_state: Union[int, RandomState]
+        A random state instance to control reproducibility
+    """
     def __init__(
         self,
-        input_data: InputData,
-        n_outer: int,
-        n_inner: int,
         estimator: Estimator,
         metric: Union[str, MetricFunction],
         random_state: Union[int, RandomState],
     ):
-        self._input_data = input_data
-        self._X = input_data.X
-        self._y = input_data.y
-        self._model_trainer = ModelTrainer(estimator, random_state=random_state)
-        self._metric = self._make_metric(metric)
-        self._random_state = random_state
-        self._splitter = DataSplitter(n_outer, n_inner, random_state=random_state).fit(
-            input_data
-        )
-        self._n_features = input_data.X.shape[1]
-        self._n_inner = n_inner
+        self._estimator = make_estimator(estimator, random_state)
+        self._metric = make_metric(metric)
+        self._n_initial_features = 0
+
+    def set_n_initial_features(self, n_initial_features: int):
+        """
+        Saves the initial number of features to be used as a reference to compute the
+        average of all feature ranks from different feature subsets.
+
+        Parameters
+        ----------
+        n_initial_features: int
+            The initial number of features to use as a reference for feature ranks.
+
+        """
+        self._n_initial_features = n_initial_features
 
     def evaluate_features(
-        self, features: Iterable[int], outer_idx: int, inner_idx: int = None
+        self, evaluation_data: TrainTestData, features: List[int]
     ) -> FeatureEvaluationResults:
-        train_idx, test_idx = self._splitter.get_split(outer_idx, inner_idx)
+        """
+        This method evaluates a feature set on an input data. This is done by training
+        the estimator on a train set, predicting for a validation set and computing the
+        score on the validation set based on the chosen metric.
 
-        X_train = self._X[train_idx, :][:, features]
-        y_train = self._y[train_idx]
-        estimator = self._model_trainer.train_model(X_train, y_train)
+        Parameters
+        ----------
+        evaluation_data: TrainTestData
+            Dataset object containing train/test X and y
+        features:
+            Feature set being used on the evaluation data
 
-        X_test = self._X[test_idx, :][:, features]
-        y_test = self._y[test_idx]
+        Returns
+        -------
+        FeatureEvaluationResults:
+            The results of the evaluation. It consists of:
+            - features: the feature set
+            - ranks: the ranking of the features
+            - model: the estimator used on evaluation
+
+        """
+        if self._n_initial_features == 0:
+            raise ValueError("Call set_n_initial_features first")
+
+        X_train = evaluation_data.train_data.X
+        y_train = evaluation_data.train_data.y
+        X_test = evaluation_data.test_data.X
+        y_test = evaluation_data.test_data.y
+
+        estimator = self._estimator.clone().fit(X_train, y_train)
         y_pred = estimator.predict(X_test)
 
         score = -self._metric(y_test, y_pred)
-        feature_ranks = self._get_feature_ranks(estimator, features)
-        return FeatureEvaluationResults(test_score=score, ranks=feature_ranks)
-
-    def get_n_features(self):
-        return self._n_features
-
-    def get_inner_loop_size(self):
-        return self._n_inner
-
-    def _make_metric(self, metric: Union[str, MetricFunction]) -> MetricFunction:
-        """Build metric function using the input `metric`. If a metric is a string
-        then is interpreted as a scikit-learn metric score, such as "accuracy".
-        Else, if should be a callable accepting two input arrays."""
-        if isinstance(metric, str):
-            return self._make_metric_from_string(metric)
-        elif hasattr(metric, "__call__"):
-            return metric
-        else:
-            raise ValueError("Input metric is not valid")
-
-    @staticmethod
-    def _make_metric_from_string(metric_string: str) -> MetricFunction:
-        if metric_string == "MISS":
-            return miss_score
-        if metric_string in SCORERS:
-            # pylint: disable=protected-access
-            return get_scorer(metric_string)._score_func
-        raise ValueError("Input metric is not a valid string")
-
-    def _get_feature_importances(self, estimator: Estimator):
-        if hasattr(estimator, "feature_importances_"):
-            return estimator.feature_importances_
-        elif hasattr(estimator, "coef_"):
-            return np.abs(estimator.coef_[0])
-        elif hasattr(estimator, "steps"):
-            for _, step in estimator.steps:
-                if hasattr(step, "coef_") or hasattr(step, "feature_importances_"):
-                    return self._get_feature_importances(step)
-        else:
-            raise ValueError("The estimator provided has no feature importances")
+        ranks = self._get_feature_ranks(estimator, features)
+        return FeatureEvaluationResults(test_score=score, ranks=ranks, model=estimator)
 
     def _get_feature_ranks(
-        self, estimator: Estimator, features: Iterable[int]
+        self, estimator: Estimator, features: Union[List[int], NumpyArray]
     ) -> FeatureRanks:
-        """Extract the feature rank from the input estimator. So far it can only handle
-        estimators as scikit-learn ones, so either having the `feature_importances_` or
-        the `coef_` attribute."""
-        feature_importances = self._get_feature_importances(estimator)
+        feature_importances = estimator.feature_importances
         ranks = rankdata(-feature_importances)
-        return FeatureRanks(features=features, ranks=ranks, n_feats=self._n_features)
-
-    def refresh_splits(self):
-        self._splitter = self._splitter.fit(self._input_data)
-
-
-def miss_score(y_true: NumpyArray, y_pred: NumpyArray):
-    """MISS score: number of wrong classifications preceded by - so that the higher
-    this score the better the model"""
-    return -(y_true != y_pred).sum()
+        return FeatureRanks(
+            features=features, ranks=ranks, n_feats=self._n_initial_features
+        )

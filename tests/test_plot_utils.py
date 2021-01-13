@@ -1,14 +1,29 @@
-from omigami.plot_utils import plot_validation_curves
-from omigami.omigami import FeatureSelector
+import pytest
+from omigami.plot_utils import plot_validation_curves, plot_feature_rank
+from omigami.feature_selector import FeatureSelector
 
 
-def test_plot_validation_curves(results):
-    fs = FeatureSelector(n_outer=5, metric="MISS", estimator="RFC",)
-    fs.n_features = 10
+@pytest.fixture
+def fit_feature_selector(results):
+    fs = FeatureSelector(n_outer=5, metric="MISS", estimator="RFC")
+    fs.results = results
     fs.is_fit = True
-    fs.selected_features = {"min": (0, 1), "max": (0, 1), "mid": (0, 1)}
-    fs._results = results
-    sel_feats = fs._process_results(results)
-    fs._selected_features = sel_feats
-    ax = plot_validation_curves(fs)
+    fs._selected_features = fs.post_processor.select_features(results)
+    return fs
+
+
+def test_plot_validation_curves(fit_feature_selector):
+    ax = plot_validation_curves(fit_feature_selector)
     assert ax
+
+
+@pytest.mark.parametrize("model", ["min", "max", "mid"])
+def test_plot_feature_rank(fit_feature_selector, model):
+    fig = plot_feature_rank(fit_feature_selector, model)
+    assert fig
+
+
+def test_plot_feature_rank_error(fit_feature_selector):
+    with pytest.raises(ValueError):
+        fig = plot_feature_rank(fit_feature_selector, "yo")
+

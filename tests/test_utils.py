@@ -1,22 +1,11 @@
 import pytest
 from omigami import utils
-from omigami.models import FeatureRanks
+from omigami.data_structures import FeatureRanks
 
 
 @pytest.fixture
 def scores():
     return [{5: 5, 4: 4, 3: 4, 2: 4}, {5: 10, 4: 9, 3: 10, 2: 11}]
-
-
-def test_compute_number_of_features(scores):
-    n_feats = utils.compute_number_of_features(scores, 0.05)
-    assert isinstance(n_feats, dict)
-    assert utils.MIN in n_feats
-    assert utils.MAX in n_feats
-    assert utils.MID in n_feats
-    assert n_feats[utils.MIN] == 4
-    assert n_feats[utils.MAX] == 4
-    assert n_feats[utils.MID] == 4
 
 
 def test_average_scores(scores):
