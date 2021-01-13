@@ -20,7 +20,7 @@ omigami
 
 
 Easy and powerful tool to select features in untargeted metabolomics studies – with less risk for bias. How?
-Omigami uses multivariate models to perform a recursive feature elimination within a repeated double-cross-validation.
+Omigami uses multivariate models to perform a recursive feature elimination within a repeated double cross-validation.
 
 Install
 -------
@@ -36,20 +36,19 @@ Motivation
 - There's no freely available and easy-to-use Python tool that implements a minimally biased repeated double cross validation.
 - A robust selection requires many (100 - 5.000) models to be trained. Running such a large number of models in reasonable time, requires non-trivial parallelization.
 
-
 Features
 --------
+- [x] Repeated double cross-validation
+- [x] Multivariate feature selection (Random Forest, XGB or PLS-DA)
+- [x] Minimal optimal and all relevant feature selection
+- [x] Efficient Parallelization (with Dask)
+- [ ] Plotting
+- [ ] Predict with trained models
 
-Omigami is an opensource Python 3 software to perform multivariate feature selection
-using a nested cross validation scheme. The original idea is formulated and tested
-in *Shi L, Westerhuis JA, Rosén J, Landberg R, Brunius C. Variable selection and
-validation in multivariate modelling. Bioinformatics. 2019 Mar 15;35(6):972-980.
-doi: 10.1093/bioinformatics/bty710. PMID: 30165467; PMCID: PMC6419897.*
-The package so far supports Numpy arrays as inputs and dask-based parallelization.
-
-
-How to use Omigami
+Usage
 ------------------
+
+The package so far supports Numpy arrays as inputs and dask-based parallelization.
 
 The core functionality of omigami is represented by the `FeatureSelector` class.
 This class takes few parameters as input and can be used to select the most important
