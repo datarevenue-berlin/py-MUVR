@@ -35,7 +35,7 @@ def get_best_n_features(ranks: FeatureRanks, n_to_keep: int) -> List[int]:
     sorted_data = sorted(ranks_data.items(), key=lambda x: x[1])
     feats = [feat for feat, _ in sorted_data[0:n_to_keep]]
 
-    if len(feats) <= n_to_keep:
+    if len(feats) == n_to_keep:
         return feats
 
     # pad with non-present features, scrumble to not introduce a bias
