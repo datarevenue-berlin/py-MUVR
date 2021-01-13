@@ -1,9 +1,7 @@
 # omigami
-#### Minimally biased features selection for untargeted metabolomics
+#### Minimally biased features selection for untargeted metabolomics studies
 
-[![PyPI version shields.io](https://img.shields.io/pypi/v/omigami.svg)](https://pypi.python.org/pypi/omigami)
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PyPI version shields.io](https://img.shields.io/pypi/v/omigami.svg)](https://pypi.python.org/pypi/omigami) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <!-- image:: https://img.shields.io/travis/datarevenue-berlin/omigami.svg :target: https://travis-ci.org/datarevenue-berlin/omigami -->
 
@@ -38,17 +36,17 @@ pip install omigami
 ## Usage
 
 ### A minimal example
-This is a minimal example to show the usage of the main omigami class.
 
-- **test.csv**: Your omics dataset
-- **target**: Your class variable (pathological/control, treatment/non-treatment, etc.)
+- **test.csv**: This is your omics dataset.
+- **target**: Replace this with the name of the column that denotes your class variable
+  - e.g. this column will contain (1/0, pathological/control, treatment/non-treatment, etc.)
 
-.. code-block:: python
-
+```python
         import pandas as pd
         data = pd.read_csv('test.csv')
         X = data.drop(columns=["target"]).values
         y = data["target"].values
+```
 
 Once the data is ready, we can get a feature selector, fit it and look at the selected features:
 
@@ -104,9 +102,9 @@ client = Client()
 5. The whole process is repeated `n_repetitions` times to improve the robustness of the selection.
 6. Parameters and features are averaged over all `n_outer` splits and all `repetitions`.
 
-## Config
+## Parameters
 
-#### `FeatureSelector` parameters
+### `FeatureSelector` parameters
 
 - **repetitions**: Number of repetitions of the entire double cross-validation loop (default: `8`)
 - **n_outer**: Number of cross-validation splits in the outer loop
@@ -120,7 +118,7 @@ client = Client()
 - robust_minimum (float): Maximum normalized-score value to be considered when computing the selected features
 - random_state (int): Pass an int for a reproducible output (default: `None`)
 
-#### Selecting min, max and mid feature sets
+### Selecting min, max and mid feature sets from `feature_selector.selected_features`
 
 The feature selector returns 3 possible feature sets in `feature_selector.selected_features`:
 
@@ -132,11 +130,11 @@ The feature selector returns 3 possible feature sets in `feature_selector.select
 
 ## Further Reading
 
-- Blog Post Introducting Omigami
-- Original Paper: *Variable selection and validation in multivariate modelling (2019) [DOI:10.1093/bioinformatics/bty710](https://doi.org/10.1093/bioinformatics/bty710)*
-- Carl Brunius' R implementation
+- [Omigami blog post](https://datarevenue.com/en-blog/minimally-biased-feature-selection-untargeted-metabolomics)
+- Original Paper: [Variable selection and validation in multivariate modelling](https://doi.org/10.1093/bioinformatics/bty710)
+- [Carl Brunius' R implementation](https://gitlab.com/CarlBrunius/MUVR)
 
-## Contributing
+## Contribute to Omigami
 
 1. Fork it (https://github.com/datarevenue-berlin/omigami/fork)
 2. Create your feature branch (git checkout -b feature/fooBar)
