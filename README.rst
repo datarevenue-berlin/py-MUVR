@@ -35,7 +35,6 @@ using a nested cross validation scheme. The original idea is formulated and test
 in *Shi L, Westerhuis JA, Rosén J, Landberg R, Brunius C. Variable selection and
 validation in multivariate modelling. Bioinformatics. 2019 Mar 15;35(6):972-980.
 doi: 10.1093/bioinformatics/bty710. PMID: 30165467; PMCID: PMC6419897.*
-The package so far supports Numpy arrays as inputs and dask-based parallelization.
 
 
 Install
@@ -69,8 +68,8 @@ How to use Omigami
 ------------------
 
 The core functionality of omigami is represented by the :code:`FeatureSelector` class.
-This class takes few parameters and can be used to select the most important
-features from the input dataset. The workflow of the feature selection is the following:
+This class takes few input parameters and can be used to select the most important
+features from a tabular dataset of interest. The workflow of the feature selection is the following:
 
 - :code:`n_outer` CV splits are created
 - A recursive feature elimination is performed and evaluated on every CV split
@@ -98,7 +97,7 @@ For more details about the algorithm, please refer to the original paper.
 
 A minimal example
 +++++++++++++++++
-This is a minimal example to show the usage of the main omigami class.
+This is a minimal example to show the usage of the main omigami class and methods.
 
 Let's suppose that our data is composed of N samples for which M features have been
 measured. Among these features, we want to select the best predictors for a target class.
@@ -131,12 +130,12 @@ Once the data is ready, we can instantiate the feature selector:
 The :code:`estimator` parameter denotes the model to be used for the feature elimination. So
 far, the only native options supported are
 
-        - "RFC" (random forest classifier)
-        - "XGBC" (gradient boost classifier)
-        - "PLSC" (partial least square classifier)
+- "RFC" (random forest classifier)
+- "XGBC" (gradient boost classifier)
+- "PLSC" (partial least square classifier)
 
-but the class would also accept any scikit-learn model instance.
-`metric` is the score to address the fitness of the model. In this
+but the class would also accept any scikit-learn model instance, included pipelines.
+:code:`metric` is the score to address the fitness of the model. In this
 example we are using the number of missclassified samples. Other possibilities are
 given by scikit-learn scores, such as "accuracy".
 
@@ -155,8 +154,8 @@ Once the fit method is completed, selected features can be retrieved as
 
         selected_features = feature_selector.get_selected_features()
 
-The features are reported as column indexes. To get the names just provide the method
-with the names for every feature. Following the previous example:
+The features are reported as column indexes. To get the names, just provide the method
+with the names of every feature. Following the previous example:
 
 .. code-block:: python
 
@@ -167,10 +166,13 @@ Parallelization
 +++++++++++++++
 The fit mthod can be time consuming, for this reason Omigami gives the option
 to execute the various CV loops in parallel using
-an `Executor object <https://docs.python.org/3/library/concurrent.futures.html>`_ as
-parameter for the fit method.
+an `Executor object <https://docs.python.org/3/library/concurrent.futures.html>`_ which
+should be employed as keyword parameter of the fit method.
 
-So far, :code:`dask`, :code:`loky` (joblib) and :code:`concurrent` executors have been tested.
+So far, `dask <https://distributed.readthedocs.io/en/1.10.2/executor.html>`_,
+`loky <https://loky.readthedocs.io/en/stable/>`_ (joblib)
+and `concurrent <https://docs.python.org/3/library/concurrent.futures.html>`_
+executors have been tested.
 
 For example, using the native Python3 :code:`concurrent` library,
 we would do:
@@ -186,8 +188,8 @@ Visualization
 Omigami provides some basic plotting utils to inspect the results
 of the feature selction. In particular, it provides two main methods:
 
- - :code:`plot_feature_rank`
- - :code:`plot_validation_curves`
+- :code:`plot_feature_rank`
+- :code:`plot_validation_curves`
 
 .. code-block:: python
 
