@@ -180,3 +180,29 @@ we would do:
         from concurrent.futures import ProcessPoolExecutor
         executor = ProcessPoolExecutor()
         feature_selector.fit(X, y, executor=executor)
+
+Visualization
++++++++++++++
+Omigami provides some basic plotting utils to inspect the results
+of the feature selction. In particular, it provides two main methods:
+
+ - :code:`plot_feature_rank`
+ - :code:`plot_validation_curves`
+
+.. code-block:: python
+
+        from omigami.plot_utils import plot_feature_rank
+        fig = plot_feature_rank(
+            feature_selector,
+            model="min",  # one of "min", "mid" or "max"
+            feature_names=feature_names  # optional
+        )
+
+and
+
+.. code-block:: python
+
+        from omigami.plot_utils import plot_validation_curves
+        fig = plot_validation_curves(feature_selector)
+
+
