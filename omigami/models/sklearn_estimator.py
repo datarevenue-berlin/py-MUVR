@@ -43,7 +43,7 @@ class ScikitLearnEstimator(Estimator):
                 return coefficients
             else:
                 return coefficients[0]
-        raise ValueError(f"The estimator provided {self._estimator.__class__.__name__} "
+        raise ValueError(f"The estimator provided {self._estimator.__repr__()} "
                          f"has no feature importances")
 
     def set_random_state(self, random_state: RandomState):
@@ -64,7 +64,7 @@ class ScikitLearnEstimator(Estimator):
         return self._estimator.predict(X)
 
     def __repr__(self):
-        return f"SKLearnEstimator(model={self._estimator.__class__.__name__})"
+        return f"SKLearnEstimator(model={self._estimator.__repr__()})"
 
 
 class ScikitLearnPipeline(ScikitLearnEstimator):
@@ -81,7 +81,7 @@ class ScikitLearnPipeline(ScikitLearnEstimator):
                 return step.feature_importances_
             if hasattr(step, "coef_"):
                 return np.abs(step.coef_[0])
-        raise ValueError(f"The estimator provided {self._estimator.__class__.__name__} "
+        raise ValueError(f"The estimator provided {self._estimator.__repr__()} "
                          f"has no feature importances")
 
     def set_random_state(self, random_state: RandomState):
@@ -92,4 +92,4 @@ class ScikitLearnPipeline(ScikitLearnEstimator):
                 pass  # not all the elements of the pipeline have to be random
 
     def __repr__(self):
-        return f"SKLearnPipeline(n_steps={self._estimator.steps})"
+        return f"SKLearnPipeline(n_steps={len(self._estimator.steps)})"
