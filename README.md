@@ -95,7 +95,7 @@ client = Client()
 
 ## How it works
 
-![Schematic of repeated double cross-validation](https://global-uploads.webflow.com/5d3ec351b1eba4332d213004/5fd0e88651b733b656c3603b_ccukNlmNckEJ3p-Z9fHm2jPdgI9ILBDbOcdOBaBz3_WXA7VltferIk3vU1PPHztX5Gjcr0DMbh2xtvEK1lSYdou2xGAtni-Mq50W_cEpXssg2akHefa-H41jKDApZxctJlnVvk-b.png | width=300)
+![Schematic of repeated double cross-validation](https://global-uploads.webflow.com/5d3ec351b1eba4332d213004/5fd0e88651b733b656c3603b_ccukNlmNckEJ3p-Z9fHm2jPdgI9ILBDbOcdOBaBz3_WXA7VltferIk3vU1PPHztX5Gjcr0DMbh2xtvEK1lSYdou2xGAtni-Mq50W_cEpXssg2akHefa-H41jKDApZxctJlnVvk-b.png)
 
 1. The dataset is split into `n_outer` cross-validation splits.
 2. Each train split is further split into `n_inner` cross-validation splits.
