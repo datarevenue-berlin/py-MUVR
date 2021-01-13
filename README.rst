@@ -31,6 +31,7 @@ pip install omigami
 
 Motivation
 ----------
+
 - It's hard to protect against selection bias on high-demensional omics data ([Krawczuk and Łukaszuk, 2016](https://www.sciencedirect.com/science/article/pii/S0933365715001426)). Even common cross-validation has been shown to overfit.
 - Most feature selection techniques focus on finding the minimal set of strongest features. Omitting redundant variables that are however still relevant to understanding the biochemical systems.
 - There's no freely available and easy-to-use Python tool that implements a minimally biased repeated double cross validation.
@@ -38,6 +39,7 @@ Motivation
 
 Features
 --------
+
 - [x] Repeated double cross-validation
 - [x] Multivariate feature selection (Random Forest, XGB or PLS-DA)
 - [x] Minimal optimal and all relevant feature selection
@@ -123,6 +125,7 @@ Config
 ------
 
 #### `FeatureSelector` parameters
+
 - **repetitions**: Number of repetitions of the entire double cross-validation loop (default: `8`)
 - **n_outer**: Number of cross-validation splits in the outer loop
 - **n_inner**: Number of cross-validation splits in the inner loop (default: n_outer-1)
@@ -149,6 +152,7 @@ The feature selector returns 3 possible feature sets:
 
 Further Reading
 ---------------
+
 - Blog Post Introducting Omigami
 - Original Paper: *Variable selection and validation in multivariate modelling (2019) [DOI:10.1093/bioinformatics/bty710](https://doi.org/10.1093/bioinformatics/bty710)*
 - Carl Brunius' R implementation
