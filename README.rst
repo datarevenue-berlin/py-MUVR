@@ -1,6 +1,7 @@
 =======
 omigami
 =======
+<h4 align="center">Minimally biased features selection for untargeted metabolomics.</h4>
 
 
 .. image:: https://img.shields.io/pypi/v/omigami.svg
@@ -15,16 +16,25 @@ omigami
         :target: https://omigami.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 
+Easy and powerful tool to select features in untargeted metabolomics studies – with less risk for bias. How?
+Omigami uses multivariate models to perform a recursive feature elimination within a repeated double-cross-validation.
 
-Nested cross validation for feature selection in Python
+Install
+-------
 
+```sh
+pip install omigami
+```
 
-* Free software: MIT license
-
-..
-     * Documentation: https://omigami.readthedocs.io.
+Motivation
+-------
+- It's hard to protect against selection bias on high-demensional omics data ([Krawczuk and Łukaszuk, 2016](https://www.sciencedirect.com/science/article/pii/S0933365715001426)). Even common cross-validation has been shown to overfit.
+- Most feature selection techniques focus on finding the minimal set of strongest features. Omitting redundant variables that are however still relevant to understanding the biochemical systems.
+- There's no freely available and easy-to-use Python tool that implements a minimally biased repeated double cross validation.
+- A robust selection requires many (100 - 5.000) models to be trained. Running such a large number of models in reasonable time, requires non-trivial parallelization.
 
 
 Features
@@ -36,33 +46,6 @@ in *Shi L, Westerhuis JA, Rosén J, Landberg R, Brunius C. Variable selection an
 validation in multivariate modelling. Bioinformatics. 2019 Mar 15;35(6):972-980.
 doi: 10.1093/bioinformatics/bty710. PMID: 30165467; PMCID: PMC6419897.*
 The package so far supports Numpy arrays as inputs and dask-based parallelization.
-
-
-Install
--------
-
-Omigami can be easily installed using PIP. It's recommendable to use a virtual
-environment before performing the install. It can be done either using your python
-release as
-
-.. code-block:: bash
-
-    python3 -m venv <path_to_venv>
-    source <path_to_venv>/bin/activate
-
-or using Anaconda
-
-.. code-block:: bash
-
-        conda create --name omigami_venv
-        conda activate omigami_venv
-
-When the virtual environment is installed, you can use PIP to install omigami:
-
-.. code-block:: bash
-
-        pip install omigami
-
 
 
 How to use Omigami
@@ -169,3 +152,12 @@ at the beginning of the script:
         client = Client()
 
 this will allow the user to inspect the status of the calculation at `http://localhost:8787/status`.
+
+Citation
+--------
+Data Revenue, based on *Variable selection and validation in multivariate modelling (2019) [DOI:10.1093/bioinformatics/bty710](https://doi.org/10.1093/bioinformatics/bty710)*
+
+
+License
+--------
+MIT license - free software.
