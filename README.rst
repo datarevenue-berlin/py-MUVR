@@ -68,16 +68,16 @@ When the virtual environment is installed, you can use PIP to install omigami:
 How to use Omigami
 ------------------
 
-The core functionality of omigami is represented by the `FeatureSelector` class.
-This class takes few parameters as input and can be used to select the most important
+The core functionality of omigami is represented by the :code:`FeatureSelector` class.
+This class takes few parameters and can be used to select the most important
 features from the input dataset. The workflow of the feature selection is the following:
 
-- `n_outer` CV splits are created
-- A recursive feature selection is performed and evaluated on every CV split
+- :code:`n_outer` CV splits are created
+- A recursive feature elimination is performed and evaluated on every CV split
 
 The recursive feature elimination is also cross validated, so for each outer split:
 
-- `n_inner` CV splits are created (default is `n_outer` - 1)
+- :code:`n_inner` CV splits are created (default is :code:`n_outer - 1`)
 - for each CV split a model is trained. Performance and feature importances are extracted
 - the least important features are discarded
 
@@ -92,7 +92,9 @@ The feature selector returns 3 possible feature sets:
 - The maximum number of features for which the model performs well
 - Their geometric mean
 
-The whole process is repeated `n_repetitions` times to enhance selection robustness.
+The whole process is repeated :code:`n_repetitions` times to enhance selection robustness.
+
+For more details about the algorithm, please refer to the original paper.
 
 A minimal example
 +++++++++++++++++
@@ -100,10 +102,11 @@ This is a minimal example to show the usage of the main omigami class.
 
 Let's suppose that our data is composed of N samples for which M features have been
 measured. Among these features, we want to select the best predictors for a target class.
-The data should be stored in tabular data in two arrays: an array of predictors, `X`, with N rows and M columns,
-containing the feature values, and a target array, `y`, containing the classes to predict.
+The data should be stored in tabular format, that can be later split in two arrays:
+an array of predictors, :code:`X`, with N rows and M columns,
+containing the feature values, and a target array, :code:`y`, containing the classes to predict.
 
-For example, using `pandas` we would do something like
+For example, using :code:`pandas` we would do something like
 
 .. code-block:: python
 
@@ -116,17 +119,22 @@ Once the data is ready, we can instantiate the feature selector:
 
 .. code-block:: python
 
+        from omigami.feature_selector import FeatureSelector
 
-        from omigami.omigami import FeatureSelector
         feature_selector = FeatureSelector(
-            repetitions=10,
+            n_repetitions=10,
             n_outer=5,
-            estimator="RFC",   # random forest classifier
-            metric="MISS",   # missclassifications
+            estimator="PLSC",  # partial least squares classifier
+            metric="MISS",  # missclassifications
         )
 
-The `estimator` parameter denotes the model to be used for the feature elimination. So
-far, the only native options supported are "RFC" and "XGBC" (gradient boost classifier),
+The :code:`estimator` parameter denotes the model to be used for the feature elimination. So
+far, the only native options supported are
+
+        - "RFC" (random forest classifier)
+        - "XGBC" (gradient boost classifier)
+        - "PLSC" (partial least square classifier)
+
 but the class would also accept any scikit-learn model instance.
 `metric` is the score to address the fitness of the model. In this
 example we are using the number of missclassified samples. Other possibilities are
@@ -145,27 +153,30 @@ Once the fit method is completed, selected features can be retrieved as
 
 .. code-block:: python
 
-        selected_features = feature_selector.selected_features
+        selected_features = feature_selector.get_selected_features()
 
-The features are reported as column indexes. To get the names just pass the selection
-to the data frame:
+The features are reported as column indexes. To get the names just provide the method
+with the names for every feature. Following the previous example:
 
 .. code-block:: python
 
-        selected_feature_names = data.columns[list(selected_features["min"])]
+        feature_names = data.drop(columns=["target"]).columns
+        selected_features = feature_selector.get_selected_features(feature_names=feature_names)
 
 Parallelization
 +++++++++++++++
 The fit mthod can be time consuming, for this reason Omigami gives the option
-to execute the various CV loops in parallel using a dask cluster.
-The dask cluster can be remote, or running in local to exploit the processors of
-the user's computer.
-For the latter case - which is probably the most common case - it's sufficient to run the following
-at the beginning of the script:
+to execute the various CV loops in parallel using
+an `Executor object <https://docs.python.org/3/library/concurrent.futures.html>`_ as
+parameter for the fit method.
+
+So far, :code:`dask`, :code:`loky` (joblib) and :code:`concurrent` executors have been tested.
+
+For example, using the native Python3 :code:`concurrent` library,
+we would do:
 
 .. code-block:: python
 
-        from dask.distributed import Client
-        client = Client()
-
-this will allow the user to inspect the status of the calculation at `http://localhost:8787/status`.
+        from concurrent.futures import ProcessPoolExecutor
+        executor = ProcessPoolExecutor()
+        feature_selector.fit(X, y, executor=executor)
