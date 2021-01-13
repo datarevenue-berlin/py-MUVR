@@ -4,7 +4,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.exceptions import NotFittedError
 from omigami.models.estimator import Estimator
 from omigami.models import make_estimator
@@ -15,6 +15,7 @@ models = [
     "PLSC",
     SVC(random_state=1),
     Pipeline([("norm", Normalizer()), ("model", SVC(random_state=1))]),
+    LinearRegression(),
 ]
 
 
