@@ -42,6 +42,7 @@ Features
 - [x] Multivariate feature selection (Random Forest, XGB or PLS-DA)
 - [x] Minimal optimal and all relevant feature selection
 - [x] Efficient Parallelization (with Dask)
+- [x] Familiar scikit-learn API
 - [ ] Plotting
 - [ ] Predict with trained models
 
@@ -152,10 +153,18 @@ at the beginning of the script:
 
 this will allow the user to inspect the status of the calculation at `http://localhost:8787/status`.
 
+Contributing
+--------
+
+1. Fork it (https://github.com/datarevenue-berlin/omigami/fork)
+2. Create your feature branch (git checkout -b feature/fooBar)
+3. Commit your changes (git commit -am 'Add some fooBar')
+4. Push to the branch (git push origin feature/fooBar)
+5. Create a new Pull Request
+
 Citation
 --------
 Data Revenue, based on *Variable selection and validation in multivariate modelling (2019) [DOI:10.1093/bioinformatics/bty710](https://doi.org/10.1093/bioinformatics/bty710)*
-
 
 License
 --------
