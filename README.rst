@@ -119,15 +119,15 @@ Once the data is ready, we can instantiate the feature selector:
 
         from omigami.omigami import FeatureSelector
         feature_selector = FeatureSelector(
-            n_repetitions=10,
+            repetitions=10,
             n_outer=5,
             estimator="RFC",   # random forest classifier
             metric="MISS",   # missclassifications
         )
 
 The `estimator` parameter denotes the model to be used for the feature elimination. So
-far, the only native option supported is "RFC", but the class would also accept any scikit-learn
-model instance.
+far, the only native options supported are "RFC" and "XGBC" (gradient boost classifier),
+but the class would also accept any scikit-learn model instance.
 `metric` is the score to address the fitness of the model. In this
 example we are using the number of missclassified samples. Other possibilities are
 given by scikit-learn scores, such as "accuracy".
@@ -152,7 +152,7 @@ to the data frame:
 
 .. code-block:: python
 
-        selected_feature_names = data.columns[selected_features["min"]]
+        selected_feature_names = data.columns[list(selected_features["min"])]
 
 Parallelization
 +++++++++++++++
