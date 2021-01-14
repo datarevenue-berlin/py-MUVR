@@ -40,7 +40,6 @@ def fit_permutation_test():
 @pytest.fixture
 def fit_feature_selector(results):
     fs = FeatureSelector(n_outer=5, metric="MISS", estimator="PLSC",)
-    fs.n_features = 10
     fs.is_fit = True
     fs.results = results
     sel_feats = fs.post_processor.select_features(results)
@@ -56,16 +55,12 @@ def test_permutation_test():
 
 
 def test_fit(monkeypatch, fit_feature_selector):
-    def fit_mock(*args, **kwargs):
-        pass
-
-    monkeypatch.setattr(fit_feature_selector, "fit", fit_mock)
-    n_permutations = 10
+    n_permutations = 5
     pt = permutation_test.PermutationTest(
         feature_selector=fit_feature_selector, n_permutations=n_permutations
     )
 
-    X, y = datasets.make_classification(n_features=5, random_state=0)
+    X, y = datasets.make_classification(n_features=5, n_samples=5, random_state=0)
     pt.fit(X, y)
 
     assert pt.res

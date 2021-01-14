@@ -173,3 +173,16 @@ def test_get_selected_features(fs, mosquito):
     assert selected_features_names.min_feats == ["A"]
     with pytest.raises(ValueError):
         fs.get_selected_features(feature_names=["only-one-name"])
+
+
+def test_get_params(fs):
+    params = fs.get_params()
+    assert params["metric"] == "MISS"
+    assert params["random_state"] == 0
+    assert isinstance(params["estimator"], LinearRegression)
+    assert params["n_repetitions"] == 8
+    assert params["n_outer"] == 8
+    assert params["n_inner"] == 7
+    assert params["features_dropout_rate"] == 0.05
+    assert params["robust_minimum"] == 0.05
+    assert FeatureSelector(**params)

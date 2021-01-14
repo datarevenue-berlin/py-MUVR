@@ -59,11 +59,12 @@ class PermutationTest:
             self._fs.fit(X, y, groups=groups)
         self.res = self._get_feats_and_scores()
 
+        fs_perm = FeatureSelector(**self._fs.get_params())
         self.res_perm = []
         for _ in tqdm.tqdm(range(self.n_permutations)):
             np.random.shuffle(y_idx)
             y_perm = y[y_idx]
-            self._fs.fit(X, y_perm, groups=groups, executor=executor)
+            fs_perm.fit(X, y_perm, groups=groups, executor=executor)
             self.res_perm.append(self._get_feats_and_scores())
 
         return self

@@ -108,6 +108,10 @@ class FeatureSelector:
         self._n_features = None
         self.random_state = None if random_state is None else RandomState(random_state)
         self.n_outer = n_outer
+        self.features_dropout_rate = features_dropout_rate
+        self.estimator = estimator
+        self.metric = metric
+        self.robust_minimum = robust_minimum
         self.keep_fraction = 1 - features_dropout_rate
         self.n_repetitions = n_repetitions
         self.feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
@@ -360,3 +364,19 @@ class FeatureSelector:
             max_feats=self._selected_features.max_feats[:],
             mid_feats=self._selected_features.mid_feats[:],
         )
+
+    def get_params(self):
+        return {
+            "n_outer": self.n_outer,
+            "metric": self.metric,
+            "estimator": self.estimator,
+            "features_dropout_rate": self.features_dropout_rate,
+            "robust_minimum": self.robust_minimum,
+            "n_inner": self.n_inner,
+            "n_repetitions": self.n_repetitions,
+            "random_state": (
+                None
+                if self.random_state is None
+                else self.random_state.get_state()[1][0]
+            ),
+        }
