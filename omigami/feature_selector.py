@@ -408,6 +408,35 @@ class FeatureSelector:
             mid_feats=self._selected_features.mid_feats[:],
         )
 
+    def make_report(self, feature_names: List[str]) -> SelectedFeatures:
+        """
+        Prints a small report of the results obtained from the feature selection.
+
+        Parameters
+        ----------
+        feature_names: List[str]
+            List with the name of the features of the original data
+
+        Returns
+        -------
+        SelectedFeatures:
+            The selected features obtained from running the algorithm
+
+        """
+        selected_features = self.get_selected_features(feature_names)
+        self._print_report(selected_features)
+
+        return selected_features
+
+    @staticmethod
+    def _print_report(selected_features: SelectedFeatures):
+        print(f"Min features ({len(selected_features.min_feats)}): "
+              f"{', '.join(selected_features.min_feats)}\n")
+        print(f"Mid features ({len(selected_features.mid_feats)}): "
+              f"{', '.join(selected_features.mid_feats)}\n")
+        print(f"Max features ({len(selected_features.max_feats)}): "
+              f"{', '.join(selected_features.max_feats)}\n")
+
     def __repr__(self):
         fs = (
             f"FeatureSelector("

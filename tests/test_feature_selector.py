@@ -173,3 +173,13 @@ def test_get_selected_features(fs, mosquito):
     assert selected_features_names.min_feats == ["A"]
     with pytest.raises(ValueError):
         fs.get_selected_features(feature_names=["only-one-name"])
+
+
+def test_make_report(fs):
+    fs.get_selected_features = Mock(fs.get_selected_features, return_value="selected")
+    fs._print_report = Mock(fs._print_report)
+
+    selected_features = fs.make_report(["feature_names"])
+
+    fs.get_selected_features.assert_called_once_with(["feature_names"])
+    fs._print_report.assert_called_once_with("selected")
