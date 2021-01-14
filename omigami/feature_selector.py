@@ -414,7 +414,7 @@ class FeatureSelector:
             f"repetitions={self.n_repetitions},"
             f" n_outer={self.n_outer},"
             f" n_inner={self.n_inner},"
-            f" {self.keep_fraction},"
+            f" keep_fraction={self.keep_fraction},"
             f" is_fit={self.is_fit})"
         )
 
