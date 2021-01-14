@@ -57,7 +57,7 @@ class PermutationTest:
 
         if not self._fs.is_fit:
             self._fs.fit(X, y, groups=groups)
-        self.res = self._get_feats_and_scores()
+        self.res = self._get_feats_and_scores(self._fs)
 
         fs_perm = FeatureSelector(**self._fs.get_params())
         self.res_perm = []
@@ -65,13 +65,14 @@ class PermutationTest:
             np.random.shuffle(y_idx)
             y_perm = y[y_idx]
             fs_perm.fit(X, y_perm, groups=groups, executor=executor)
-            self.res_perm.append(self._get_feats_and_scores())
+            self.res_perm.append(self._get_feats_and_scores(fs_perm))
 
         return self
 
-    def _get_feats_and_scores(self) -> tuple:
-        selected_features = self._fs.get_selected_features()
-        score = self._fs.get_validation_curves()["total"][0]
+    @staticmethod
+    def _get_feats_and_scores(feature_selector: FeatureSelector) -> tuple:
+        selected_features = feature_selector.get_selected_features()
+        score = feature_selector.get_validation_curves()["total"][0]
         return selected_features, score
 
     def compute_permutation_scores(self, model: str) -> Tuple[float, List[float]]:

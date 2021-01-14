@@ -72,7 +72,7 @@ def test_get_feats_and_scores(fit_feature_selector):
     pt = permutation_test.PermutationTest(
         feature_selector=fit_feature_selector, n_permutations=3
     )
-    sel_feats, score_curve = pt._get_feats_and_scores()
+    sel_feats, score_curve = pt._get_feats_and_scores(fit_feature_selector)
     total_curve = fit_feature_selector.get_validation_curves()["total"][0]
     assert isinstance(sel_feats, SelectedFeatures)
     assert isinstance(score_curve, ScoreCurve)
