@@ -1,6 +1,7 @@
 from typing import List, Dict, Iterable
 import pandas as pd
 import numpy as np
+import scipy.stats
 from omigami.data_structures import FeatureRanks
 
 
@@ -48,3 +49,22 @@ def get_best_n_features(ranks: FeatureRanks, n_to_keep: int) -> List[int]:
                 return feats
 
     raise ValueError("Impossible to return so many best features")
+
+
+def compute_t_student_p_value(sample: float, population: Iterable) -> float:
+    """From Wikipeida:
+    https://en.wikipedia.org/wiki/Prediction_interval#Unknown_mean,_unknown_variance
+    Compute the p_value of the t-student variable that represent the distribution
+    of the n+1 sample of population, where n=len(population).
+    In few words, it gives the probability that `sample` belongs to `population`.
+    The underlying assumption is that population is normally distributed
+    with unknown mean and unkown variance
+    Args:
+        sample (float): value for which we want the p-value
+        population (Iterable): values that respresent the null hypothesis for `sample`
+    """
+    m = np.mean(population)
+    s = np.std(population)
+    n = len(population)
+    t = (sample - m) / (s * (1 + 1 / n) ** 0.5)
+    return scipy.stats.t(df=n - 1).cdf(t)
