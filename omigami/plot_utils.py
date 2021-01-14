@@ -90,7 +90,6 @@ def plot_feature_rank(feature_selector, model, feature_names=None, **figure_kwar
     bbox_props = {"color": color_ranks, "alpha": 0.5}
     bbox_color = {"boxes": color_ranks, "medians": "black"}
 
-
     if feature_names is not None:
         feature_numbers = range(len(feature_names))
         numbers_to_names = dict(zip(feature_numbers, feature_names))

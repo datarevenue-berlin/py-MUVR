@@ -183,3 +183,4 @@ def test_make_report(fs):
 
     fs.get_selected_features.assert_called_once_with(["feature_names"])
     fs._print_report.assert_called_once_with("selected")
+    assert selected_features == "selected"
