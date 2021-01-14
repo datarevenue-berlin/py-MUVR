@@ -4,10 +4,12 @@ from matplotlib.axes import Axes
 import pandas as pd
 from omigami.feature_selector import FeatureSelector
 
+log = logging.getLogger(__name__)
+
 
 def plot_validation_curves(feature_selector: FeatureSelector, **figure_kwargs) -> Axes:
     if not feature_selector.is_fit:
-        logging.warning(  # pylint: disable=logging-not-lazy
+        log.warning(  # pylint: disable=logging-not-lazy
             "Validation curves have not been generated. To be able to plot"
             + " call `select_features` method first"
         )
