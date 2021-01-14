@@ -40,6 +40,7 @@ setup(
         "scipy>=1.5.2",
         "scikit-learn>=0.23.2",
         "xgboost>=1.3.1",
+        "tqdm>=4.52.0",
     ],
     license="MIT license",
     long_description=readme + "\n\n" + history,
