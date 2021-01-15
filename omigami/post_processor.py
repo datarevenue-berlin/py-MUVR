@@ -202,3 +202,23 @@ class PostProcessor:
             n_feats = len(features)
             n_to_features[n_feats] = features
         return n_to_features
+
+    @staticmethod
+    def get_all_feature_sets(results: FeatureSelectionResults, model: str):
+        if model == "min":
+            ranks = [r.min_eval.ranks for repetition in results for r in repetition]
+        if model == "mid":
+            ranks = [r.mid_eval.ranks for repetition in results for r in repetition]
+        if model == "max":
+            ranks = [r.max_eval.ranks for repetition in results for r in repetition]
+        feature_sets = [list(r.get_data().keys()) for r in ranks]
+        return feature_sets
+
+    @staticmethod
+    def get_all_feature_models(results: FeatureSelectionResults, model: str):
+        if model == "min":
+            return [r.min_eval.model for repetition in results for r in repetition]
+        if model == "mid":
+            return [r.mid_eval.model for repetition in results for r in repetition]
+        if model == "max":
+            return [r.max_eval.model for repetition in results for r in repetition]

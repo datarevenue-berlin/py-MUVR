@@ -105,7 +105,7 @@ class FeatureSelector:
         random_state: int = None,
     ):
         self.is_fit = False
-        self._n_features = None
+        self.n_features = None
         self.random_state = None if random_state is None else RandomState(random_state)
         self.n_outer = n_outer
         self.keep_fraction = 1 - features_dropout_rate
@@ -185,7 +185,7 @@ class FeatureSelector:
             repetition_results.append(outer_loop_results)
 
         self._selected_features = self._select_best_features(repetition_results)
-        self._n_features = input_data.n_features
+        self.n_features = input_data.n_features
         self.is_fit = True
         return self
 
@@ -343,9 +343,9 @@ class FeatureSelector:
             raise NotFitException("The feature selector is not fit yet")
 
         if feature_names is not None:
-            if len(feature_names) != self._n_features:
+            if len(feature_names) != self.n_features:
                 raise ValueError(
-                    f"feature_names provided should contain {self._n_features} elements"
+                    f"feature_names provided should contain {self.n_features} elements"
                 )
             min_names = [feature_names[f] for f in self._selected_features.min_feats]
             mid_names = [feature_names[f] for f in self._selected_features.mid_feats]

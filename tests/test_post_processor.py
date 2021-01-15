@@ -1,8 +1,10 @@
 import pytest
 
+import collections
 from omigami.post_processor import PostProcessor
 from omigami.feature_evaluator import FeatureEvaluationResults
 from omigami.data_structures import FeatureRanks, ScoreCurve, OuterLoopResults
+from omigami.models import Estimator
 
 
 @pytest.fixture
@@ -13,19 +15,19 @@ def outer_loop_results():
             min_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[1, 2], ranks=[1, 2], n_feats=5),
-                model="model"
+                model="model",
             ),
             max_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(
                     features=[1, 2, 3, 4], ranks=[2, 1, 3, 4], n_feats=5
                 ),
-                model="model"
+                model="model",
             ),
             mid_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[1, 2, 3], ranks=[1, 2, 3], n_feats=5),
-                model="model"
+                model="model",
             ),
         ),
         OuterLoopResults(
@@ -33,19 +35,19 @@ def outer_loop_results():
             min_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[1, 2], ranks=[1.5, 1.5], n_feats=5),
-                model="model"
+                model="model",
             ),
             max_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(
                     features=[0, 1, 2, 3], ranks=[1, 2, 3, 4], n_feats=5
                 ),
-                model="model"
+                model="model",
             ),
             mid_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[0, 1, 2], ranks=[3, 1, 2], n_feats=5),
-                model="model"
+                model="model",
             ),
         ),
     ]
@@ -59,19 +61,19 @@ def outer_loop_results2():
             min_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[2, 3], ranks=[1, 2], n_feats=5),
-                model="model"
+                model="model",
             ),
             max_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(
                     features=[0, 1, 2, 3], ranks=[3, 1, 2, 4], n_feats=5
                 ),
-                model="model"
+                model="model",
             ),
             mid_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[0, 1, 2], ranks=[3, 1, 2], n_feats=5),
-                model="model"
+                model="model",
             ),
         ),
         OuterLoopResults(
@@ -79,19 +81,19 @@ def outer_loop_results2():
             min_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[0, 1], ranks=[1, 2], n_feats=5),
-                model="model"
+                model="model",
             ),
             max_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(
                     features=[0, 1, 2, 4], ranks=[4, 3, 1, 2], n_feats=5
                 ),
-                model="model"
+                model="model",
             ),
             mid_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[1, 2, 3], ranks=[3, 1, 2], n_feats=5),
-                model="model"
+                model="model",
             ),
         ),
     ]
@@ -184,3 +186,20 @@ def test_select_best_features(rfe_raw_results):
     assert sorted(selected_feats.min_feats) == [2, 4]
     assert sorted(selected_feats.mid_feats) == [2, 3, 4]
     assert sorted(selected_feats.max_feats) == [1, 2, 3, 4]
+
+
+def test_get_all_feature_sets(results):
+    pp = PostProcessor(None)
+    feature_sets = pp.get_all_feature_sets(results, "min")
+    feature_sets_counts = collections.Counter(tuple(sorted(fs)) for fs in feature_sets)
+    assert feature_sets
+    assert len(feature_sets) == 4
+    assert feature_sets_counts[(0, 1)] == 3
+    assert feature_sets_counts[(0, 1, 3, 4)] == 1
+
+
+def test_get_all_feature_models(results):
+    pp = PostProcessor(None)
+    models = pp.get_all_feature_sets(results, "min")
+    return len(models) == 4
+    assert isinstance(models[0], Estimator)
