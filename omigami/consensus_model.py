@@ -1,7 +1,10 @@
+from typing import List
 import numpy as np
 from scipy.stats import mode
 from omigami.feature_selector import FeatureSelector
 from omigami.exceptions import NotFitException
+from omigami.data_structures.data_types import NumpyArray
+from omigami.models import Estimator
 
 
 class ConsensusModel:
@@ -18,7 +21,7 @@ class ConsensusModel:
             raise ValueError("'problem' must be 'classification' or 'regression'")
         self.problem = problem
 
-    def predict(self, X):
+    def raw_predict(self, X: NumpyArray) -> NumpyArray:
         if X.shape[1] != self.n_features:
             raise ValueError()
         y_preds = []
@@ -27,18 +30,26 @@ class ConsensusModel:
             y_pred = model.predict(pred_X)
             y_preds.append(y_pred)
         y_preds = np.vstack(y_preds)  # n-rows = n-models
+        return y_preds
+
+    def predict(self, X: NumpyArray) -> NumpyArray:
+        y_preds = self.raw_predict(X)
         if self.problem == "classification":
             return mode(y_preds, axis=0).mode.ravel()
         return y_preds.mean(axis=0)
 
     @staticmethod
-    def _extract_evaluators(feature_selector, model):
+    def _extract_evaluators(
+        feature_selector: FeatureSelector, model: str
+    ) -> List[List[int]]:
         return feature_selector.post_processor.get_all_feature_models(
             feature_selector.results, model
         )
 
     @staticmethod
-    def _extract_feature_sets(feature_selector, model):
+    def _extract_feature_sets(
+        feature_selector: FeatureSelector, model: str
+    ) -> List[Estimator]:
         return feature_selector.post_processor.get_all_feature_sets(
             feature_selector.results, model
         )
