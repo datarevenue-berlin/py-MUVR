@@ -1,8 +1,9 @@
 import pytest
 import numpy as np
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
-from sklearn.svm import SVC
+from sklearn.svm import SVC ,SVR
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.exceptions import NotFittedError
 from omigami.models.estimator import Estimator
@@ -10,6 +11,8 @@ from omigami.models import make_estimator
 
 models = [
     "RFC",
+    RandomForestRegressor(10),
+    SVR(kernel="linear"),
     "XGBC",
     "PLSC",
     SVC(kernel="linear", random_state=1),
