@@ -1,6 +1,7 @@
 import logging
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
+import matplotlib.ticker as mtick
 import pandas as pd
 from omigami.feature_selector import FeatureSelector
 
@@ -45,12 +46,12 @@ def plot_validation_curves(feature_selector: FeatureSelector, **figure_kwargs) -
     plt.ylabel("Fitness score")
     plt.grid(ls=":")
     plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
-    return plt.gca()
+    return plt.gcf()
 
 
 def plot_feature_rank(feature_selector, model, feature_names=None, **figure_kwargs):
     if model not in {"min", "max", "mid"}:
-        raise ValueError("model must be one of min, max or mid")
+        raise ValueError("The model parameter must be one of 'min', 'max' or 'mid'.")
 
     eval_attr = model + "_eval"
     feats_attr = model + "_feats"
@@ -80,9 +81,10 @@ def plot_feature_rank(feature_selector, model, feature_names=None, **figure_kwar
     color_notnan = "grey"
     color_ranks = "#4e79a7"
 
-    ax_notnan.set_xlabel("feature")
-    ax_notnan.set_ylabel("not-NaN fraction", color=color_notnan)
-    ax_ranks.set_ylabel("rank", color=color_ranks)
+    ax_notnan.yaxis.set_major_formatter(mtick.PercentFormatter())
+    ax_notnan.set_xlabel("Feature")
+    ax_notnan.set_ylabel("Percentage of times selected", color=color_notnan)
+    ax_ranks.set_ylabel("Feature Rank", color=color_ranks)
 
     ax_notnan.tick_params(axis="y", labelcolor=color_notnan)
     ax_ranks.tick_params(axis="y", labelcolor=color_ranks)
@@ -95,8 +97,8 @@ def plot_feature_rank(feature_selector, model, feature_names=None, **figure_kwar
         numbers_to_names = dict(zip(feature_numbers, feature_names))
         selected_ranks.rename(columns=numbers_to_names, inplace=True)
 
-    selected_ranks.notna().mean().plot.bar(
-        facecolor=color_notnan, ax=ax_notnan, alpha=0.7
+    (selected_ranks.notna().mean() * 100).plot.bar(
+        facecolor=color_notnan, ax=ax_notnan, alpha=0.4, edgecolor="black"
     )
 
     selected_ranks.boxplot(
