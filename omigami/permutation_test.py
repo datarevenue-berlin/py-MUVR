@@ -3,7 +3,7 @@ import logging
 from concurrent.futures import Executor
 import numpy as np
 from scipy.stats import rankdata, normaltest
-import tqdm
+import progressbar
 from omigami.utils import compute_t_student_p_value
 from omigami.data_structures.data_types import NumpyArray
 from omigami.data_structures.data_models import SelectedFeatures, ScoreCurve
@@ -66,7 +66,7 @@ class PermutationTest:
 
         fs_perm = FeatureSelector(**self._fs.get_params())
         self.res_perm = []
-        for _ in tqdm.tqdm(range(self.n_permutations)):
+        for _ in progressbar.progressbar(range(self.n_permutations)):
             np.random.shuffle(y_idx)
             y_perm = y[y_idx]
             fs_perm.fit(X, y_perm, groups=groups, executor=executor)
@@ -114,7 +114,7 @@ class PermutationTest:
     def compute_p_values(self, model: str, ranks: bool = False) -> float:
         """Compute the p-value relative to the original feature selection score for
         the input `model` based on the results of the various permutations.
-        If the permutation scores are not normal, set `ranks=True`.
+        If the permutation scores are not normal, `ranks` is automatically set to True.
 
         Parameters
         ----------
@@ -135,7 +135,7 @@ class PermutationTest:
 
         if not ranks and len(x_perm) > 7:  # or `normaltest` would raise an error
             test = normaltest(x_perm)
-            if test.p_value < 0.05:
+            if test.pvalue < 0.05:
                 log.warning(
                     "the permutation scores don't seem to be normally distributed. "
                     + "Setting ranks to True (non-parametric test)"
