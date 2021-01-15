@@ -30,7 +30,7 @@ pip install omigami
 - [x] Minimal optimal and all relevant feature selection
 - [x] Efficient Parallelization (with Dask)
 - [x] Familiar scikit-learn API
-- [ ] Plotting
+- [x] Plotting
 - [ ] Predict with trained models
 
 ## Usage
@@ -53,7 +53,7 @@ Once the data is ready, we can get a feature selector, fit it and look at the se
 ```python
 from omigami.omigami import FeatureSelector
 feature_selector = FeatureSelector(
-    repetitions=10,
+    n_repetitions=10,
     n_outer=5,
     n_inner=4
     estimator="RFC",   # random forest classifier
@@ -62,31 +62,48 @@ feature_selector = FeatureSelector(
 
 feature_selector.fit(X, y)
 
-selected_features = feature_selector.selected_features
+feature_names = data.drop(columns=["target"]).columns
+selected_features = feature_selector.get_selected_features(feature_names=feature_names)
 ```
 
-It might take a while for it to complete, depending on your machine and on the model
-selected.
+It might take a while for it to complete, depending on your machine and on the model selected.
 
-The features are reported as column indexes. To get the names just pass the selection
-to the data frame:
+### Selecting min, max and mid feature sets from `selected_features`
 
-```python
-selected_feature_names = data.columns[list(selected_features["min"])]
-```
+The feature selector returns 3 possible feature sets in `feature_selector.selected_features`:
+
+- **`selected_features.min_feats`**: The minimum number of features for which the model performs optimally.
+  - The minimal set of most informative features. If you choose less features, then the model will perform worse.
+- **`selected_features.max_feats`**: The maximum number of features for which the model performs optimally.
+  - The all-relevant feature set. This includes also all weak and redundante, but still relevant features – without including noisy and uninformative features. Using more features would also decrease the performance of the model.
+- **`selected_features.mid_feats`**: The geometric mean of both feature sets.
 
 ### Parallelization
 
-The feature selection can be time consuming. To speed it up execute the various CV loops in parallel using a dask cluster.
-The dask cluster can be remote, or running in local to exploit all the processors of
-the your computer.
+The feature selection can be time consuming. To speed it up execute the various CV loops in parallel using an [Executor object](https://docs.python.org/3/library/concurrent.futures.html) which
+should be passed as keyword parameter to the fit method.
 
-For the latter case - which is probably the most common case - it's sufficient to run the following
-**at the beginning of your script**:
+So far, [dask](https://distributed.readthedocs.io/en/1.10.2/executor.html),
+[loky](https://loky.readthedocs.io/en/stable/>) (joblib) and [concurrent](https://docs.python.org/3/library/concurrent.futures.html) executors have been tested.
+
+For example, using the native Python3 `concurrent` library, you would do:
+
+```python
+from concurrent.futures import ProcessPoolExecutor
+executor = ProcessPoolExecutor()
+
+feature_selector.fit(X, y, executor=executor)
+```
+Note that you need to pass the `executor` to the `fit()` method.
+
+Another example with Dask would be
 
 ```python
 from dask.distributed import Client
 client = Client()
+executor = client.get_executor()
+
+feature_selector.fit(X, y, executor=executor)
 ```
 
 *Also*: Dask gives you a neat dashboard to see the status of all the jobs at `http://localhost:8787/status`.
@@ -100,33 +117,47 @@ client = Client()
 3. On each cross-validation split multivarate models are trained and evaluated.
 4. The least important fraction of features (`features_dropout_rate`) is removed, until there are no more features in the model
 5. The whole process is repeated `n_repetitions` times to improve the robustness of the selection.
-6. Parameters and features are averaged over all `n_outer` splits and all `repetitions`.
+6. Feature ranks are averaged over all `n_outer` splits and all `n_repetitions`.
+
+## Visualization
+
+Omigami provides some basic plotting utils to inspect the results of the feature selection. In particular, it provides two main methods:
+
+- :code:`plot_feature_rank`
+- :code:`plot_validation_curves`
+
+```python
+from omigami.plot_utils import plot_feature_rank
+fig = plot_feature_rank(
+    feature_selector,
+    model="min",  # one of "min", "mid" or "max"
+    feature_names=feature_names  # optional
+)
+```
+
+and
+
+```python
+from omigami.plot_utils import plot_validation_curves
+fig = plot_validation_curves(feature_selector)
+```
 
 ## Parameters
 
 ### `FeatureSelector` parameters
 
-- **repetitions**: Number of repetitions of the entire double cross-validation loop (default: `8`)
+- **n_repetitions**: Number of repetitions of the entire double cross-validation loop (default: `8`)
 - **n_outer**: Number of cross-validation splits in the outer loop
 - **n_inner**: Number of cross-validation splits in the inner loop (default: n_outer-1)
 - **estimator**: Multivariate model that you want to use for the feature selection. Supports
   - `"RFC"`: Random Forest Classifier
   - `"XGBC"`: XGBoost Classifier
+  - `"PLSC"`: (partial least square classifier)
 - **metric**: Metric to be used to assess fitness of estimators. Supports
   - `"MISS"`: Number of missclassifications.
 - **features_dropout_rate**: Fraction of features that will be dropped in each elimination step (float)
 - robust_minimum (float): Maximum normalized-score value to be considered when computing the selected features
 - random_state (int): Pass an int for a reproducible output (default: `None`)
-
-### Selecting min, max and mid feature sets from `feature_selector.selected_features`
-
-The feature selector returns 3 possible feature sets in `feature_selector.selected_features`:
-
-- **`feature_selector.selected_features[min]`**: The minimum number of features for which the model performs optimally.
-  - The minimal set of most informative features. If you choose less features, then the model will perform worse.
-- **`feature_selector.selected_features[min]`**: The maximum number of features for which the model performs optimally.
-  - The all-relevant feature set. This includes also all weak and redundante, but still relevant features – without including noisy and uninformative features. Using more features would also decrease the performance of the model.
-- **`feature_selector.selected_features[min]`**: The geometric mean of both feature sets.
 
 ## Further Reading
 
