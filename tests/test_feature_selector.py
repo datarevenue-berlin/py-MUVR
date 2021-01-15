@@ -146,9 +146,7 @@ def test_deferred_fit(executor):
 
 
 def test_select_best_features(fs):
-    fs.post_processor.fetch_results = Mock(
-        fs.post_processor.fetch_results, return_value="results"
-    )
+    fs._fetch_results = Mock(fs._fetch_results, return_value="results")
     fs.post_processor.select_features = Mock(
         fs.post_processor.select_features, return_value="features"
     )
@@ -156,7 +154,7 @@ def test_select_best_features(fs):
     selected_features = fs._select_best_features("rep results")
 
     assert selected_features == "features"
-    fs.post_processor.fetch_results.assert_called_once_with("rep results")
+    fs._fetch_results.assert_called_once_with("rep results")
     fs.post_processor.select_features.assert_called_once_with("results")
 
 
@@ -186,3 +184,13 @@ def test_get_params(fs):
     assert params["features_dropout_rate"] == 0.05
     assert params["robust_minimum"] == 0.05
     assert FeatureSelector(**params)
+
+
+def test_make_report(fs):
+    fs.get_selected_features = Mock(fs.get_selected_features, return_value="selected")
+    fs._print_report = Mock(fs._print_report)
+
+    fs.print_report(["feature_names"])
+
+    fs.get_selected_features.assert_called_once_with(["feature_names"])
+    fs._print_report.assert_called_once_with("selected")
