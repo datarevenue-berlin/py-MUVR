@@ -54,7 +54,7 @@ def test_permutation_test():
     assert permutation_test.PermutationTest(feature_selector=fs, n_permutations=10)
 
 
-def test_fit(monkeypatch, fit_feature_selector):
+def test_fit(fit_feature_selector):
     n_permutations = 5
     pt = permutation_test.PermutationTest(
         feature_selector=fit_feature_selector, n_permutations=n_permutations
@@ -81,7 +81,7 @@ def test_get_feats_and_scores(fit_feature_selector):
     assert total_curve.scores == score_curve.scores
 
 
-def test_compute_permutation_scores(monkeypatch, fit_permutation_test):
+def test_compute_permutation_scores(fit_permutation_test):
     s_min, p_score_min = fit_permutation_test.compute_permutation_scores(model="min")
     s_mid, p_score_mid = fit_permutation_test.compute_permutation_scores(model="mid")
     s_max, p_score_max = fit_permutation_test.compute_permutation_scores(model="max")
@@ -94,7 +94,7 @@ def test_compute_permutation_scores(monkeypatch, fit_permutation_test):
     assert sorted(p_score_max) == [4.5, 4.5, 4.9, 4.9]
 
 
-def test_compute_p_values(monkeypatch, fit_permutation_test):
+def test_compute_p_values(fit_permutation_test):
     min_p_val = fit_permutation_test.compute_p_values(model="min")
     mid_p_val = fit_permutation_test.compute_p_values(model="mid")
     max_p_val = fit_permutation_test.compute_p_values(model="max")

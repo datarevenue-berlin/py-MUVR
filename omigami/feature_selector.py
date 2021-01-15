@@ -112,7 +112,7 @@ class FeatureSelector:
         self.estimator = estimator
         self.metric = metric
         self.robust_minimum = robust_minimum
-        self.keep_fraction = 1 - features_dropout_rate
+        self._keep_fraction = 1 - features_dropout_rate
         self.n_repetitions = n_repetitions
         self.feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
 
@@ -246,7 +246,7 @@ class FeatureSelector:
     def _remove_features(
         self, features: List[int], results: InnerLoopResults
     ) -> List[int]:
-        features_to_keep = int(np.floor(len(features) * self.keep_fraction))
+        features_to_keep = int(np.floor(len(features) * self._keep_fraction))
         features = self._select_n_best(results, features_to_keep)
         return features
 

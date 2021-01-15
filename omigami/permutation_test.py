@@ -1,11 +1,16 @@
 from typing import Iterable, Tuple, List
+import logging
 from concurrent.futures import Executor
 import numpy as np
-import scipy
+from scipy.stats import rankdata, normaltest
 import tqdm
 from omigami.utils import compute_t_student_p_value
 from omigami.data_structures.data_types import NumpyArray
+from omigami.data_structures.data_models import SelectedFeatures, ScoreCurve
 from omigami.feature_selector import FeatureSelector
+
+
+log = logging.getLogger(__name__)
 
 
 class PermutationTest:
@@ -72,13 +77,13 @@ class PermutationTest:
     @staticmethod
     def _get_feats_and_scores(feature_selector: FeatureSelector) -> tuple:
         selected_features = feature_selector.get_selected_features()
-        score = feature_selector.get_validation_curves()["total"][0]
-        return selected_features, score
+        score_curve = feature_selector.get_validation_curves()["total"][0]
+        return selected_features, score_curve
 
     def compute_permutation_scores(self, model: str) -> Tuple[float, List[float]]:
         """Compute the permutation tests scores for input model. `model` must be one of
         `"min"`, `"mid"` or `"max"`. It returns a tuple. The first element is the score
-        of the original featur selection, the second element is a list of scores, one
+        of the original feature selection, the second element is a list of scores, one
         for each permutation
 
         Parameters
@@ -101,7 +106,7 @@ class PermutationTest:
         if not self.res:
             raise RuntimeError("Call fit method first")
         if model not in {"min", "mid", "max"}:
-            return ValueError("Input model must be one of 'min', 'mid' or 'max'")
+            raise ValueError("Input model must be one of 'min', 'mid' or 'max'")
         x = self._compute_model_score(model, self.res)
         x_perm = [self._compute_model_score(model, r) for r in self.res_perm]
         return x, x_perm
@@ -125,8 +130,17 @@ class PermutationTest:
             the permutation test p-value
         """
         if model not in {"min", "mid", "max"}:
-            return ValueError("Input model must be one of 'min', 'mid' or 'max'")
+            raise ValueError("Input model must be one of 'min', 'mid' or 'max'")
         x, x_perm = self.compute_permutation_scores(model)
+
+        if not ranks and len(x_perm) > 7:  # or `normaltest` would raise an error
+            test = normaltest(x_perm)
+            if test.p_value < 0.05:
+                log.warning(
+                    "the permutation scores don't seem to be normally distributed. "
+                    + "Setting ranks to True (non-parametric test)"
+                )
+                ranks = True
 
         if ranks:
             x, x_perm = self._rank_data(x, x_perm)
@@ -135,20 +149,19 @@ class PermutationTest:
         return p_values
 
     @staticmethod
-    def _compute_model_score(model, feats_and_scores):
-        selected_features, scores = feats_and_scores
-        features = {
-            "min": selected_features.min_feats,
-            "max": selected_features.max_feats,
-            "mid": selected_features.mid_feats,
-        }[model]
+    def _compute_model_score(
+        model: str, feats_and_scores: Tuple[SelectedFeatures, ScoreCurve]
+    ) -> float:
+        selected_features, score_curve = feats_and_scores
+        features = getattr(selected_features, f"{model}_feats")
         n_feats = len(features)
         if model == "mid":
-            # mid is the geomteric mean, the score curve might not contain it
-            n_feats = min(scores.n_features, key=lambda x: abs(x - n_feats))
-        return scores.scores[scores.n_features.index(n_feats)]
+            # mid is the geometric mean, the score curve might not contain it
+            n_feats = min(score_curve.n_features, key=lambda x: abs(x - n_feats))
+        idx = score_curve.n_features.index(n_feats)
+        return score_curve.scores[idx]
 
     @staticmethod
     def _rank_data(sample: float, population: Iterable):
-        ranks = scipy.stats.rankdata([sample] + list(population))
+        ranks = rankdata([sample] + list(population))
         return ranks[0], ranks[1:]
