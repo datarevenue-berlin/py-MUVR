@@ -4,15 +4,18 @@ from matplotlib.axes import Axes
 import pandas as pd
 from omigami.feature_selector import FeatureSelector
 
+log = logging.getLogger(__name__)
 
-def plot_validation_curves(feature_selector: FeatureSelector) -> Axes:
+
+def plot_validation_curves(feature_selector: FeatureSelector, **figure_kwargs) -> Axes:
     if not feature_selector.is_fit:
-        logging.warning(  # pylint: disable=logging-not-lazy
+        log.warning(  # pylint: disable=logging-not-lazy
             "Validation curves have not been generated. To be able to plot"
             + " call `select_features` method first"
         )
         return None
     curves = feature_selector.get_validation_curves()
+    plt.figure(**figure_kwargs)
     for i, curve in enumerate(curves["outer_loops"]):
         label = "Outer loop average" if i == 0 else None
         plt.semilogx(curve.n_features, curve.scores, c="#deebf7", label=label)
@@ -45,7 +48,7 @@ def plot_validation_curves(feature_selector: FeatureSelector) -> Axes:
     return plt.gca()
 
 
-def plot_feature_rank(feature_selector, model, feature_names=None):
+def plot_feature_rank(feature_selector, model, feature_names=None, **figure_kwargs):
     if model not in {"min", "max", "mid"}:
         raise ValueError("model must be one of min, max or mid")
 
@@ -65,7 +68,11 @@ def plot_feature_rank(feature_selector, model, feature_names=None):
     sorted_feats = selected_ranks.mean().sort_values().index
     selected_ranks = selected_ranks[sorted_feats]
 
-    fig, ax_notnan = plt.subplots()
+    if "figsize" not in figure_kwargs.keys():
+        fig_width = len(selected_ranks.columns) / 3
+        figure_kwargs["figsize"] = (max(fig_width, 5), 3)
+
+    fig, ax_notnan = plt.subplots(**figure_kwargs)
     ax_ranks = (
         ax_notnan.twinx()
     )  # instantiate a second axes that shares the same x-axis
@@ -83,16 +90,13 @@ def plot_feature_rank(feature_selector, model, feature_names=None):
     bbox_props = {"color": color_ranks, "alpha": 0.5}
     bbox_color = {"boxes": color_ranks, "medians": "black"}
 
-    fig_width = len(selected_ranks.columns) / 3
-    figsize = (max(fig_width, 5), 3)
-
     if feature_names is not None:
         feature_numbers = range(len(feature_names))
         numbers_to_names = dict(zip(feature_numbers, feature_names))
         selected_ranks.rename(columns=numbers_to_names, inplace=True)
 
     selected_ranks.notna().mean().plot.bar(
-        figsize=figsize, facecolor=color_notnan, ax=ax_notnan, alpha=0.7
+        facecolor=color_notnan, ax=ax_notnan, alpha=0.7
     )
 
     selected_ranks.boxplot(

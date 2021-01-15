@@ -5,6 +5,7 @@ from concurrent.futures import Executor, Future
 from typing import Union, List, Dict, Tuple
 
 import numpy as np
+import progressbar
 from numpy.random import RandomState
 
 from omigami.data_structures import (
@@ -28,6 +29,7 @@ from omigami.sync_executor import SyncExecutor
 
 
 Repetition = List[Union[OuterLoopResults, Future]]
+log = logging.getLogger(__name__)
 
 
 class FeatureSelector:
@@ -113,7 +115,7 @@ class FeatureSelector:
         self.feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
 
         if not n_inner:
-            logging.info("n_inner is not specified, setting it to n_outer - 1")
+            log.info("Parameter n_inner is not specified, setting it to n_outer - 1")
             n_inner = n_outer - 1
         self.n_inner = n_inner
 
@@ -166,25 +168,42 @@ class FeatureSelector:
         input_data = InputDataset(X=X, y=y, groups=groups)
         self.feature_evaluator.set_n_initial_features(n_features)
 
+        log.info(
+            f"Running {self.n_repetitions} repetitions and"
+            f" {self.n_outer} outer loops using "
+            f"executor {executor.__class__.__name__}."
+        )
+
         repetition_results = []
 
-        for _ in range(self.n_repetitions):
-            data_splitter = DataSplitter(
-                self.n_outer, self.n_inner, input_data, self.random_state,
-            )
-
-            outer_loop_results = []
-            for outer_split in data_splitter.iter_outer_splits():
-                outer_loop_result = self._deferred_run_outer_loop(
+        log.info("Scheduling tasks...")
+        with progressbar.ProgressBar(max_value=self.n_repetitions * self.n_outer) as b:
+            progress = 0
+            b.update(progress)
+            for _ in range(self.n_repetitions):
+                data_splitter = DataSplitter(
+                    self.n_outer,
+                    self.n_inner,
                     input_data,
-                    outer_split,
-                    executor=executor,
-                    data_splitter=data_splitter,
+                    self.random_state,
                 )
-                outer_loop_results.append(outer_loop_result)
-            repetition_results.append(outer_loop_results)
+
+                outer_loop_results = []
+                for outer_split in data_splitter.iter_outer_splits():
+                    outer_loop_result = self._deferred_run_outer_loop(
+                        input_data,
+                        outer_split,
+                        executor=executor,
+                        data_splitter=data_splitter,
+                    )
+                    outer_loop_results.append(outer_loop_result)
+                    progress += 1
+                    b.update(progress)
+
+                repetition_results.append(outer_loop_results)
 
         self._selected_features = self._select_best_features(repetition_results)
+        log.info("Finished feature selection.")
         self._n_features = input_data.n_features
         self.is_fit = True
         return self
@@ -192,7 +211,7 @@ class FeatureSelector:
     @staticmethod
     def _get_groups(groups: NumpyArray, size: int) -> NumpyArray:
         if groups is None:
-            logging.info("groups is not specified: i.i.d. samples assumed")
+            log.info("Groups parameter is not specified: independent samples assumed")
             groups = np.arange(size)
         return groups
 
@@ -210,7 +229,10 @@ class FeatureSelector:
         )
 
     def _run_outer_loop(
-        self, input_data: InputDataset, outer_split: Split, data_splitter: DataSplitter,
+        self,
+        input_data: InputDataset,
+        outer_split: Split,
+        data_splitter: DataSplitter,
     ) -> OuterLoopResults:
 
         feature_elimination_results = {}
@@ -304,9 +326,32 @@ class FeatureSelector:
     def _select_best_features(
         self, repetition_results: FeatureSelectionResults
     ) -> SelectedFeatures:
-        self.results = self.post_processor.fetch_results(repetition_results)
+        self.results = self._fetch_results(repetition_results)
         selected_features = self.post_processor.select_features(self.results)
         return selected_features
+
+    def _fetch_results(
+        self, results: FeatureSelectionResults
+    ) -> FeatureSelectionResults:
+
+        log.info("Retrieving results...")
+        with progressbar.ProgressBar(max_value=self.n_repetitions * self.n_outer) as b:
+            progress = 0
+            b.update(progress)
+
+            fetched_results = []
+            for repetition in results:
+                ol_results = []
+
+                for outer_loop_result in repetition:
+                    fetched_outer_loop = outer_loop_result.result()
+                    ol_results.append(fetched_outer_loop)
+
+                    progress += 1
+                    b.update(progress)
+
+                fetched_results.append(ol_results)
+        return fetched_results
 
     def get_validation_curves(self) -> Dict[str, List]:
         """
@@ -352,7 +397,9 @@ class FeatureSelector:
             max_names = [feature_names[f] for f in self._selected_features.max_feats]
 
             return SelectedFeatures(
-                min_feats=min_names, max_feats=max_names, mid_feats=mid_names,
+                min_feats=min_names,
+                max_feats=max_names,
+                mid_feats=mid_names,
             )
 
         return SelectedFeatures(
@@ -360,3 +407,44 @@ class FeatureSelector:
             max_feats=self._selected_features.max_feats[:],
             mid_feats=self._selected_features.mid_feats[:],
         )
+
+    def make_report(self, feature_names: List[str]) -> SelectedFeatures:
+        """
+        Prints a small report of the results obtained from the feature selection.
+
+        Parameters
+        ----------
+        feature_names: List[str]
+            List with the name of the features of the original data
+
+        Returns
+        -------
+        SelectedFeatures:
+            The selected features obtained from running the algorithm
+
+        """
+        selected_features = self.get_selected_features(feature_names)
+        self._print_report(selected_features)
+
+        return selected_features
+
+    @staticmethod
+    def _print_report(selected_features: SelectedFeatures):
+        print(f"Min features ({len(selected_features.min_feats)}): "
+              f"{', '.join(selected_features.min_feats)}\n")
+        print(f"Mid features ({len(selected_features.mid_feats)}): "
+              f"{', '.join(selected_features.mid_feats)}\n")
+        print(f"Max features ({len(selected_features.max_feats)}): "
+              f"{', '.join(selected_features.max_feats)}\n")
+
+    def __repr__(self):
+        fs = (
+            f"FeatureSelector("
+            f"repetitions={self.n_repetitions},"
+            f" n_outer={self.n_outer},"
+            f" n_inner={self.n_inner},"
+            f" keep_fraction={self.keep_fraction},"
+            f" is_fit={self.is_fit})"
+        )
+
+        return fs
