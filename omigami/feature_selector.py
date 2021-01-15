@@ -408,7 +408,7 @@ class FeatureSelector:
             mid_feats=self._selected_features.mid_feats[:],
         )
 
-    def make_report(self, feature_names: List[str]) -> SelectedFeatures:
+    def print_report(self, feature_names: List[str]):
         """
         Prints a small report of the results obtained from the feature selection.
 
@@ -417,16 +417,9 @@ class FeatureSelector:
         feature_names: List[str]
             List with the name of the features of the original data
 
-        Returns
-        -------
-        SelectedFeatures:
-            The selected features obtained from running the algorithm
-
         """
         selected_features = self.get_selected_features(feature_names)
         self._print_report(selected_features)
-
-        return selected_features
 
     @staticmethod
     def _print_report(selected_features: SelectedFeatures):

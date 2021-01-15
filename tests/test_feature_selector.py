@@ -179,8 +179,7 @@ def test_make_report(fs):
     fs.get_selected_features = Mock(fs.get_selected_features, return_value="selected")
     fs._print_report = Mock(fs._print_report)
 
-    selected_features = fs.make_report(["feature_names"])
+    fs.print_report(["feature_names"])
 
     fs.get_selected_features.assert_called_once_with(["feature_names"])
     fs._print_report.assert_called_once_with("selected")
-    assert selected_features == "selected"
