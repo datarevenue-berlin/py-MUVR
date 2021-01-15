@@ -30,7 +30,7 @@ pip install omigami
 - [x] Minimal optimal and all relevant feature selection
 - [x] Efficient Parallelization (with Dask)
 - [x] Familiar scikit-learn API
-- [ ] Plotting
+- [x] Plotting
 - [ ] Predict with trained models
 
 ## Usage
