@@ -117,7 +117,7 @@ feature_selector.fit(X, y, executor=executor)
 3. On each cross-validation split multivarate models are trained and evaluated.
 4. The least important fraction of features (`features_dropout_rate`) is removed, until there are no more features in the model
 5. The whole process is repeated `n_repetitions` times to improve the robustness of the selection.
-6. Parameters and feature ranks are averaged over all `n_outer` splits and all `repetitions`.
+6. Feature ranks are averaged over all `n_outer` splits and all `n_repetitions`.
 
 ## Visualization
 
@@ -146,7 +146,7 @@ fig = plot_validation_curves(feature_selector)
 
 ### `FeatureSelector` parameters
 
-- **repetitions**: Number of repetitions of the entire double cross-validation loop (default: `8`)
+- **n_repetitions**: Number of repetitions of the entire double cross-validation loop (default: `8`)
 - **n_outer**: Number of cross-validation splits in the outer loop
 - **n_inner**: Number of cross-validation splits in the inner loop (default: n_outer-1)
 - **estimator**: Multivariate model that you want to use for the feature selection. Supports
