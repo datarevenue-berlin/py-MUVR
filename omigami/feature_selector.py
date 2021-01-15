@@ -211,7 +211,7 @@ class FeatureSelector:
     @staticmethod
     def _get_groups(groups: NumpyArray, size: int) -> NumpyArray:
         if groups is None:
-            log.info("groups is not specified: i.i.d. samples assumed")
+            log.info("Groups parameter is not specified: independent samples assumed")
             groups = np.arange(size)
         return groups
 
