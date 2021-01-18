@@ -1,4 +1,5 @@
-from typing import List, Dict, Iterable
+from typing import List, Dict, Iterable, Callable
+import logging
 import pandas as pd
 import numpy as np
 import scipy.stats
@@ -54,17 +55,48 @@ def get_best_n_features(ranks: FeatureRanks, n_to_keep: int) -> List[int]:
 def compute_t_student_p_value(sample: float, population: Iterable) -> float:
     """From Wikipeida:
     https://en.wikipedia.org/wiki/Prediction_interval#Unknown_mean,_unknown_variance
-    Compute the p_value of the t-student variable that represent the distribution
-    of the n+1 sample of population, where n=len(population).
+    Compute the p_value of the t-Student variable that represent the distribution
+    of the n+1 sample of population, where `n = len(population)`.
     In few words, it gives the probability that `sample` belongs to `population`.
     The underlying assumption is that population is normally distributed
     with unknown mean and unkown variance
-    Args:
-        sample (float): value for which we want the p-value
-        population (Iterable): values that respresent the null hypothesis for `sample`
+
+    Parameters
+    ----------
+        sample: float
+            value for which we want the p-value
+        population: Iterable
+            values that respresent the null hypothesis for `sample`
+
+    Returns
+    -------
+        float
+            the t-Student test p-value
     """
     m = np.mean(population)
     s = np.std(population)
     n = len(population)
     t = (sample - m) / (s * (1 + 1 / n) ** 0.5)
     return scipy.stats.t(df=n - 1).cdf(t)
+
+
+def mute_loggers(loggers_: List[str] = None):
+    def decorator(function: Callable):
+        def decorated(*args, **kwargs):
+            loggers = loggers_ or []
+            logs = {log_name: logging.getLogger(log_name) for log_name in loggers}
+            old_levels = {
+                log_name: log.getEffectiveLevel() for log_name, log in logs.items()
+            }
+            for log in logs.values():
+                log.setLevel(logging.WARN)
+            try:
+                res = function(*args, **kwargs)
+            finally:
+                for log_name, log in logs.items():
+                    log.setLevel(old_levels[log_name])
+            return res
+
+        return decorated
+
+    return decorator

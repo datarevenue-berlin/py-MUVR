@@ -3,7 +3,11 @@ from sklearn import datasets
 from omigami import permutation_test
 from omigami.feature_selector import FeatureSelector
 from omigami.utils import compute_t_student_p_value
-from omigami.data_structures import SelectedFeatures, ScoreCurve
+from omigami.data_structures import (
+    SelectedFeatures,
+    ScoreCurve,
+    FeatureSelectionResults,
+)
 
 
 @pytest.fixture
@@ -12,24 +16,24 @@ def fit_permutation_test():
     fs = FeatureSelector(n_outer=5, metric="MISS", estimator="PLSC",)
     pt = permutation_test.PermutationTest(feature_selector=fs, n_permutations=4)
 
-    pt.res = (
+    pt.res = FeatureSelectionResults(
         SelectedFeatures(min_feats=[0, 1], max_feats=[0, 1, 4, 3], mid_feats=[0, 1, 4]),
         ScoreCurve(n_features=(2, 3, 4, 5), scores=(4.0, 4.5, 4.0, 4.75)),
     )
     pt.res_perm = [
-        (
+        FeatureSelectionResults(
             SelectedFeatures(min_feats=[0], max_feats=[0, 1, 2], mid_feats=[0, 1]),
             ScoreCurve(n_features=(1, 2, 3), scores=(4.0, 4.5, 4.5)),
         ),
-        (
+        FeatureSelectionResults(
             SelectedFeatures(min_feats=[0], max_feats=[0, 1, 2], mid_feats=[0, 1]),
             ScoreCurve(n_features=(1, 2, 3), scores=(4.0, 4.5, 4.5)),
         ),
-        (
+        FeatureSelectionResults(
             SelectedFeatures(min_feats=[0], max_feats=[0, 1, 2], mid_feats=[0, 1]),
             ScoreCurve(n_features=(1, 2, 3), scores=(4.0, 4.6, 4.9)),
         ),
-        (
+        FeatureSelectionResults(
             SelectedFeatures(min_feats=[0], max_feats=[0, 1, 2], mid_feats=[0, 1]),
             ScoreCurve(n_features=(1, 2, 3), scores=(4.1, 4.6, 4.9)),
         ),
@@ -66,19 +70,6 @@ def test_fit(fit_feature_selector):
     assert pt.res
     assert pt.res_perm
     assert len(pt.res_perm) == n_permutations
-
-
-def test_get_feats_and_scores(fit_feature_selector):
-    pt = permutation_test.PermutationTest(
-        feature_selector=fit_feature_selector, n_permutations=3
-    )
-    sel_feats, score_curve = pt._get_feats_and_scores(fit_feature_selector)
-    total_curve = fit_feature_selector.get_validation_curves()["total"][0]
-    assert isinstance(sel_feats, SelectedFeatures)
-    assert isinstance(score_curve, ScoreCurve)
-    assert sel_feats.min_feats == fit_feature_selector.get_selected_features().min_feats
-    assert total_curve.n_features == score_curve.n_features
-    assert total_curve.scores == score_curve.scores
 
 
 def test_compute_permutation_scores(fit_permutation_test):

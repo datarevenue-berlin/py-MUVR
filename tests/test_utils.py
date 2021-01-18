@@ -1,4 +1,5 @@
 import pytest
+import logging
 import numpy as np
 from omigami import utils
 from omigami.data_structures import FeatureRanks
@@ -65,3 +66,30 @@ def test_compute_t_student_p_value():
         p_values_01.append(p_value)
     assert abs(np.mean(p_values_005) - 0.05) < 0.01
     assert abs(np.mean(p_values_01) - 0.1) < 0.01
+
+
+def test_mute_loggers():
+    @utils.mute_loggers(loggers_=["omigami.feature_selector"])
+    def test_function(logger_name):
+        return logging.getLogger(logger_name).getEffectiveLevel()
+
+    @utils.mute_loggers(loggers_=["omigami.feature_selector"])
+    def test_bad_function(logger_name):
+        raise RuntimeError("exception")
+
+    assert test_function("omigami.models.pls_classifier") == logging.INFO
+    assert test_function("omigami.feature_selector") == logging.WARN
+    assert (
+        logging.getLogger("omigami.models.pls_classifier").getEffectiveLevel()
+        == logging.INFO
+    )
+    assert (
+        logging.getLogger("omigami.feature_selector").getEffectiveLevel()
+        == logging.INFO
+    )
+    with pytest.raises(RuntimeError):
+        test_bad_function("omigami.feature_selector")
+    assert (
+        logging.getLogger("omigami.feature_selector").getEffectiveLevel()
+        == logging.INFO
+    )

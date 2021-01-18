@@ -7,7 +7,12 @@ from sklearn.linear_model import LinearRegression
 from loky import get_reusable_executor
 from dask.distributed import Client
 
-from omigami.data_structures import InputDataset, SelectedFeatures
+from omigami.data_structures import (
+    InputDataset,
+    SelectedFeatures,
+    FeatureSelectionResults,
+    ScoreCurve,
+)
 from omigami.data_splitter import DataSplitter
 from omigami.feature_selector import FeatureSelector
 
@@ -194,3 +199,16 @@ def test_make_report(fs):
 
     fs.get_selected_features.assert_called_once_with(["feature_names"])
     fs._print_report.assert_called_once_with("selected")
+
+
+def test_get_features_and_scores(fs):
+    fs.get_selected_features = Mock(fs.get_selected_features, return_value="sel_feats")
+    fs.get_validation_curves = Mock(
+        fs.get_validation_curves, return_value={"total": [ScoreCurve(None, None)]}
+    )
+    fs_results = fs.get_feature_selection_results()
+    score_curve = fs_results.score_curve
+    assert isinstance(fs_results, FeatureSelectionResults)
+    assert isinstance(score_curve, ScoreCurve)
+    fs.get_selected_features.assert_called_once()
+    fs.get_validation_curves.assert_called_once()

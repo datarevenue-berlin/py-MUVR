@@ -27,9 +27,7 @@ class InputDataset:
     def __getitem__(self, data_slice: tuple) -> InputDataset:
         rows, features = data_slice
         sliced = InputDataset(
-            X=self.X[rows, :],
-            y=self.y[rows],
-            groups=self.groups[rows]
+            X=self.X[rows, :], y=self.y[rows], groups=self.groups[rows]
         )
         if features:
             sliced.X = sliced.X[:, features]
@@ -105,4 +103,10 @@ class ScoreCurve:
     scores: List[float]
 
 
-FeatureSelectionResults = List[List[Union[OuterLoopResults, Future]]]
+FeatureSelectionRawResults = List[List[Union[OuterLoopResults, Future]]]
+
+
+@dataclass
+class FeatureSelectionResults:
+    selected_features: SelectedFeatures
+    score_curve: ScoreCurve

@@ -18,6 +18,7 @@ from omigami.data_structures import (
     MetricFunction,
     InputEstimator,
     NumpyArray,
+    FeatureSelectionRawResults,
     FeatureSelectionResults,
 )
 from omigami.feature_evaluator import FeatureEvaluator
@@ -322,15 +323,15 @@ class FeatureSelector:
         return min_eval, mid_eval, max_eval
 
     def _select_best_features(
-        self, repetition_results: FeatureSelectionResults
+        self, repetition_results: FeatureSelectionRawResults
     ) -> SelectedFeatures:
         self.results = self._fetch_results(repetition_results)
         selected_features = self.post_processor.select_features(self.results)
         return selected_features
 
     def _fetch_results(
-        self, results: FeatureSelectionResults
-    ) -> FeatureSelectionResults:
+        self, results: FeatureSelectionRawResults
+    ) -> FeatureSelectionRawResults:
 
         log.info("Retrieving results...")
         with progressbar.ProgressBar(max_value=self.n_repetitions * self.n_outer) as b:
@@ -454,8 +455,14 @@ class FeatureSelector:
             f"repetitions={self.n_repetitions},"
             f" n_outer={self.n_outer},"
             f" n_inner={self.n_inner},"
-            f" keep_fraction={self.keep_fraction},"
+            f" feature_dropout_rate={self.features_dropout_rate},"
             f" is_fit={self.is_fit})"
         )
 
         return fs
+
+    def get_feature_selection_results(self) -> FeatureSelectionResults:
+        return FeatureSelectionResults(
+            selected_features=self.get_selected_features(),
+            score_curve=self.get_validation_curves()["total"][0],
+        )

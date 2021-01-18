@@ -1,26 +1,24 @@
 from typing import Iterable, Tuple, List
-import logging
 from concurrent.futures import Executor
 import numpy as np
 from scipy.stats import rankdata, normaltest
 import progressbar
-from omigami.utils import compute_t_student_p_value
+from omigami.utils import compute_t_student_p_value, mute_loggers
 from omigami.data_structures.data_types import NumpyArray
-from omigami.data_structures.data_models import SelectedFeatures, ScoreCurve
+from omigami.data_structures.data_models import FeatureSelectionResults
 from omigami.feature_selector import FeatureSelector
-
-
-log = logging.getLogger(__name__)
+from omigami import logger
 
 
 class PermutationTest:
     """"Implements a permutation test of the omigami feature selection.
     The tests fits the input `feature_selector` `n_permutations` times.
-    The output vector `y` is scambled at every iteration so that the original
+    The target `y` is scrambled at every iteration so that the original
     feature selection results can be contrasted against the results of the
     randomized ones. Statistical significance is addressed using a t-Test.
 
-    The resuts of the randomized fit can be inspected using `compute_permutation_scores`
+    The results of the randomized fit can be inspected using
+    `compute_permutation_scores`.
     If the scores returned by the permutations are very non-normally distributed,
     it's probably better to invoke `compute_p_values` with `ranks=True`, to mitigate
     the violation of the normality assumption needed to perform a meaningful t-Test.
@@ -50,6 +48,9 @@ class PermutationTest:
         self.res = None
         self.res_perm = None
 
+    @mute_loggers(
+        loggers_=["omigami.feature_selector", "omigami.models.pls_classifier"]
+    )
     def fit(
         self,
         X: NumpyArray,
@@ -57,12 +58,12 @@ class PermutationTest:
         groups: NumpyArray = None,
         executor: Executor = None,
     ):
-
+        logger.info("Running permutation test for %d permutations", self.n_permutations)
         y_idx = np.arange(y.size)
 
         if not self._fs.is_fit:
             self._fs.fit(X, y, groups=groups)
-        self.res = self._get_feats_and_scores(self._fs)
+        self.res = self._fs.get_feature_selection_results()
 
         fs_perm = FeatureSelector(**self._fs.get_params())
         self.res_perm = []
@@ -70,15 +71,9 @@ class PermutationTest:
             np.random.shuffle(y_idx)
             y_perm = y[y_idx]
             fs_perm.fit(X, y_perm, groups=groups, executor=executor)
-            self.res_perm.append(self._get_feats_and_scores(fs_perm))
-
+            self.res_perm.append(fs_perm.get_feature_selection_results())
+        logger.info("Finished permutation test. Storing results in self.res_perm")
         return self
-
-    @staticmethod
-    def _get_feats_and_scores(feature_selector: FeatureSelector) -> tuple:
-        selected_features = feature_selector.get_selected_features()
-        score_curve = feature_selector.get_validation_curves()["total"][0]
-        return selected_features, score_curve
 
     def compute_permutation_scores(self, model: str) -> Tuple[float, List[float]]:
         """Compute the permutation tests scores for input model. `model` must be one of
@@ -107,9 +102,9 @@ class PermutationTest:
             raise RuntimeError("Call fit method first")
         if model not in {"min", "mid", "max"}:
             raise ValueError("Input model must be one of 'min', 'mid' or 'max'")
-        x = self._compute_model_score(model, self.res)
-        x_perm = [self._compute_model_score(model, r) for r in self.res_perm]
-        return x, x_perm
+        score = self._compute_model_score(model, self.res)
+        score_perm = [self._compute_model_score(model, r) for r in self.res_perm]
+        return score, score_perm
 
     def compute_p_values(self, model: str, ranks: bool = False) -> float:
         """Compute the p-value relative to the original feature selection score for
@@ -131,28 +126,30 @@ class PermutationTest:
         """
         if model not in {"min", "mid", "max"}:
             raise ValueError("Input model must be one of 'min', 'mid' or 'max'")
-        x, x_perm = self.compute_permutation_scores(model)
+        score, score_perm = self.compute_permutation_scores(model)
 
-        if not ranks and len(x_perm) > 7:  # or `normaltest` would raise an error
-            test = normaltest(x_perm)
+        if not ranks and len(score_perm) > 7:  # or `normaltest` would raise an error
+            test = normaltest(score_perm)
             if test.pvalue < 0.05:
-                log.warning(
-                    "the permutation scores don't seem to be normally distributed. "
-                    + "Setting ranks to True (non-parametric test)"
+                logger.warning(
+                    "%s %s",
+                    "The permutation scores don't seem to be normally distributed.",
+                    "Setting ranks to True (non-parametric test)",
                 )
                 ranks = True
 
         if ranks:
-            x, x_perm = self._rank_data(x, x_perm)
+            score, score_perm = self._rank_data(score, score_perm)
 
-        p_values = compute_t_student_p_value(x, x_perm)
+        p_values = compute_t_student_p_value(score, score_perm)
         return p_values
 
     @staticmethod
     def _compute_model_score(
-        model: str, feats_and_scores: Tuple[SelectedFeatures, ScoreCurve]
+        model: str, feats_and_scores: FeatureSelectionResults
     ) -> float:
-        selected_features, score_curve = feats_and_scores
+        selected_features = feats_and_scores.selected_features
+        score_curve = feats_and_scores.score_curve
         features = getattr(selected_features, f"{model}_feats")
         n_feats = len(features)
         if model == "mid":
