@@ -56,7 +56,7 @@ class PermutationTest:
         groups: NumpyArray = None,
         executor: Executor = None,
     ):
-        logger.info("Running permutation test for %d permutations", self.n_permutations)
+        logger.info("Running permutation test for %s permutations", self.n_permutations)
         y_idx = np.arange(y.size)
 
         if not self._fs.is_fit:
