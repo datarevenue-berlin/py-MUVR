@@ -8,7 +8,7 @@ from omigami.data_structures import (
     InnerLoopResults,
     FeatureSelectionResults,
 )
-from omigami.models import Evaluator
+from omigami.models import Estimator
 from omigami.utils import (
     average_ranks,
     average_scores,
@@ -198,7 +198,7 @@ class PostProcessor:
     @staticmethod
     def get_all_feature_models(
         results: FeatureSelectionResults, feature_set_label: str
-    ) -> List[Evaluator]:
+    ) -> List[Estimator]:
         if feature_set_label == "min":
             return [r.min_eval.model for repetition in results for r in repetition]
         if feature_set_label == "mid":
