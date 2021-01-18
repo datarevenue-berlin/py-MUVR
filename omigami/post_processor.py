@@ -8,6 +8,7 @@ from omigami.data_structures import (
     InnerLoopResults,
     FeatureSelectionResults,
 )
+from omigami.models import Evaluator
 from omigami.utils import (
     average_ranks,
     average_scores,
@@ -182,21 +183,25 @@ class PostProcessor:
         return n_to_features
 
     @staticmethod
-    def get_all_feature_sets(results: FeatureSelectionResults, model: str):
-        if model == "min":
+    def get_all_feature_sets(
+        results: FeatureSelectionResults, feature_set_label: str
+    ) -> List[List[int]]:
+        if feature_set_label == "min":
             ranks = [r.min_eval.ranks for repetition in results for r in repetition]
-        if model == "mid":
+        if feature_set_label == "mid":
             ranks = [r.mid_eval.ranks for repetition in results for r in repetition]
-        if model == "max":
+        if feature_set_label == "max":
             ranks = [r.max_eval.ranks for repetition in results for r in repetition]
         feature_sets = [list(r.get_data().keys()) for r in ranks]
         return feature_sets
 
     @staticmethod
-    def get_all_feature_models(results: FeatureSelectionResults, model: str):
-        if model == "min":
+    def get_all_feature_models(
+        results: FeatureSelectionResults, feature_set_label: str
+    ) -> List[Evaluator]:
+        if feature_set_label == "min":
             return [r.min_eval.model for repetition in results for r in repetition]
-        if model == "mid":
+        if feature_set_label == "mid":
             return [r.mid_eval.model for repetition in results for r in repetition]
-        if model == "max":
+        if feature_set_label == "max":
             return [r.max_eval.model for repetition in results for r in repetition]
