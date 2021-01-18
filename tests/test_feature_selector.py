@@ -16,7 +16,12 @@ from omigami.feature_selector import FeatureSelector
 def fs():
     lr = LinearRegression()
     fs = FeatureSelector(
-        n_outer=4, n_repetitions=4, random_state=0, estimator=lr, metric="MISS"
+        n_outer=4,
+        n_repetitions=4,
+        random_state=0,
+        estimator=lr,
+        metric="MISS",
+        features_dropout_rate=0.1,
     )
     return fs
 
@@ -166,11 +171,10 @@ def test_get_selected_features(fs, mosquito):
     fs.fit(X, y)
     selected_features = fs.get_selected_features()
     assert selected_features["min"] == fs._selected_features["min"]
-    assert selected_features["min"] == [0]
     feature_names = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"]
     assert len(feature_names) == X.shape[1]
     selected_features_names = fs.get_selected_features(feature_names=feature_names)
-    assert selected_features_names["min"] == ["A"]
+    assert len(selected_features_names["min"]) == len(selected_features["min"])
     with pytest.raises(ValueError):
         fs.get_selected_features(feature_names=["only-one-name"])
 
