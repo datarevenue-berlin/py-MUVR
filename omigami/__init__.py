@@ -17,7 +17,10 @@ del get_versions
 
 logger = logging.getLogger("omigami")
 logger.setLevel(level=logging.INFO)
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s %(name)-26s %(levelname)-7s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
 ch = logging.StreamHandler(sys.stdout)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
