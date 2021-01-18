@@ -16,7 +16,7 @@ from omigami.feature_selector import FeatureSelector
 def fs():
     lr = LinearRegression()
     fs = FeatureSelector(
-        n_outer=8, n_repetitions=8, random_state=0, estimator=lr, metric="MISS"
+        n_outer=4, n_repetitions=4, random_state=0, estimator=lr, metric="MISS"
     )
     return fs
 
@@ -123,7 +123,7 @@ def test_evaluate_min_mid_and_max_features(fs, dataset, rfe_raw_results):
 
     assert res == ("min", "mid", "max")
     data_splitter.split_data.assert_called_with(
-        dataset, "split", best_features.max_feats
+        dataset, "split", best_features["max"]
     )
     assert fs.feature_evaluator.evaluate_features.call_count == 3
 
@@ -165,12 +165,12 @@ def test_get_selected_features(fs, mosquito):
     y = np.array([1] + [0, 1] * 14)
     fs.fit(X, y)
     selected_features = fs.get_selected_features()
-    assert selected_features.min_feats == fs._selected_features.min_feats
-    assert selected_features.min_feats == [0]
+    assert selected_features["min"] == fs._selected_features["min"]
+    assert selected_features["min"] == [0]
     feature_names = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"]
     assert len(feature_names) == X.shape[1]
     selected_features_names = fs.get_selected_features(feature_names=feature_names)
-    assert selected_features_names.min_feats == ["A"]
+    assert selected_features_names["min"] == ["A"]
     with pytest.raises(ValueError):
         fs.get_selected_features(feature_names=["only-one-name"])
 

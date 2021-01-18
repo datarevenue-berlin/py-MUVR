@@ -309,9 +309,9 @@ class FeatureSelector:
     ) -> Tuple[
         FeatureEvaluationResults, FeatureEvaluationResults, FeatureEvaluationResults
     ]:
-        min_feats = best_features.min_feats
-        mid_feats = best_features.mid_feats
-        max_feats = best_features.max_feats
+        min_feats = best_features["min"]
+        mid_feats = best_features["mid"]
+        max_feats = best_features["max"]
 
         data_min_feats = data_splitter.split_data(input_data, split, min_feats)
         data_mid_feats = data_splitter.split_data(input_data, split, mid_feats)
@@ -392,20 +392,20 @@ class FeatureSelector:
                 raise ValueError(
                     f"feature_names provided should contain {self._n_features} elements"
                 )
-            min_names = [feature_names[f] for f in self._selected_features.min_feats]
-            mid_names = [feature_names[f] for f in self._selected_features.mid_feats]
-            max_names = [feature_names[f] for f in self._selected_features.max_feats]
+            min_names = [feature_names[f] for f in self._selected_features["min"]]
+            mid_names = [feature_names[f] for f in self._selected_features["mid"]]
+            max_names = [feature_names[f] for f in self._selected_features["max"]]
 
             return SelectedFeatures(
-                min_feats=min_names,
-                max_feats=max_names,
-                mid_feats=mid_names,
+                min=min_names,
+                max=max_names,
+                mid=mid_names,
             )
 
         return SelectedFeatures(
-            min_feats=self._selected_features.min_feats[:],
-            max_feats=self._selected_features.max_feats[:],
-            mid_feats=self._selected_features.mid_feats[:],
+            min=self._selected_features["min"][:],
+            max=self._selected_features["max"][:],
+            mid=self._selected_features["mid"][:],
         )
 
     def print_report(self, feature_names: List[str]):
@@ -423,12 +423,12 @@ class FeatureSelector:
 
     @staticmethod
     def _print_report(selected_features: SelectedFeatures):
-        print(f"Min features ({len(selected_features.min_feats)}): "
-              f"{', '.join(selected_features.min_feats)}\n")
-        print(f"Mid features ({len(selected_features.mid_feats)}): "
-              f"{', '.join(selected_features.mid_feats)}\n")
-        print(f"Max features ({len(selected_features.max_feats)}): "
-              f"{', '.join(selected_features.max_feats)}\n")
+        print(f"Min features ({len(selected_features['min'])}): "
+              f"{', '.join(selected_features['min'])}\n")
+        print(f"Mid features ({len(selected_features['mid'])}): "
+              f"{', '.join(selected_features['mid'])}\n")
+        print(f"Max features ({len(selected_features['max'])}): "
+              f"{', '.join(selected_features['max'])}\n")
 
     def __repr__(self):
         fs = (

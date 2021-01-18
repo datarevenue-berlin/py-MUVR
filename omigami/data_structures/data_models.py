@@ -80,9 +80,15 @@ InnerLoopResults = List[FeatureEvaluationResults]
 
 @dataclass
 class SelectedFeatures:
-    min_feats: Union[List[int], NumpyArray, List[str], Tuple[int]]
-    max_feats: Union[List[int], NumpyArray, List[str], Tuple[int]]
-    mid_feats: Union[List[int], NumpyArray, List[str], Tuple[int]]
+    min: Union[List[int], NumpyArray, List[str], Tuple[int]]
+    max: Union[List[int], NumpyArray, List[str], Tuple[int]]
+    mid: Union[List[int], NumpyArray, List[str], Tuple[int]]
+
+    def __getitem__(self, item):
+        if item in self.__dict__.keys():
+            return self.__dict__[item]
+        else:
+            raise KeyError("Accepted keys are: 'min_feats', 'mid_feats' ,'max_feats'")
 
 
 @dataclass

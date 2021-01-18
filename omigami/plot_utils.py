@@ -29,7 +29,7 @@ def plot_validation_curves(feature_selector: FeatureSelector, **figure_kwargs) -
 
     min_y, max_y = plt.gca().get_ylim()
     selected_features = feature_selector.get_selected_features()
-    for attribute in ["min_feats", "max_feats", "mid_feats"]:
+    for attribute in ["min", "max", "mid"]:
         n_feats = len(getattr(selected_features, attribute))
         plt.vlines(
             n_feats,
@@ -54,7 +54,7 @@ def plot_feature_rank(feature_selector, model, feature_names=None, **figure_kwar
         raise ValueError("The model parameter must be one of 'min', 'max' or 'mid'.")
 
     eval_attr = model + "_eval"
-    feats_attr = model + "_feats"
+    feats_attr = model
 
     ranks = []
     for r in feature_selector.results:
