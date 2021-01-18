@@ -40,7 +40,7 @@ def get_best_n_features(ranks: FeatureRanks, n_to_keep: int) -> List[int]:
     if len(feats) == n_to_keep:
         return feats
 
-    # pad with non-present features, scrumble to not introduce a bias
+    # pad with non-present features, scramble to not introduce a bias
     all_feats = np.arange(ranks.n_feats)
     np.random.shuffle(all_feats)
     for f in all_feats:
@@ -59,14 +59,14 @@ def compute_t_student_p_value(sample: float, population: Iterable) -> float:
     of the n+1 sample of population, where `n = len(population)`.
     In few words, it gives the probability that `sample` belongs to `population`.
     The underlying assumption is that population is normally distributed
-    with unknown mean and unkown variance
+    with unknown mean and unknown variance
 
     Parameters
     ----------
         sample: float
             value for which we want the p-value
         population: Iterable
-            values that respresent the null hypothesis for `sample`
+            values that represent the null hypothesis for `sample`
 
     Returns
     -------
@@ -82,7 +82,7 @@ def compute_t_student_p_value(sample: float, population: Iterable) -> float:
 
 def mute_loggers(loggers: List[str] = None):
     """Decorator to mute specific loggers within a function call. This is particularly
-    useful when nested for loops migh add excessive verbosity to a specific method.
+    useful when nested for loops might add excessive verbosity to a specific method.
     The input `loggers` is a list of loggers by name that should be muted. The logging
     level of the selected loggers is set to WARNING and restored to the original value
     at the end of the decorated method execution.
