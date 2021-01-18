@@ -80,10 +80,22 @@ def compute_t_student_p_value(sample: float, population: Iterable) -> float:
     return scipy.stats.t(df=n - 1).cdf(t)
 
 
-def mute_loggers(loggers_: List[str] = None):
+def mute_loggers(loggers: List[str] = None):
+    """Decorator to mute specific loggers within a function call. This is particularly
+    useful when nested for loops migh add excessive verbosity to a specific method.
+    The input `loggers` is a list of loggers by name that should be muted. The logging
+    level of the selected loggers is set to WARNING and restored to the original value
+    at the end of the decorated method execution.
+
+    Parameters
+    ----------
+    loggers : List[str], optional
+        List of loggers by name that have to be muted, by default None
+    """
+    loggers = loggers or []
+
     def decorator(function: Callable):
         def decorated(*args, **kwargs):
-            loggers = loggers_ or []
             logs = {log_name: logging.getLogger(log_name) for log_name in loggers}
             old_levels = {
                 log_name: log.getEffectiveLevel() for log_name, log in logs.items()

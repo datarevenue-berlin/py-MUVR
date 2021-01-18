@@ -69,11 +69,11 @@ def test_compute_t_student_p_value():
 
 
 def test_mute_loggers():
-    @utils.mute_loggers(loggers_=["omigami.feature_selector"])
+    @utils.mute_loggers(loggers=["omigami.feature_selector"])
     def test_function(logger_name):
         return logging.getLogger(logger_name).getEffectiveLevel()
 
-    @utils.mute_loggers(loggers_=["omigami.feature_selector"])
+    @utils.mute_loggers(loggers=["omigami.feature_selector"])
     def test_bad_function(logger_name):
         raise RuntimeError("exception")
 

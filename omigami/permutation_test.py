@@ -48,9 +48,7 @@ class PermutationTest:
         self.res = None
         self.res_perm = None
 
-    @mute_loggers(
-        loggers_=["omigami.feature_selector", "omigami.models.pls_classifier"]
-    )
+    @mute_loggers(loggers=["omigami.feature_selector", "omigami.models.pls_classifier"])
     def fit(
         self,
         X: NumpyArray,
