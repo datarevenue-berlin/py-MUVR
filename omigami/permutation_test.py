@@ -162,3 +162,6 @@ class PermutationTest:
     def _rank_data(sample: float, population: Iterable):
         ranks = rankdata([sample] + list(population))
         return ranks[0], ranks[1:]
+
+    def __repr__(self):
+        return f"PermutationTest(n_permutations={self.n_permutations})"
