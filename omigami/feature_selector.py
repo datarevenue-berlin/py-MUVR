@@ -182,7 +182,8 @@ class FeatureSelector:
         repetition_results = []
 
         log.info("Scheduling tasks...")
-        with progressbar.ProgressBar(max_value=self.n_repetitions * self.n_outer) as b:
+        Progressbar = self._make_progress_bar()
+        with Progressbar(max_value=self.n_repetitions * self.n_outer) as b:
             progress = 0
             b.update(progress)
             for _ in range(self.n_repetitions):
@@ -334,7 +335,8 @@ class FeatureSelector:
     ) -> FeatureSelectionRawResults:
 
         log.info("Retrieving results...")
-        with progressbar.ProgressBar(max_value=self.n_repetitions * self.n_outer) as b:
+        Progressbar = self._make_progress_bar()
+        with Progressbar(max_value=self.n_repetitions * self.n_outer) as b:
             progress = 0
             b.update(progress)
 
@@ -466,3 +468,9 @@ class FeatureSelector:
             selected_features=self.get_selected_features(),
             score_curve=self.get_validation_curves()["total"][0],
         )
+
+    @staticmethod
+    def _make_progress_bar():
+        if logging.getLogger(__name__).getEffectiveLevel() > logging.INFO:
+            return progressbar.NullBar
+        return progressbar.ProgressBar
