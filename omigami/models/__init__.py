@@ -7,7 +7,7 @@ from xgboost import XGBClassifier
 
 from omigami.data_structures import RandomState
 from omigami.models.estimator import Estimator
-from omigami.models.pls_classifier import PLSClassifier
+from omigami.models.pls import PLSClassifier
 from omigami.models.sklearn_estimator import ScikitLearnPipeline, ScikitLearnEstimator
 
 

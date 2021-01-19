@@ -77,12 +77,9 @@ def test_mute_loggers():
     def test_bad_function(logger_name):
         raise RuntimeError("exception")
 
-    assert test_function("omigami.models.pls_classifier") == logging.INFO
+    assert test_function("omigami.models.pls") == logging.INFO
     assert test_function("omigami.feature_selector") == logging.WARN
-    assert (
-        logging.getLogger("omigami.models.pls_classifier").getEffectiveLevel()
-        == logging.INFO
-    )
+    assert logging.getLogger("omigami.models.pls").getEffectiveLevel() == logging.INFO
     assert (
         logging.getLogger("omigami.feature_selector").getEffectiveLevel()
         == logging.INFO

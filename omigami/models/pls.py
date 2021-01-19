@@ -70,3 +70,42 @@ class PLSClassifier(PLSRegression):
         y_pred = super().predict(X, copy=copy)
         y_pred = np.equal(y_pred.T, y_pred.max(axis=1)).T.astype(float)
         return self.encoder.inverse_transform(y_pred).ravel()
+
+
+class PLSRegressor(PLSRegression):
+    """This class extends the scikit-learn PLS regression.
+    It provides feature_importances_ by get_vip method and prevent fit failures
+    if the number of components is bigger than the number of features
+
+    The signaure is analogous to sklearn.cross_decomposition.PLSRegression:
+
+    Parameters
+    ----------
+    n_components: int, optional
+        Number of components to keep, by default 2.
+    scale: bool, optional
+        whether to scale the data, by default True.
+    max_iter: int, optional
+        the maximum number of iterations of the NIPALS inner loop, by default 500.
+    tol: float, optional
+        tolerance used in the iterative algorithm, by default 1e-06.
+    copy: bool, optional
+        Whether the deflation should be done on a copy. Let the default value to True
+        unless you don’t care about side effects, by default True.
+
+    """
+
+    encoder = None
+    feature_importances_ = None
+
+    def fit(self, X, Y):
+        if self.n_components > X.shape[1]:
+            # there might be occasions in which the loops try to fit on a matrix
+            # with n_features, a PLS with n_components > n_features. The recursive
+            # feature elimination where we stop at n_features = 1 is a clear case
+            # of this
+            log.info("Lowering PLSRegressor n_components to %s during fit", X.shape[1])
+            self.set_params(n_components=X.shape[1])
+        super().fit(X, Y)
+        self.feature_importances_ = get_vip(self)
+        return self
