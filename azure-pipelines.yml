@@ -45,4 +45,4 @@ steps:
 
 - script: |
     echo "This has been executed"
-  condition: not(eq($(hasTag), ''))
+  condition: not(eq(variables.hasTag, ''))
