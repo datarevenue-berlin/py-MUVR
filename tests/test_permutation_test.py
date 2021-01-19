@@ -17,25 +17,25 @@ def fit_permutation_test():
     pt = permutation_test.PermutationTest(feature_selector=fs, n_permutations=4)
 
     pt.res = FeatureSelectionResults(
-        SelectedFeatures(min_feats=[0, 1], max_feats=[0, 1, 4, 3], mid_feats=[0, 1, 4]),
-        ScoreCurve(n_features=(2, 3, 4, 5), scores=(4.0, 4.5, 4.0, 4.75)),
+        SelectedFeatures(min=[0, 1], max=[0, 1, 4, 3], mid=[0, 1, 4]),
+        ScoreCurve(n_features=[2, 3, 4, 5], scores=[4.0, 4.5, 4.0, 4.75]),
     )
     pt.res_perm = [
         FeatureSelectionResults(
-            SelectedFeatures(min_feats=[0], max_feats=[0, 1, 2], mid_feats=[0, 1]),
-            ScoreCurve(n_features=(1, 2, 3), scores=(4.0, 4.5, 4.5)),
+            SelectedFeatures(min=[0], max=[0, 1, 2], mid=[0, 1]),
+            ScoreCurve(n_features=[1, 2, 3], scores=[4.0, 4.5, 4.5]),
         ),
         FeatureSelectionResults(
-            SelectedFeatures(min_feats=[0], max_feats=[0, 1, 2], mid_feats=[0, 1]),
-            ScoreCurve(n_features=(1, 2, 3), scores=(4.0, 4.5, 4.5)),
+            SelectedFeatures(min=[0], max=[0, 1, 2], mid=[0, 1]),
+            ScoreCurve(n_features=[1, 2, 3], scores=[4.0, 4.5, 4.5]),
         ),
         FeatureSelectionResults(
-            SelectedFeatures(min_feats=[0], max_feats=[0, 1, 2], mid_feats=[0, 1]),
-            ScoreCurve(n_features=(1, 2, 3), scores=(4.0, 4.6, 4.9)),
+            SelectedFeatures(min=[0], max=[0, 1, 2], mid=[0, 1]),
+            ScoreCurve(n_features=[1, 2, 3], scores=[4.0, 4.6, 4.9]),
         ),
         FeatureSelectionResults(
-            SelectedFeatures(min_feats=[0], max_feats=[0, 1, 2], mid_feats=[0, 1]),
-            ScoreCurve(n_features=(1, 2, 3), scores=(4.1, 4.6, 4.9)),
+            SelectedFeatures(min=[0], max=[0, 1, 2], mid=[0, 1]),
+            ScoreCurve(n_features=[1, 2, 3], scores=[4.1, 4.6, 4.9]),
         ),
     ]
     return pt

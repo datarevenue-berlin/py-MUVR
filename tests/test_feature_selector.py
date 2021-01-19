@@ -187,10 +187,10 @@ def test_get_params(fs):
     assert params["metric"] == "MISS"
     assert params["random_state"] == 0
     assert isinstance(params["estimator"], LinearRegression)
-    assert params["n_repetitions"] == 8
-    assert params["n_outer"] == 8
-    assert params["n_inner"] == 7
-    assert params["features_dropout_rate"] == 0.05
+    assert params["n_repetitions"] == 4
+    assert params["n_outer"] == 4
+    assert params["n_inner"] == 3
+    assert params["features_dropout_rate"] == 0.1
     assert params["robust_minimum"] == 0.05
     assert FeatureSelector(**params)
 
