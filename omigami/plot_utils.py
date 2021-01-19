@@ -49,7 +49,9 @@ def plot_validation_curves(feature_selector: FeatureSelector, **figure_kwargs) -
     return plt.gcf()
 
 
-def plot_feature_rank(feature_selector, model, feature_names=None, **figure_kwargs):
+def plot_feature_rank(
+    feature_selector, model, feature_names=None, show_outliers=True, **figure_kwargs
+):
     if model not in {"min", "max", "mid"}:
         raise ValueError("The model parameter must be one of 'min', 'max' or 'mid'.")
 
@@ -103,6 +105,7 @@ def plot_feature_rank(feature_selector, model, feature_names=None, **figure_kwar
         ax=ax_ranks,
         boxprops=bbox_props,
         vert=False,
+        showfliers=show_outliers,
     )
 
     (selected_ranks.notna().mean() * 100).plot.barh(
