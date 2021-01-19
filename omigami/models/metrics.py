@@ -1,6 +1,6 @@
 from typing import Union
-from sklearn.metrics import SCORERS, get_scorer
 from omigami.data_structures import MetricFunction, NumpyArray
+from omigami.models.sklearn_metrics import SKLEARN_METRICS
 
 
 def make_metric(metric: Union[str, MetricFunction]) -> MetricFunction:
@@ -17,9 +17,8 @@ def make_metric(metric: Union[str, MetricFunction]) -> MetricFunction:
 def _make_metric_from_string(metric_string: str) -> MetricFunction:
     if metric_string == "MISS":
         return miss_score
-    if metric_string in SCORERS:
-        # pylint: disable=protected-access
-        return get_scorer(metric_string)._score_func
+    if metric_string in SKLEARN_METRICS:
+        return SKLEARN_METRICS[metric_string]
     raise ValueError("Input metric is not a valid string")
 
 

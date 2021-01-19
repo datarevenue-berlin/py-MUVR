@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from sklearn.metrics import SCORERS
+from omigami.models.sklearn_metrics import SKLEARN_METRICS
 from omigami.models.metrics import make_metric, _make_metric_from_string, miss_score
 
 
@@ -21,7 +21,7 @@ def test_miss_score():
 
 
 def test_make_metric_from_string():
-    for metric_id in SCORERS:
+    for metric_id in SKLEARN_METRICS:
         assert _make_metric_from_string(metric_id)
     assert _make_metric_from_string("MISS") is miss_score
     with pytest.raises(ValueError):
