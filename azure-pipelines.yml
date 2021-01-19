@@ -34,8 +34,8 @@ steps:
   displayName: 'Install dependencies'
 
 - script: |
-    pip install pytest pytest-azurepipelines
-    pytest --cov=omigami --cov-report html
+    pip install pytest https://github.com/tonybaloney/pytest-azurepipelines/archive/master.zip
+    pytest --cov=omigami --cov-report html tests/
   displayName: 'Run tests'
 
 - script: |
