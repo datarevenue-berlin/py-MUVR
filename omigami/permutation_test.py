@@ -1,3 +1,4 @@
+import logging
 from typing import Iterable, Tuple, List
 from concurrent.futures import Executor
 import numpy as np
@@ -7,7 +8,8 @@ from omigami.utils import compute_t_student_p_value, mute_loggers
 from omigami.data_structures.data_types import NumpyArray
 from omigami.data_structures.data_models import FeatureSelectionResults
 from omigami.feature_selector import FeatureSelector
-from omigami import logger
+
+logger = logging.getLogger(__name__)
 
 
 class PermutationTest:
