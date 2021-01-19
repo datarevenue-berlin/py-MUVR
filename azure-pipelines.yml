@@ -41,7 +41,6 @@ steps:
     echo "##vso[task.setvariable variable=hasTag]$hasTag"
     echo $hasTag
   env: {sourceVersion: $(Build.SourceVersion)}
-  # workingDirectory: $(Build.SourcesDirectory)
   displayName: Look for tag on commit
 
 - script: |
