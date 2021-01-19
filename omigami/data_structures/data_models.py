@@ -83,10 +83,11 @@ class SelectedFeatures:
     mid: Union[List[int], NumpyArray, List[str], Tuple[int]]
 
     def __getitem__(self, item):
-        if item in self.__dict__.keys():
-            return self.__dict__[item]
+        accepted_keys = {"min", "mid", "max"}
+        if item in accepted_keys:
+            return getattr(self, item)
         else:
-            raise KeyError("Accepted keys are: 'min_feats', 'mid_feats' ,'max_feats'")
+            raise KeyError(f"Accepted keys are: {accepted_keys}")
 
 
 @dataclass
