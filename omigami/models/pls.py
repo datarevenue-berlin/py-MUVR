@@ -31,7 +31,10 @@ class PLSClassifier(PLSRegression):
     of each row. Finally the matrix is converted to classes using the inverse one hot
     transformation.
 
-    The signaure is analogous to sklearn.cross_decomposition.PLSRegression:
+    It also provides `feature_importances_` as VIP and prevent fit failures
+    if the number of components is bigger than the number of features
+
+    The signature is analogous to sklearn.cross_decomposition.PLSRegression:
 
     Parameters
     ----------
@@ -58,7 +61,7 @@ class PLSClassifier(PLSRegression):
             # with n_features, a PLS with n_components > n_features. The recursive
             # feature elimination where we stop at n_features = 1 is a clear case
             # of this
-            log.info("Lowering PLSC n_components to %d during fit", X.shape[1])
+            log.debug("Lowering PLSC n_components to %s during fit", X.shape[1])
             self.set_params(n_components=X.shape[1])
         self.encoder = OneHotEncoder().fit(Y.reshape(-1, 1))
         encoded_y = self.encoder.transform(Y.reshape(-1, 1)).toarray()
@@ -74,10 +77,10 @@ class PLSClassifier(PLSRegression):
 
 class PLSRegressor(PLSRegression):
     """This class extends the scikit-learn PLS regression.
-    It provides feature_importances_ by get_vip method and prevent fit failures
+    It provides `feature_importances_` as VIP and prevent fit failures
     if the number of components is bigger than the number of features
 
-    The signaure is analogous to sklearn.cross_decomposition.PLSRegression:
+    The signature is analogous to sklearn.cross_decomposition.PLSRegression:
 
     Parameters
     ----------
@@ -104,7 +107,7 @@ class PLSRegressor(PLSRegression):
             # with n_features, a PLS with n_components > n_features. The recursive
             # feature elimination where we stop at n_features = 1 is a clear case
             # of this
-            log.info("Lowering PLSRegressor n_components to %s during fit", X.shape[1])
+            log.debug("Lowering PLSRegressor n_components to %s during fit", X.shape[1])
             self.set_params(n_components=X.shape[1])
         super().fit(X, Y)
         self.feature_importances_ = get_vip(self)
