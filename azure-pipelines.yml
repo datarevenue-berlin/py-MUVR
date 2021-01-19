@@ -35,7 +35,7 @@ steps:
 
 - script: |
     pip install pytest pytest-azurepipelines
-    pytest --cov=omigami tests/ --cov-report html
+    pytest --cov=omigami --cov-report html
   displayName: 'Run tests'
 
 - script: |
