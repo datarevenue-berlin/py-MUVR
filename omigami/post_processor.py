@@ -6,7 +6,7 @@ from omigami.data_structures import (
     ScoreCurve,
     FeatureEliminationResults,
     InnerLoopResults,
-    FeatureSelectionResults,
+    FeatureSelectionRawResults,
 )
 from omigami.utils import (
     average_ranks,
@@ -30,7 +30,7 @@ class PostProcessor:
     def __init__(self, robust_minimum: float):
         self.robust_minimum = robust_minimum
 
-    def select_features(self, results: FeatureSelectionResults) -> SelectedFeatures:
+    def select_features(self, results: FeatureSelectionRawResults) -> SelectedFeatures:
         """Select the best features for the three possible models (`min`, `mid`
         and `max`).
         The best features are chosen based on their average ranks in the three models
@@ -39,7 +39,7 @@ class PostProcessor:
 
         Parameters
         ----------
-        results : FeatureSelectionResults
+        results : FeatureSelectionRawResults
             results of the double CV feature selection
 
         Returns
@@ -58,7 +58,7 @@ class PostProcessor:
             max=get_best_n_features(average_ranks_max, features_max),
         )
 
-    def _compute_n_features(self, results: FeatureSelectionResults):
+    def _compute_n_features(self, results: FeatureSelectionRawResults):
         avg_rep_scores = self._get_repetition_avg_scores(results)
         avg_scores = average_scores(avg_rep_scores)
         norm_score = normalize_score(avg_scores)
@@ -72,7 +72,7 @@ class PostProcessor:
         return min_feats, mid_feats, max_feats
 
     @staticmethod
-    def _get_repetition_avg_scores(results: FeatureSelectionResults) -> List:
+    def _get_repetition_avg_scores(results: FeatureSelectionRawResults) -> List:
         avg_scores = []
         for outer_loops_results in results:
             scores = [ol.n_features_to_score_map for ol in outer_loops_results]
@@ -80,7 +80,7 @@ class PostProcessor:
         return avg_scores
 
     def get_validation_curves(
-        self, results: FeatureSelectionResults
+        self, results: FeatureSelectionRawResults
     ) -> Dict[str, List[ScoreCurve]]:
         """Get validation curves (avg score vs number of features) for all outer
         loop iterations, and their average per repetition and overall. Every group
@@ -94,7 +94,7 @@ class PostProcessor:
 
         Parameters
         ----------
-        results : FeatureSelectionResults
+        results : FeatureSelectionRawResults
             results of the double CV feature selection
 
         Returns
