@@ -45,5 +45,5 @@ steps:
 
 - script: |
     echo ${{  variables.hasTag  }}
-    echo "This has been executed"
   condition: not(eq(variables.hasTag, ''))
+  displayName: 'Push to pypi.'
