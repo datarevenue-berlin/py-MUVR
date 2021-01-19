@@ -4,7 +4,12 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
 trigger:
-- main
+  tags:
+    include:
+      - '*'
+  branches:
+    include:
+      - 'main'
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -25,6 +30,7 @@ steps:
     python -m pip install --upgrade pip
     pip install -r requirements.txt
     pip install -r requirements_dev.txt
+    pip install twine
   displayName: 'Install dependencies'
 
 - script: |
