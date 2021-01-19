@@ -40,8 +40,17 @@ def test_regressor_fit(pls_regressor):
     X = np.random.rand(10, 10)
     y = np.random.rand(10)
     sklearn_regressor = PLSRegression().fit(X, y)
-    pls_regressor.fit(X, y)
-    assert np.all(pls_regressor.predict(X) == sklearn_regressor.predict(X))
+    assert pls_regressor.fit(X, y)
     assert pls_regressor.fit(X[:, 0:1], y)
     with pytest.raises(ValueError):
         sklearn_regressor.fit(X[:, 0:1], y)
+
+
+def test_regressor_predict(pls_regressor):
+    X = np.random.rand(10, 10)
+    y = np.random.rand(10)
+    sklearn_regressor = PLSRegression().fit(X, y)
+    pls_regressor.fit(X, y)
+    y_pred = pls_regressor.predict(X)
+    assert y_pred.shape == y.shape
+    assert np.all(y_pred == sklearn_regressor.predict(X).ravel())

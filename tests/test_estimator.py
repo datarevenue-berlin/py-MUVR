@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
-from sklearn.svm import SVC ,SVR
+from sklearn.svm import SVC, SVR
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.exceptions import NotFittedError
 from omigami.models.estimator import Estimator
@@ -15,6 +15,7 @@ models = [
     SVR(kernel="linear"),
     "XGBC",
     "PLSC",
+    "PLSR",
     SVC(kernel="linear", random_state=1),
     Pipeline([("norm", Normalizer()), ("model", SVC(kernel="linear", random_state=1))]),
     LinearRegression(),
@@ -43,8 +44,7 @@ def test_estimator_fit(est, dataset):
 
 
 @pytest.mark.parametrize(
-    "est",
-    models,
+    "est", models,
 )
 def test_estimator_predict(est, dataset):
     estimator = make_estimator(est, 0)
@@ -53,8 +53,7 @@ def test_estimator_predict(est, dataset):
 
 
 @pytest.mark.parametrize(
-    "est",
-    models,
+    "est", models,
 )
 def test_estimator_predict(est, dataset):
     estimator = make_estimator(est, 0).fit(dataset.X, dataset.y)
@@ -80,10 +79,7 @@ def test_train_model(est, dataset):
     assert estimator is not trained_estimator
 
 
-@pytest.mark.parametrize(
-    "estimator",
-    models
-)
+@pytest.mark.parametrize("estimator", models)
 def test_get_feature_importancres(estimator, dataset):
     estimator = make_estimator(estimator, 0)
     estimator.fit(dataset.X, dataset.y)

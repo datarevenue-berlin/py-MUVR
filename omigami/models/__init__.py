@@ -7,7 +7,7 @@ from xgboost import XGBClassifier
 
 from omigami.data_structures import RandomState
 from omigami.models.estimator import Estimator
-from omigami.models.pls import PLSClassifier
+from omigami.models.pls import PLSClassifier, PLSRegressor
 from omigami.models.sklearn_estimator import ScikitLearnPipeline, ScikitLearnEstimator
 
 
@@ -15,6 +15,7 @@ class ESTIMATORS:
     RFC = "RFC"
     XGBC = "XGBC"
     PLSC = "PLSC"
+    PLSR = "PLSR"
 
 
 def make_estimator(estimator: Any, random_state: RandomState) -> Estimator:
@@ -58,4 +59,7 @@ def _make_estimator_from_string(estimator: str, random_state: RandomState) -> Es
     if estimator == ESTIMATORS.XGBC:
         xgbc = XGBClassifier()
         return ScikitLearnEstimator(xgbc, random_state)
+    if estimator == ESTIMATORS.PLSR:
+        plsr = PLSRegressor()
+        return ScikitLearnEstimator(plsr, random_state)
     raise ValueError("Unknown type of estimator")

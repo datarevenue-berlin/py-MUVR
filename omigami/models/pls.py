@@ -109,3 +109,6 @@ class PLSRegressor(PLSRegression):
         super().fit(X, Y)
         self.feature_importances_ = get_vip(self)
         return self
+
+    def predict(self, X, copy=True):
+        return super().predict(X, copy=copy).ravel()
