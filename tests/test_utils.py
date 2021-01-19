@@ -1,4 +1,6 @@
 import pytest
+import logging
+import numpy as np
 from omigami import utils
 from omigami.data_structures import FeatureRanks
 
@@ -45,3 +47,49 @@ def test_get_best_ranks(n, best):
     ranks = FeatureRanks(features=[5, 0, 1, 4], ranks=[1, 2, 3, 4], n_feats=10)
     best_feats = utils.get_best_n_features(ranks, n)
     assert sorted(best_feats) == sorted(best)
+
+
+def test_compute_t_student_p_value():
+    """Using p-values tables for t-student with 17 dof"""
+    dof = 17
+    n = dof + 1
+    random_state = np.random.RandomState(9)
+    sample_005 = -1.74
+    sample_01 = -1.333
+    p_values_005 = []
+    p_values_01 = []
+    for i in range(1000):
+        population = random_state.normal(size=n)
+        p_value = utils.compute_t_student_p_value(sample_005, population)
+        p_values_005.append(p_value)
+        p_value = utils.compute_t_student_p_value(sample_01, population)
+        p_values_01.append(p_value)
+    assert abs(np.mean(p_values_005) - 0.05) < 0.01
+    assert abs(np.mean(p_values_01) - 0.1) < 0.01
+
+
+def test_mute_loggers():
+    @utils.mute_loggers(loggers=["omigami.feature_selector"])
+    def test_function(logger_name):
+        return logging.getLogger(logger_name).getEffectiveLevel()
+
+    @utils.mute_loggers(loggers=["omigami.feature_selector"])
+    def test_bad_function(logger_name):
+        raise RuntimeError("exception")
+
+    assert test_function("omigami.models.pls_classifier") == logging.INFO
+    assert test_function("omigami.feature_selector") == logging.WARN
+    assert (
+        logging.getLogger("omigami.models.pls_classifier").getEffectiveLevel()
+        == logging.INFO
+    )
+    assert (
+        logging.getLogger("omigami.feature_selector").getEffectiveLevel()
+        == logging.INFO
+    )
+    with pytest.raises(RuntimeError):
+        test_bad_function("omigami.feature_selector")
+    assert (
+        logging.getLogger("omigami.feature_selector").getEffectiveLevel()
+        == logging.INFO
+    )

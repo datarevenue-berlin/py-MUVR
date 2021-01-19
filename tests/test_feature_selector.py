@@ -7,7 +7,12 @@ from sklearn.linear_model import LinearRegression
 from loky import get_reusable_executor
 from dask.distributed import Client
 
-from omigami.data_structures import InputDataset, SelectedFeatures
+from omigami.data_structures import (
+    InputDataset,
+    SelectedFeatures,
+    FeatureSelectionResults,
+    ScoreCurve,
+)
 from omigami.data_splitter import DataSplitter
 from omigami.feature_selector import FeatureSelector
 
@@ -146,9 +151,7 @@ def test_deferred_fit(executor):
 
 
 def test_select_best_features(fs):
-    fs._fetch_results = Mock(
-        fs._fetch_results, return_value="results"
-    )
+    fs._fetch_results = Mock(fs._fetch_results, return_value="results")
     fs.post_processor.select_features = Mock(
         fs.post_processor.select_features, return_value="features"
     )
@@ -175,6 +178,19 @@ def test_get_selected_features(fs, mosquito):
         fs.get_selected_features(feature_names=["only-one-name"])
 
 
+def test_get_params(fs):
+    params = fs.get_params()
+    assert params["metric"] == "MISS"
+    assert params["random_state"] == 0
+    assert isinstance(params["estimator"], LinearRegression)
+    assert params["n_repetitions"] == 8
+    assert params["n_outer"] == 8
+    assert params["n_inner"] == 7
+    assert params["features_dropout_rate"] == 0.05
+    assert params["robust_minimum"] == 0.05
+    assert FeatureSelector(**params)
+
+
 def test_make_report(fs):
     fs.get_selected_features = Mock(fs.get_selected_features, return_value="selected")
     fs._print_report = Mock(fs._print_report)
@@ -183,3 +199,16 @@ def test_make_report(fs):
 
     fs.get_selected_features.assert_called_once_with(["feature_names"])
     fs._print_report.assert_called_once_with("selected")
+
+
+def test_get_features_and_scores(fs):
+    fs.get_selected_features = Mock(fs.get_selected_features, return_value="sel_feats")
+    fs.get_validation_curves = Mock(
+        fs.get_validation_curves, return_value={"total": [ScoreCurve(None, None)]}
+    )
+    fs_results = fs.get_feature_selection_results()
+    score_curve = fs_results.score_curve
+    assert isinstance(fs_results, FeatureSelectionResults)
+    assert isinstance(score_curve, ScoreCurve)
+    fs.get_selected_features.assert_called_once()
+    fs.get_validation_curves.assert_called_once()
