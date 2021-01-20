@@ -1,4 +1,5 @@
 import logging
+from typing import Iterable
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 import matplotlib.ticker as mtick
@@ -49,7 +50,13 @@ def plot_validation_curves(feature_selector: FeatureSelector, **figure_kwargs) -
     return plt.gcf()
 
 
-def plot_feature_rank(feature_selector, model, feature_names=None, **figure_kwargs):
+def plot_feature_rank(
+    feature_selector: FeatureSelector,
+    model: str,
+    feature_names: Iterable = None,
+    show_outliers: bool = True,
+    **figure_kwargs
+):
     if model not in {"min", "max", "mid"}:
         raise ValueError("The model parameter must be one of 'min', 'max' or 'mid'.")
 
@@ -71,25 +78,24 @@ def plot_feature_rank(feature_selector, model, feature_names=None, **figure_kwar
 
     if "figsize" not in figure_kwargs.keys():
         fig_width = len(selected_ranks.columns) / 3
-        figure_kwargs["figsize"] = (max(fig_width, 5), 3)
+        figure_kwargs["figsize"] = (6, max(fig_width, 5))
 
-    fig, ax_notnan = plt.subplots(**figure_kwargs)
-    ax_ranks = (
-        ax_notnan.twinx()
-    )  # instantiate a second axes that shares the same x-axis
+    fig, (ax_ranks, ax_notnan) = plt.subplots(
+        nrows=1, ncols=2, sharey=True, **figure_kwargs
+    )
 
     color_notnan = "grey"
     color_ranks = "#4e79a7"
 
-    ax_notnan.yaxis.set_major_formatter(mtick.PercentFormatter())
-    ax_notnan.set_xlabel("Feature")
-    ax_notnan.set_ylabel("Percentage of times selected", color=color_notnan)
-    ax_ranks.set_ylabel("Feature Rank", color=color_ranks)
+    ax_notnan.xaxis.set_major_formatter(mtick.PercentFormatter())
+    ax_notnan.set_ylabel("Feature")
+    ax_notnan.set_xlabel("Percentage of times selected")
+    ax_ranks.set_xlabel("Feature Rank")
 
-    ax_notnan.tick_params(axis="y", labelcolor=color_notnan)
-    ax_ranks.tick_params(axis="y", labelcolor=color_ranks)
+    ax_notnan.tick_params(axis="x")
+    ax_ranks.tick_params(axis="x")
 
-    bbox_props = {"color": color_ranks, "alpha": 0.5}
+    bbox_props = {"color": color_ranks}
     bbox_color = {"boxes": color_ranks, "medians": "black"}
 
     if feature_names is not None:
@@ -97,17 +103,22 @@ def plot_feature_rank(feature_selector, model, feature_names=None, **figure_kwar
         numbers_to_names = dict(zip(feature_numbers, feature_names))
         selected_ranks.rename(columns=numbers_to_names, inplace=True)
 
-    (selected_ranks.notna().mean() * 100).plot.bar(
-        facecolor=color_notnan, ax=ax_notnan, alpha=0.4, edgecolor="black"
-    )
-
     selected_ranks.boxplot(
         positions=range(len(selected_ranks.columns)),
         color=bbox_color,
         patch_artist=True,
         ax=ax_ranks,
         boxprops=bbox_props,
+        vert=False,
+        showfliers=show_outliers,
     )
+
+    (selected_ranks.notna().mean() * 100).plot.barh(
+        facecolor=color_notnan, ax=ax_notnan, edgecolor="black"
+    )
+
+    ax_notnan.invert_yaxis()  # being the y-axis, shared it will invert both
+    ax_notnan.grid(axis="x", zorder=-100)
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
 
