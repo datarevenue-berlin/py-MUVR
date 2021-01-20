@@ -27,9 +27,7 @@ class InputDataset:
     def __getitem__(self, data_slice: tuple) -> InputDataset:
         rows, features = data_slice
         sliced = InputDataset(
-            X=self.X[rows, :],
-            y=self.y[rows],
-            groups=self.groups[rows]
+            X=self.X[rows, :], y=self.y[rows], groups=self.groups[rows]
         )
         if features:
             sliced.X = sliced.X[:, features]
@@ -80,9 +78,16 @@ InnerLoopResults = List[FeatureEvaluationResults]
 
 @dataclass
 class SelectedFeatures:
-    min_feats: Union[List[int], NumpyArray, List[str], Tuple[int]]
-    max_feats: Union[List[int], NumpyArray, List[str], Tuple[int]]
-    mid_feats: Union[List[int], NumpyArray, List[str], Tuple[int]]
+    min: Union[List[int], NumpyArray, List[str], Tuple[int]]
+    max: Union[List[int], NumpyArray, List[str], Tuple[int]]
+    mid: Union[List[int], NumpyArray, List[str], Tuple[int]]
+
+    def __getitem__(self, item):
+        accepted_keys = {"min", "mid", "max"}
+        if item in accepted_keys:
+            return getattr(self, item)
+        else:
+            raise KeyError(f"Accepted keys are: {accepted_keys}")
 
 
 @dataclass
@@ -105,4 +110,10 @@ class ScoreCurve:
     scores: List[float]
 
 
-FeatureSelectionResults = List[List[Union[OuterLoopResults, Future]]]
+FeatureSelectionRawResults = List[List[Union[OuterLoopResults, Future]]]
+
+
+@dataclass
+class FeatureSelectionResults:
+    selected_features: SelectedFeatures
+    score_curve: ScoreCurve

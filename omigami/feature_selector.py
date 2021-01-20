@@ -5,6 +5,7 @@ from concurrent.futures import Executor, Future
 from typing import Union, List, Dict, Tuple
 
 import numpy as np
+import progressbar
 from numpy.random import RandomState
 
 from omigami.data_structures import (
@@ -17,6 +18,7 @@ from omigami.data_structures import (
     MetricFunction,
     InputEstimator,
     NumpyArray,
+    FeatureSelectionRawResults,
     FeatureSelectionResults,
 )
 from omigami.feature_evaluator import FeatureEvaluator
@@ -28,6 +30,7 @@ from omigami.sync_executor import SyncExecutor
 
 
 Repetition = List[Union[OuterLoopResults, Future]]
+log = logging.getLogger(__name__)
 
 
 class FeatureSelector:
@@ -108,12 +111,16 @@ class FeatureSelector:
         self._n_features = None
         self.random_state = None if random_state is None else RandomState(random_state)
         self.n_outer = n_outer
-        self.keep_fraction = 1 - features_dropout_rate
+        self.features_dropout_rate = features_dropout_rate
+        self.estimator = estimator
+        self.metric = metric
+        self.robust_minimum = robust_minimum
+        self._keep_fraction = 1 - features_dropout_rate
         self.n_repetitions = n_repetitions
         self.feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
 
         if not n_inner:
-            logging.info("n_inner is not specified, setting it to n_outer - 1")
+            log.info("Parameter n_inner is not specified, setting it to n_outer - 1")
             n_inner = n_outer - 1
         self.n_inner = n_inner
 
@@ -166,25 +173,40 @@ class FeatureSelector:
         input_data = InputDataset(X=X, y=y, groups=groups)
         self.feature_evaluator.set_n_initial_features(n_features)
 
+        log.info(
+            f"Running {self.n_repetitions} repetitions and"
+            f" {self.n_outer} outer loops using "
+            f"executor {executor.__class__.__name__}."
+        )
+
         repetition_results = []
 
-        for _ in range(self.n_repetitions):
-            data_splitter = DataSplitter(
-                self.n_outer, self.n_inner, input_data, self.random_state,
-            )
-
-            outer_loop_results = []
-            for outer_split in data_splitter.iter_outer_splits():
-                outer_loop_result = self._deferred_run_outer_loop(
-                    input_data,
-                    outer_split,
-                    executor=executor,
-                    data_splitter=data_splitter,
+        log.info("Scheduling tasks...")
+        Progressbar = self._make_progress_bar()
+        with Progressbar(max_value=self.n_repetitions * self.n_outer) as b:
+            progress = 0
+            b.update(progress)
+            for _ in range(self.n_repetitions):
+                data_splitter = DataSplitter(
+                    self.n_outer, self.n_inner, input_data, self.random_state,
                 )
-                outer_loop_results.append(outer_loop_result)
-            repetition_results.append(outer_loop_results)
+
+                outer_loop_results = []
+                for outer_split in data_splitter.iter_outer_splits():
+                    outer_loop_result = self._deferred_run_outer_loop(
+                        input_data,
+                        outer_split,
+                        executor=executor,
+                        data_splitter=data_splitter,
+                    )
+                    outer_loop_results.append(outer_loop_result)
+                    progress += 1
+                    b.update(progress)
+
+                repetition_results.append(outer_loop_results)
 
         self._selected_features = self._select_best_features(repetition_results)
+        log.info("Finished feature selection.")
         self._n_features = input_data.n_features
         self.is_fit = True
         return self
@@ -192,7 +214,7 @@ class FeatureSelector:
     @staticmethod
     def _get_groups(groups: NumpyArray, size: int) -> NumpyArray:
         if groups is None:
-            logging.info("groups is not specified: i.i.d. samples assumed")
+            log.info("Groups parameter is not specified: independent samples assumed")
             groups = np.arange(size)
         return groups
 
@@ -242,7 +264,7 @@ class FeatureSelector:
     def _remove_features(
         self, features: List[int], results: InnerLoopResults
     ) -> List[int]:
-        features_to_keep = int(np.floor(len(features) * self.keep_fraction))
+        features_to_keep = int(np.floor(len(features) * self._keep_fraction))
         features = self._select_n_best(results, features_to_keep)
         return features
 
@@ -287,9 +309,9 @@ class FeatureSelector:
     ) -> Tuple[
         FeatureEvaluationResults, FeatureEvaluationResults, FeatureEvaluationResults
     ]:
-        min_feats = best_features.min_feats
-        mid_feats = best_features.mid_feats
-        max_feats = best_features.max_feats
+        min_feats = best_features["min"]
+        mid_feats = best_features["mid"]
+        max_feats = best_features["max"]
 
         data_min_feats = data_splitter.split_data(input_data, split, min_feats)
         data_mid_feats = data_splitter.split_data(input_data, split, mid_feats)
@@ -302,11 +324,35 @@ class FeatureSelector:
         return min_eval, mid_eval, max_eval
 
     def _select_best_features(
-        self, repetition_results: FeatureSelectionResults
+        self, repetition_results: FeatureSelectionRawResults
     ) -> SelectedFeatures:
-        self.results = self.post_processor.fetch_results(repetition_results)
+        self.results = self._fetch_results(repetition_results)
         selected_features = self.post_processor.select_features(self.results)
         return selected_features
+
+    def _fetch_results(
+        self, results: FeatureSelectionRawResults
+    ) -> FeatureSelectionRawResults:
+
+        log.info("Retrieving results...")
+        Progressbar = self._make_progress_bar()
+        with Progressbar(max_value=self.n_repetitions * self.n_outer) as b:
+            progress = 0
+            b.update(progress)
+
+            fetched_results = []
+            for repetition in results:
+                ol_results = []
+
+                for outer_loop_result in repetition:
+                    fetched_outer_loop = outer_loop_result.result()
+                    ol_results.append(fetched_outer_loop)
+
+                    progress += 1
+                    b.update(progress)
+
+                fetched_results.append(ol_results)
+        return fetched_results
 
     def get_validation_curves(self) -> Dict[str, List]:
         """
@@ -347,16 +393,80 @@ class FeatureSelector:
                 raise ValueError(
                     f"feature_names provided should contain {self._n_features} elements"
                 )
-            min_names = [feature_names[f] for f in self._selected_features.min_feats]
-            mid_names = [feature_names[f] for f in self._selected_features.mid_feats]
-            max_names = [feature_names[f] for f in self._selected_features.max_feats]
+            min_names = [feature_names[f] for f in self._selected_features["min"]]
+            mid_names = [feature_names[f] for f in self._selected_features["mid"]]
+            max_names = [feature_names[f] for f in self._selected_features["max"]]
 
             return SelectedFeatures(
-                min_feats=min_names, max_feats=max_names, mid_feats=mid_names,
+                min=min_names,
+                max=max_names,
+                mid=mid_names,
             )
 
         return SelectedFeatures(
-            min_feats=self._selected_features.min_feats[:],
-            max_feats=self._selected_features.max_feats[:],
-            mid_feats=self._selected_features.mid_feats[:],
+            min=self._selected_features["min"][:],
+            max=self._selected_features["max"][:],
+            mid=self._selected_features["mid"][:],
         )
+
+    def get_params(self):
+        return {
+            "n_outer": self.n_outer,
+            "metric": self.metric,
+            "estimator": self.estimator,
+            "features_dropout_rate": self.features_dropout_rate,
+            "robust_minimum": self.robust_minimum,
+            "n_inner": self.n_inner,
+            "n_repetitions": self.n_repetitions,
+            "random_state": (
+                None
+                if self.random_state is None
+                else self.random_state.get_state()[1][0]
+            ),
+        }
+
+    def print_report(self, feature_names: List[str]):
+        """
+        Prints a small report of the results obtained from the feature selection.
+
+        Parameters
+        ----------
+        feature_names: List[str]
+            List with the name of the features of the original data
+
+        """
+        selected_features = self.get_selected_features(feature_names)
+        self._print_report(selected_features)
+
+    @staticmethod
+    def _print_report(selected_features: SelectedFeatures):
+        print(f"Min features ({len(selected_features['min'])}): "
+              f"{', '.join(selected_features['min'])}\n")
+        print(f"Mid features ({len(selected_features['mid'])}): "
+              f"{', '.join(selected_features['mid'])}\n")
+        print(f"Max features ({len(selected_features['max'])}): "
+              f"{', '.join(selected_features['max'])}\n")
+
+    def __repr__(self):
+        fs = (
+            f"FeatureSelector("
+            f"repetitions={self.n_repetitions},"
+            f" n_outer={self.n_outer},"
+            f" n_inner={self.n_inner},"
+            f" feature_dropout_rate={self.features_dropout_rate},"
+            f" is_fit={self.is_fit})"
+        )
+
+        return fs
+
+    def get_feature_selection_results(self) -> FeatureSelectionResults:
+        return FeatureSelectionResults(
+            selected_features=self.get_selected_features(),
+            score_curve=self.get_validation_curves()["total"][0],
+        )
+
+    @staticmethod
+    def _make_progress_bar():
+        if logging.getLogger(__name__).getEffectiveLevel() > logging.INFO:
+            return progressbar.NullBar
+        return progressbar.ProgressBar
