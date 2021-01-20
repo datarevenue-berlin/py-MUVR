@@ -77,7 +77,11 @@ def test_neg_mean_squared_error(y_pred, y_true, res):
 @pytest.mark.parametrize(
     ("y_pred", "y_true", "res"),
     [
-        (regression_pred, regression_true, -0.587156711483398),
+        (
+            regression_pred,
+            regression_true,
+            -np.mean((np.log(1 + regression_true) - np.log(1 + regression_pred)) ** 2),
+        ),
         (regression_true, regression_true, 0),
     ],
 )
