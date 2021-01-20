@@ -36,6 +36,6 @@ def test_readme_code_examples(data, readme_string):
     would run sequentially without raising errors"""
     python_snippets = PYTHON_SNIPPET_REGEX.findall(readme_string)
     for snippet in python_snippets:
-        if "read_csv" in snippet:
+        if "read_csv" in snippet:  # the file is an unexisting example
             continue
         exec(snippet.strip())
