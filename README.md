@@ -42,21 +42,25 @@ pip install omigami
   - e.g. this column will contain (1/0, pathological/control, treatment/non-treatment, etc.)
 
 ```python
-        import pandas as pd
-        data = pd.read_csv('test.csv')
-        X = data.drop(columns=["target"]).values
-        y = data["target"].values
+import pandas as pd
+data = pd.read_csv('test.csv')
+```
+from the data, numpy arrays have to be extracted:
+
+```python
+X = data.drop(columns=["target"]).values
+y = data["target"].values
 ```
 
 Once the data is ready, we can get a feature selector, fit it and look at the selected features:
 
 ```python
-from omigami.omigami import FeatureSelector
+from omigami.feature_selector import FeatureSelector
 feature_selector = FeatureSelector(
     n_repetitions=10,
     n_outer=5,
-    n_inner=4
-    estimator="RFC",   # random forest classifier
+    n_inner=4,
+    estimator="PLSC",   # partial least squares classifier
     metric="MISS",   # missclassifications
 )
 
@@ -70,17 +74,23 @@ It might take a while for it to complete, depending on your machine and on the m
 
 ### Selecting min, max and mid feature sets from `selected_features`
 
-The feature selector returns 3 possible feature sets in `feature_selector.selected_features`:
+The feature selector returns 3 possible feature sets that can be inpected as:
 
-- **`selected_features.min_feats`**: The minimum number of features for which the model performs optimally.
+```python
+min_feats = selected_features["min"]
+mid_feats = selected_features["min"]
+max_feats = selected_features["min"]
+```
+
+- **`min_feats`**: The minimum number of features for which the model performs optimally.
   - The minimal set of most informative features. If you choose less features, then the model will perform worse.
-- **`selected_features.max_feats`**: The maximum number of features for which the model performs optimally.
-  - The all-relevant feature set. This includes also all weak and redundante, but still relevant features – without including noisy and uninformative features. Using more features would also decrease the performance of the model.
-- **`selected_features.mid_feats`**: The geometric mean of both feature sets.
+- **`max_feats`**: The maximum number of features for which the model performs optimally.
+  - The all-relevant feature set. This includes also all weak and redundant, but still relevant features – without including noisy and uninformative features. Using more features would also decrease the performance of the model.
+- **`mid_feats`**: The geometric mean of both feature sets.
 
 ### Parallelization
 
-The feature selection can be time consuming. To speed it up execute the various CV loops in parallel using an [Executor object](https://docs.python.org/3/library/concurrent.futures.html) which
+The feature selection can be time consuming. To speed it up, Omigami gives the option of executing the various CV loops in parallel using an [Executor object](https://docs.python.org/3/library/concurrent.futures.html) which
 should be passed as keyword parameter to the fit method.
 
 So far, [dask](https://distributed.readthedocs.io/en/1.10.2/executor.html),
@@ -119,12 +129,26 @@ feature_selector.fit(X, y, executor=executor)
 5. The whole process is repeated `n_repetitions` times to improve the robustness of the selection.
 6. Feature ranks are averaged over all `n_outer` splits and all `n_repetitions`.
 
+## Permutation Test
+
+To test the significance of the selected features, Omigami implements as class to perform a permutation test for the feature selection
+
+```python
+from omigami.permutation_test import PermutationTest
+
+permutation_test = PermutationTest(feature_selector, n_permutations=10)
+permutation_test.fit(X, y)
+p_value = permutation_test.compute_p_values("min")
+print("p-value of the 'min' feature set: %s" % p_value)
+
+```
+
 ## Visualization
 
 Omigami provides some basic plotting utils to inspect the results of the feature selection. In particular, it provides two main methods:
 
-- :code:`plot_feature_rank`
-- :code:`plot_validation_curves`
+- `plot_feature_rank`
+- `plot_validation_curves`
 
 ```python
 from omigami.plot_utils import plot_feature_rank
@@ -153,8 +177,10 @@ fig = plot_validation_curves(feature_selector)
   - `"RFC"`: Random Forest Classifier
   - `"XGBC"`: XGBoost Classifier
   - `"PLSC"`: (partial least square classifier)
+  - `"PLSR"`: (partial least square regressor)
 - **metric**: Metric to be used to assess fitness of estimators. Supports
   - `"MISS"`: Number of missclassifications.
+  - several classification and regression scores from scikit-learn (refer to documentation)
 - **features_dropout_rate**: Fraction of features that will be dropped in each elimination step (float)
 - robust_minimum (float): Maximum normalized-score value to be considered when computing the selected features
 - random_state (int): Pass an int for a reproducible output (default: `None`)
