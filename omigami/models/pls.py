@@ -1,13 +1,15 @@
 import logging
+from typing import Union
 import numpy as np
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.preprocessing import OneHotEncoder
+from omigami.data_structures.data_types import NumpyArray
 
 
 log = logging.getLogger(__name__)
 
 
-def get_vip(model):
+def get_vip(model: PLSRegression) -> NumpyArray:
     # Calculate VIP
     # https://github.com/scikit-learn/scikit-learn/pull/13492
     # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3883573/#S6title
@@ -55,21 +57,16 @@ class PLSClassifier(PLSRegression):
     encoder = None
     feature_importances_ = None
 
-    def fit(self, X, Y):
+    def fit(self, X: NumpyArray, Y: NumpyArray):
         if self.n_components > X.shape[1]:
-            # there might be occasions in which the loops try to fit on a metrix
-            # with n_features, a PLS with n_components > n_features. The recursive
-            # feature elimination where we stop at n_features = 1 is a clear case
-            # of this
-            log.debug("Lowering PLSC n_components to %s during fit", X.shape[1])
-            self.set_params(n_components=X.shape[1])
+            reduce_pls_components(self, X.shape[1])
         self.encoder = OneHotEncoder().fit(Y.reshape(-1, 1))
         encoded_y = self.encoder.transform(Y.reshape(-1, 1)).toarray()
         super().fit(X, encoded_y)
         self.feature_importances_ = get_vip(self)
         return self
 
-    def predict(self, X, copy=True):
+    def predict(self, X: NumpyArray, copy: bool = True):
         y_pred = super().predict(X, copy=copy)
         y_pred = np.equal(y_pred.T, y_pred.max(axis=1)).T.astype(float)
         return self.encoder.inverse_transform(y_pred).ravel()
@@ -98,20 +95,23 @@ class PLSRegressor(PLSRegression):
 
     """
 
-    encoder = None
     feature_importances_ = None
 
-    def fit(self, X, Y):
+    def fit(self, X: NumpyArray, Y: NumpyArray):
         if self.n_components > X.shape[1]:
-            # there might be occasions in which the loops try to fit on a matrix
-            # with n_features, a PLS with n_components > n_features. The recursive
-            # feature elimination where we stop at n_features = 1 is a clear case
-            # of this
-            log.debug("Lowering PLSRegressor n_components to %s during fit", X.shape[1])
-            self.set_params(n_components=X.shape[1])
+            reduce_pls_components(self, X.shape[1])
         super().fit(X, Y)
         self.feature_importances_ = get_vip(self)
         return self
 
-    def predict(self, X, copy=True):
+    def predict(self, X: NumpyArray, copy: bool = True):
         return super().predict(X, copy=copy).ravel()
+
+
+def reduce_pls_components(pls: Union[PLSRegressor, PLSClassifier], n_components: int):
+    # there might be occasions in which the loops try to fit on a matrix
+    # with n_features, a PLS with n_components > n_features. The recursive
+    # feature elimination where we stop at n_features = 1 is a clear case
+    # of this
+    log.debug("Lowering PLS n_components to %s during fit", n_components)
+    pls.set_params(n_components=n_components)
