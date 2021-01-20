@@ -150,7 +150,7 @@ class PermutationTest:
     ) -> float:
         selected_features = feats_and_scores.selected_features
         score_curve = feats_and_scores.score_curve
-        features = getattr(selected_features, f"{model}_feats")
+        features = getattr(selected_features, model)
         n_feats = len(features)
         if model == "mid":
             # mid is the geometric mean, the score curve might not contain it
