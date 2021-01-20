@@ -96,9 +96,9 @@ SKLEARN_METRICS = _SKLEARN_CLASSIFICATION_METRICS.copy()
 SKLEARN_METRICS.update(_SKLEARN_REGRESSION_METRICS)
 
 
-def get_possible_classification_metrics() -> List[str]:
+def get_supported_classification_metrics() -> List[str]:
     return list(_SKLEARN_CLASSIFICATION_METRICS.keys())
 
 
-def get_possible_regression_metrics() -> List[str]:
+def get_supported_regression_metrics() -> List[str]:
     return list(_SKLEARN_REGRESSION_METRICS.keys())
