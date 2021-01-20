@@ -1,19 +1,22 @@
 import logging
-from typing import Iterable
+from typing import Iterable, Union
 from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
+from matplotlib.pyplot import Figure
 import matplotlib.ticker as mtick
 import pandas as pd
 from omigami.feature_selector import FeatureSelector
+from omigami.permutation_test import PermutationTest
 
 log = logging.getLogger(__name__)
 
 
-def plot_validation_curves(feature_selector: FeatureSelector, **figure_kwargs) -> Axes:
+def plot_validation_curves(
+    feature_selector: FeatureSelector, **figure_kwargs
+) -> Figure:
     if not feature_selector.is_fit:
-        log.warning(  # pylint: disable=logging-not-lazy
+        log.warning(
             "Validation curves have not been generated. To be able to plot"
-            + " call `select_features` method first"
+            " call `select_features` method first"
         )
         return None
     curves = feature_selector.get_validation_curves()
@@ -56,7 +59,7 @@ def plot_feature_rank(
     feature_names: Iterable = None,
     show_outliers: bool = True,
     **figure_kwargs
-):
+) -> Figure:
     if model not in {"min", "max", "mid"}:
         raise ValueError("The model parameter must be one of 'min', 'max' or 'mid'.")
 
@@ -122,4 +125,37 @@ def plot_feature_rank(
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
 
+    return fig
+
+
+def plot_permutation_scores(
+    permutation_test: PermutationTest,
+    model: str,
+    bins: Union[int, str, Iterable[float]] = "auto",
+    **fig_kwargs
+) -> Figure:
+    score, perm_scores = permutation_test.compute_permutation_scores(model)
+    p_value = permutation_test.compute_p_values(model, ranks=False)
+    fig, ax = plt.subplots(1, 1, **fig_kwargs)
+    ax.grid(linestyle=":", zorder=0)
+    counts, _, _ = ax.hist(
+        perm_scores,
+        bins=bins,
+        alpha=0.8,
+        edgecolor="white",
+        label="Permutation Scores",
+        zorder=10,
+    )
+    ax.vlines(
+        score,
+        ymin=0,
+        ymax=counts.max(),
+        color="k",
+        label="Feature Selection Score",
+        zorder=20,
+    )
+    ax.set_ylabel("Number of Occurrences")
+    ax.set_xlabel("Score")
+    ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
+    ax.set_title("Feature selection p-value = %1.3g" % p_value)
     return fig
