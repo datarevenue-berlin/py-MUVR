@@ -1,4 +1,5 @@
 import logging
+from typing import Iterable
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 import matplotlib.ticker as mtick
@@ -50,7 +51,11 @@ def plot_validation_curves(feature_selector: FeatureSelector, **figure_kwargs) -
 
 
 def plot_feature_rank(
-    feature_selector, model, feature_names=None, show_outliers=True, **figure_kwargs
+    feature_selector: FeatureSelector,
+    model: str,
+    feature_names: Iterable = None,
+    show_outliers: bool = True,
+    **figure_kwargs
 ):
     if model not in {"min", "max", "mid"}:
         raise ValueError("The model parameter must be one of 'min', 'max' or 'mid'.")
