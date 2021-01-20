@@ -53,9 +53,9 @@ class PostProcessor:
         average_ranks_max = average_ranks([r.max_eval.ranks for r in flat_results])
         features_min, features_mid, features_max = self._compute_n_features(results)
         return SelectedFeatures(
-            min_feats=get_best_n_features(average_ranks_min, features_min),
-            mid_feats=get_best_n_features(average_ranks_mid, features_mid),
-            max_feats=get_best_n_features(average_ranks_max, features_max),
+            min=get_best_n_features(average_ranks_min, features_min),
+            mid=get_best_n_features(average_ranks_mid, features_mid),
+            max=get_best_n_features(average_ranks_max, features_max),
         )
 
     def _compute_n_features(self, results: FeatureSelectionRawResults):
@@ -166,9 +166,9 @@ class PostProcessor:
         mid_feats = min(avg_scores.keys(), key=lambda x: abs(x - mid_feats))
 
         return SelectedFeatures(
-            mid_feats=n_to_features[mid_feats],
-            min_feats=n_to_features[min_feats],
-            max_feats=n_to_features[max_feats],
+            mid=n_to_features[mid_feats],
+            min=n_to_features[min_feats],
+            max=n_to_features[max_feats],
         )
 
     @staticmethod

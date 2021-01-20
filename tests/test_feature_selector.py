@@ -21,7 +21,12 @@ from omigami.feature_selector import FeatureSelector
 def fs():
     lr = LinearRegression()
     fs = FeatureSelector(
-        n_outer=8, n_repetitions=8, random_state=0, estimator=lr, metric="MISS"
+        n_outer=4,
+        n_repetitions=4,
+        random_state=0,
+        estimator=lr,
+        metric="MISS",
+        features_dropout_rate=0.1,
     )
     return fs
 
@@ -128,7 +133,7 @@ def test_evaluate_min_mid_and_max_features(fs, dataset, rfe_raw_results):
 
     assert res == ("min", "mid", "max")
     data_splitter.split_data.assert_called_with(
-        dataset, "split", best_features.max_feats
+        dataset, "split", best_features["max"]
     )
     assert fs.feature_evaluator.evaluate_features.call_count == 3
 
@@ -168,12 +173,11 @@ def test_get_selected_features(fs, mosquito):
     y = np.array([1] + [0, 1] * 14)
     fs.fit(X, y)
     selected_features = fs.get_selected_features()
-    assert selected_features.min_feats == fs._selected_features.min_feats
-    assert selected_features.min_feats == [0]
+    assert selected_features["min"] == fs._selected_features["min"]
     feature_names = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"]
     assert len(feature_names) == X.shape[1]
     selected_features_names = fs.get_selected_features(feature_names=feature_names)
-    assert selected_features_names.min_feats == ["A"]
+    assert len(selected_features_names["min"]) == len(selected_features["min"])
     with pytest.raises(ValueError):
         fs.get_selected_features(feature_names=["only-one-name"])
 
@@ -183,10 +187,10 @@ def test_get_params(fs):
     assert params["metric"] == "MISS"
     assert params["random_state"] == 0
     assert isinstance(params["estimator"], LinearRegression)
-    assert params["n_repetitions"] == 8
-    assert params["n_outer"] == 8
-    assert params["n_inner"] == 7
-    assert params["features_dropout_rate"] == 0.05
+    assert params["n_repetitions"] == 4
+    assert params["n_outer"] == 4
+    assert params["n_inner"] == 3
+    assert params["features_dropout_rate"] == 0.1
     assert params["robust_minimum"] == 0.05
     assert FeatureSelector(**params)
 
