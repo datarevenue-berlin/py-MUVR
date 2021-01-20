@@ -172,6 +172,7 @@ def test_get_selected_features(fs, mosquito):
     X = mosquito.X[:, 0:10]
     y = np.array([1] + [0, 1] * 14)
     fs.fit(X, y)
+    fs._selected_features = SelectedFeatures([0], [0], [0])
     selected_features = fs.get_selected_features()
     assert selected_features["min"] == fs._selected_features["min"]
     feature_names = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"]
