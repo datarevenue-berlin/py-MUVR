@@ -18,7 +18,7 @@ pip install omigami
 
 ## Motivation
 
-- It's hard to protect against selection bias on high-demensional omics data ([Krawczuk and Łukaszuk, 2016](https://www.sciencedirect.com/science/article/pii/S0933365715001426)). Even common cross-validation has been shown to overfit.
+- It's hard to protect against selection bias on high-dimensional omics data ([Krawczuk and Łukaszuk, 2016](https://www.sciencedirect.com/science/article/pii/S0933365715001426)). Even common cross-validation has been shown to overfit.
 - Most feature selection techniques focus on finding the minimal set of strongest features. Omitting redundant variables that are however still relevant to understanding the biochemical systems.
 - There's no freely available and easy-to-use Python tool that implements a minimally biased repeated double cross validation.
 - A robust selection requires many (100 - 5.000) models to be trained. Running such a large number of models in reasonable time, requires non-trivial parallelization.
@@ -74,7 +74,7 @@ It might take a while for it to complete, depending on your machine and on the m
 
 ### Selecting min, max and mid feature sets from `selected_features`
 
-The feature selector returns 3 possible feature sets that can be inpected as:
+The feature selector returns 3 possible feature sets that can be inspected as:
 
 ```python
 min_feats = selected_features["min"]
@@ -124,7 +124,7 @@ feature_selector.fit(X, y, executor=executor)
 
 1. The dataset is split into `n_outer` cross-validation splits.
 2. Each train split is further split into `n_inner` cross-validation splits.
-3. On each cross-validation split multivarate models are trained and evaluated.
+3. On each cross-validation split multivariate models are trained and evaluated.
 4. The least important fraction of features (`features_dropout_rate`) is removed, until there are no more features in the model
 5. The whole process is repeated `n_repetitions` times to improve the robustness of the selection.
 6. Feature ranks are averaged over all `n_outer` splits and all `n_repetitions`.
