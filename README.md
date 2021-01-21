@@ -176,11 +176,13 @@ fig = plot_validation_curves(feature_selector)
 - **estimator**: Multivariate model that you want to use for the feature selection. Supports
   - `"RFC"`: Random Forest Classifier
   - `"XGBC"`: XGBoost Classifier
-  - `"PLSC"`: (partial least square classifier)
-  - `"PLSR"`: (partial least square regressor)
+  - `"PLSC"`: Partial Least Square Classifier
+  - `"PLSR"`: Partial Least Square Regressor
+  - scikit-learn model and pipeline instances
 - **metric**: Metric to be used to assess fitness of estimators. Supports
   - `"MISS"`: Number of missclassifications.
-  - several classification and regression scores from scikit-learn (refer to documentation)
+  - several classification and regression scores from [scikit-learn](https://scikit-learn.org/stable/modules/model_evaluation.html) (refer to documentation)
+  - custom functions
 - **features_dropout_rate**: Fraction of features that will be dropped in each elimination step (float)
 - robust_minimum (float): Maximum normalized-score value to be considered when computing the selected features
 - random_state (int): Pass an int for a reproducible output (default: `None`)
