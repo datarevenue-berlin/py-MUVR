@@ -18,6 +18,7 @@ from omigami.data_structures import (
     MetricFunction,
     InputEstimator,
     NumpyArray,
+    FeatureSelectionRawResults,
     FeatureSelectionResults,
 )
 from omigami.feature_evaluator import FeatureEvaluator
@@ -110,7 +111,11 @@ class FeatureSelector:
         self.n_features = None
         self.random_state = None if random_state is None else RandomState(random_state)
         self.n_outer = n_outer
-        self.keep_fraction = 1 - features_dropout_rate
+        self.features_dropout_rate = features_dropout_rate
+        self.estimator = estimator
+        self.metric = metric
+        self.robust_minimum = robust_minimum
+        self._keep_fraction = 1 - features_dropout_rate
         self.n_repetitions = n_repetitions
         self.feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
 
@@ -177,7 +182,8 @@ class FeatureSelector:
         repetition_results = []
 
         log.info("Scheduling tasks...")
-        with progressbar.ProgressBar(max_value=self.n_repetitions * self.n_outer) as b:
+        Progressbar = self._make_progress_bar()
+        with Progressbar(max_value=self.n_repetitions * self.n_outer) as b:
             progress = 0
             b.update(progress)
             for _ in range(self.n_repetitions):
@@ -257,7 +263,7 @@ class FeatureSelector:
     def _remove_features(
         self, features: List[int], results: InnerLoopResults
     ) -> List[int]:
-        features_to_keep = int(np.floor(len(features) * self.keep_fraction))
+        features_to_keep = int(np.floor(len(features) * self._keep_fraction))
         features = self._select_n_best(results, features_to_keep)
         return features
 
@@ -302,9 +308,9 @@ class FeatureSelector:
     ) -> Tuple[
         FeatureEvaluationResults, FeatureEvaluationResults, FeatureEvaluationResults
     ]:
-        min_feats = best_features.min_feats
-        mid_feats = best_features.mid_feats
-        max_feats = best_features.max_feats
+        min_feats = best_features["min"]
+        mid_feats = best_features["mid"]
+        max_feats = best_features["max"]
 
         data_min_feats = data_splitter.split_data(input_data, split, min_feats)
         data_mid_feats = data_splitter.split_data(input_data, split, mid_feats)
@@ -317,18 +323,19 @@ class FeatureSelector:
         return min_eval, mid_eval, max_eval
 
     def _select_best_features(
-        self, repetition_results: FeatureSelectionResults
+        self, repetition_results: FeatureSelectionRawResults
     ) -> SelectedFeatures:
         self.results = self._fetch_results(repetition_results)
         selected_features = self.post_processor.select_features(self.results)
         return selected_features
 
     def _fetch_results(
-        self, results: FeatureSelectionResults
-    ) -> FeatureSelectionResults:
+        self, results: FeatureSelectionRawResults
+    ) -> FeatureSelectionRawResults:
 
         log.info("Retrieving results...")
-        with progressbar.ProgressBar(max_value=self.n_repetitions * self.n_outer) as b:
+        Progressbar = self._make_progress_bar()
+        with Progressbar(max_value=self.n_repetitions * self.n_outer) as b:
             progress = 0
             b.update(progress)
 
@@ -385,19 +392,33 @@ class FeatureSelector:
                 raise ValueError(
                     f"feature_names provided should contain {self.n_features} elements"
                 )
-            min_names = [feature_names[f] for f in self._selected_features.min_feats]
-            mid_names = [feature_names[f] for f in self._selected_features.mid_feats]
-            max_names = [feature_names[f] for f in self._selected_features.max_feats]
+            min_names = [feature_names[f] for f in self._selected_features["min"]]
+            mid_names = [feature_names[f] for f in self._selected_features["mid"]]
+            max_names = [feature_names[f] for f in self._selected_features["max"]]
 
-            return SelectedFeatures(
-                min_feats=min_names, max_feats=max_names, mid_feats=mid_names,
-            )
+            return SelectedFeatures(min=min_names, max=max_names, mid=mid_names,)
 
         return SelectedFeatures(
-            min_feats=self._selected_features.min_feats[:],
-            max_feats=self._selected_features.max_feats[:],
-            mid_feats=self._selected_features.mid_feats[:],
+            min=self._selected_features["min"][:],
+            max=self._selected_features["max"][:],
+            mid=self._selected_features["mid"][:],
         )
+
+    def get_params(self):
+        return {
+            "n_outer": self.n_outer,
+            "metric": self.metric,
+            "estimator": self.estimator,
+            "features_dropout_rate": self.features_dropout_rate,
+            "robust_minimum": self.robust_minimum,
+            "n_inner": self.n_inner,
+            "n_repetitions": self.n_repetitions,
+            "random_state": (
+                None
+                if self.random_state is None
+                else self.random_state.get_state()[1][0]
+            ),
+        }
 
     def print_report(self, feature_names: List[str]):
         """
@@ -415,16 +436,16 @@ class FeatureSelector:
     @staticmethod
     def _print_report(selected_features: SelectedFeatures):
         print(
-            f"Min features ({len(selected_features.min_feats)}): "
-            f"{', '.join(selected_features.min_feats)}\n"
+            f"Min features ({len(selected_features['min'])}): "
+            f"{', '.join(selected_features['min'])}\n"
         )
         print(
-            f"Mid features ({len(selected_features.mid_feats)}): "
-            f"{', '.join(selected_features.mid_feats)}\n"
+            f"Mid features ({len(selected_features['mid'])}): "
+            f"{', '.join(selected_features['mid'])}\n"
         )
         print(
-            f"Max features ({len(selected_features.max_feats)}): "
-            f"{', '.join(selected_features.max_feats)}\n"
+            f"Max features ({len(selected_features['max'])}): "
+            f"{', '.join(selected_features['max'])}\n"
         )
 
     def __repr__(self):
@@ -433,8 +454,20 @@ class FeatureSelector:
             f"repetitions={self.n_repetitions},"
             f" n_outer={self.n_outer},"
             f" n_inner={self.n_inner},"
-            f" keep_fraction={self.keep_fraction},"
+            f" feature_dropout_rate={self.features_dropout_rate},"
             f" is_fit={self.is_fit})"
         )
 
         return fs
+
+    def get_feature_selection_results(self) -> FeatureSelectionResults:
+        return FeatureSelectionResults(
+            selected_features=self.get_selected_features(),
+            score_curve=self.get_validation_curves()["total"][0],
+        )
+
+    @staticmethod
+    def _make_progress_bar():
+        if logging.getLogger(__name__).getEffectiveLevel() > logging.INFO:
+            return progressbar.NullBar
+        return progressbar.ProgressBar

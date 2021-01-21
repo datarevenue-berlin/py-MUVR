@@ -7,7 +7,12 @@ from sklearn.linear_model import LinearRegression
 from loky import get_reusable_executor
 from dask.distributed import Client
 
-from omigami.data_structures import InputDataset, SelectedFeatures
+from omigami.data_structures import (
+    InputDataset,
+    SelectedFeatures,
+    FeatureSelectionResults,
+    ScoreCurve,
+)
 from omigami.data_splitter import DataSplitter
 from omigami.feature_selector import FeatureSelector
 
@@ -16,7 +21,12 @@ from omigami.feature_selector import FeatureSelector
 def fs():
     lr = LinearRegression()
     fs = FeatureSelector(
-        n_outer=8, n_repetitions=8, random_state=0, estimator=lr, metric="MISS"
+        n_outer=4,
+        n_repetitions=4,
+        random_state=0,
+        estimator=lr,
+        metric="MISS",
+        features_dropout_rate=0.1,
     )
     return fs
 
@@ -123,7 +133,7 @@ def test_evaluate_min_mid_and_max_features(fs, dataset, rfe_raw_results):
 
     assert res == ("min", "mid", "max")
     data_splitter.split_data.assert_called_with(
-        dataset, "split", best_features.max_feats
+        dataset, "split", best_features["max"]
     )
     assert fs.feature_evaluator.evaluate_features.call_count == 3
 
@@ -146,9 +156,7 @@ def test_deferred_fit(executor):
 
 
 def test_select_best_features(fs):
-    fs._fetch_results = Mock(
-        fs._fetch_results, return_value="results"
-    )
+    fs._fetch_results = Mock(fs._fetch_results, return_value="results")
     fs.post_processor.select_features = Mock(
         fs.post_processor.select_features, return_value="features"
     )
@@ -164,15 +172,28 @@ def test_get_selected_features(fs, mosquito):
     X = mosquito.X[:, 0:10]
     y = np.array([1] + [0, 1] * 14)
     fs.fit(X, y)
+    fs._selected_features = SelectedFeatures([0], [0], [0])
     selected_features = fs.get_selected_features()
-    assert selected_features.min_feats == fs._selected_features.min_feats
-    assert selected_features.min_feats == [0]
+    assert selected_features["min"] == fs._selected_features["min"]
     feature_names = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"]
     assert len(feature_names) == X.shape[1]
     selected_features_names = fs.get_selected_features(feature_names=feature_names)
-    assert selected_features_names.min_feats == ["A"]
+    assert len(selected_features_names["min"]) == len(selected_features["min"])
     with pytest.raises(ValueError):
         fs.get_selected_features(feature_names=["only-one-name"])
+
+
+def test_get_params(fs):
+    params = fs.get_params()
+    assert params["metric"] == "MISS"
+    assert params["random_state"] == 0
+    assert isinstance(params["estimator"], LinearRegression)
+    assert params["n_repetitions"] == 4
+    assert params["n_outer"] == 4
+    assert params["n_inner"] == 3
+    assert params["features_dropout_rate"] == 0.1
+    assert params["robust_minimum"] == 0.05
+    assert FeatureSelector(**params)
 
 
 def test_make_report(fs):
@@ -183,3 +204,16 @@ def test_make_report(fs):
 
     fs.get_selected_features.assert_called_once_with(["feature_names"])
     fs._print_report.assert_called_once_with("selected")
+
+
+def test_get_features_and_scores(fs):
+    fs.get_selected_features = Mock(fs.get_selected_features, return_value="sel_feats")
+    fs.get_validation_curves = Mock(
+        fs.get_validation_curves, return_value={"total": [ScoreCurve(None, None)]}
+    )
+    fs_results = fs.get_feature_selection_results()
+    score_curve = fs_results.score_curve
+    assert isinstance(fs_results, FeatureSelectionResults)
+    assert isinstance(score_curve, ScoreCurve)
+    fs.get_selected_features.assert_called_once()
+    fs.get_validation_curves.assert_called_once()

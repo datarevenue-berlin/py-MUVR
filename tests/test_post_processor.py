@@ -113,12 +113,12 @@ def test_select_features(repetitions):
     pp = PostProcessor(robust_minimum=0.05)
     selected_feats = pp.select_features(repetitions)
     # the scores have a deep minimum at 2, 3 and 4 features
-    assert selected_feats.min_feats
-    assert selected_feats.mid_feats
-    assert selected_feats.max_feats
-    assert sorted(selected_feats.min_feats) == [1, 2]
-    assert sorted(selected_feats.mid_feats) == [1, 2, 3]
-    assert sorted(selected_feats.max_feats) == [0, 1, 2, 3]
+    assert selected_feats["min"]
+    assert selected_feats["mid"]
+    assert selected_feats["max"]
+    assert sorted(selected_feats["min"]) == [1, 2]
+    assert sorted(selected_feats["mid"]) == [1, 2, 3]
+    assert sorted(selected_feats["max"]) == [0, 1, 2, 3]
 
 
 def test_compute_n_features(repetitions):

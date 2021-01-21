@@ -173,12 +173,20 @@ def dataset():
     return InputDataset(X=X, y=y, groups=np.arange(12))
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mosquito():
-    df = pd.read_csv(ASSETS_DIR / "mosquito.csv").set_index("Unnamed: 0")
+    df = pd.read_csv(ASSETS_DIR / "mosquito.csv", index_col=0)
     df = df.sample(frac=1)
     X = df.drop(columns=["Yotu"]).values
     y = df.Yotu.values
     groups = df.index
     return InputDataset(X=X, y=y, groups=groups)
 
+
+@pytest.fixture(scope="session")
+def freelive():
+    df = pd.read_csv(ASSETS_DIR / "freelive.csv", index_col=0)
+    X = df.drop(columns=["YR"]).values
+    y = df.YR.values
+    groups = df.index
+    return InputDataset(X=X, y=y, groups=groups)

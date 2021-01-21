@@ -15,5 +15,6 @@ from omigami.data_structures.data_models import (
     FeatureEliminationResults,
     OuterLoopResults,
     ScoreCurve,
-    FeatureSelectionResults
+    FeatureSelectionRawResults,
+    FeatureSelectionResults,
 )
