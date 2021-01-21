@@ -107,28 +107,31 @@ class FeatureSelector:
         n_repetitions: int = 8,
         random_state: int = None,
     ):
+        self.n_outer = n_outer
+        self.metric = metric
+        self.estimator = estimator
+        self.features_dropout_rate = features_dropout_rate
+        self.robust_minimum = robust_minimum
+        self.n_inner = self._set_n_inner(n_inner)
+        self.n_repetitions = n_repetitions
+        self.random_state = None if random_state is None else RandomState(random_state)
+
+        self._keep_fraction = 1 - features_dropout_rate
         self.is_fit = False
         self._n_features = None
-        self.random_state = None if random_state is None else RandomState(random_state)
-        self.n_outer = n_outer
-        self.features_dropout_rate = features_dropout_rate
-        self.estimator = estimator
-        self.metric = metric
-        self.robust_minimum = robust_minimum
-        self._keep_fraction = 1 - features_dropout_rate
-        self.n_repetitions = n_repetitions
-        self.feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
-
-        if not n_inner:
-            log.info("Parameter n_inner is not specified, setting it to n_outer - 1")
-            n_inner = n_outer - 1
-        self.n_inner = n_inner
-
         self._selected_features = None
         self.outer_loop_aggregation = None
         self.results = None
         self._minimum_features = 1
-        self.post_processor = PostProcessor(robust_minimum)
+
+        self._feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
+        self._post_processor = PostProcessor(robust_minimum)
+
+    def _set_n_inner(self, n_inner: Union[int, None]) -> int:
+        if not n_inner:
+            log.info("Parameter n_inner is not specified, setting it to n_outer - 1")
+            n_inner = self.n_outer - 1
+        return n_inner
 
     def fit(
         self,
@@ -171,7 +174,7 @@ class FeatureSelector:
         size, n_features = X.shape
         groups = self._get_groups(groups, size)
         input_data = InputDataset(X=X, y=y, groups=groups)
-        self.feature_evaluator.set_n_initial_features(n_features)
+        self._feature_evaluator.set_n_initial_features(n_features)
 
         log.info(
             f"Running {self.n_repetitions} repetitions and"
@@ -246,7 +249,7 @@ class FeatureSelector:
                     input_data, inner_split, feature_set
                 )
 
-                feature_evaluation_results = self.feature_evaluator.evaluate_features(
+                feature_evaluation_results = self._feature_evaluator.evaluate_features(
                     inner_loop_data, feature_set
                 )
 
@@ -283,7 +286,7 @@ class FeatureSelector:
         outer_split: Split,
         data_splitter: DataSplitter,
     ) -> OuterLoopResults:
-        feature_elimination_results = self.post_processor.process_feature_elim_results(
+        feature_elimination_results = self._post_processor.process_feature_elim_results(
             raw_feature_elim_results
         )
         min_eval, mid_eval, max_eval = self._evaluate_min_mid_and_max_features(
@@ -317,9 +320,9 @@ class FeatureSelector:
         data_mid_feats = data_splitter.split_data(input_data, split, mid_feats)
         data_max_feats = data_splitter.split_data(input_data, split, max_feats)
 
-        min_eval = self.feature_evaluator.evaluate_features(data_min_feats, min_feats)
-        mid_eval = self.feature_evaluator.evaluate_features(data_mid_feats, mid_feats)
-        max_eval = self.feature_evaluator.evaluate_features(data_max_feats, max_feats)
+        min_eval = self._feature_evaluator.evaluate_features(data_min_feats, min_feats)
+        mid_eval = self._feature_evaluator.evaluate_features(data_mid_feats, mid_feats)
+        max_eval = self._feature_evaluator.evaluate_features(data_max_feats, max_feats)
 
         return min_eval, mid_eval, max_eval
 
@@ -327,7 +330,7 @@ class FeatureSelector:
         self, repetition_results: FeatureSelectionRawResults
     ) -> SelectedFeatures:
         self.results = self._fetch_results(repetition_results)
-        selected_features = self.post_processor.select_features(self.results)
+        selected_features = self._post_processor.select_features(self.results)
         return selected_features
 
     def _fetch_results(
@@ -358,7 +361,7 @@ class FeatureSelector:
         """
         Refer to post_processor.PostProcessor.get_validation_curves for documentation
         """
-        return self.post_processor.get_validation_curves(self.results)
+        return self._post_processor.get_validation_curves(self.results)
 
     def get_selected_features(
         self, feature_names: List[str] = None
@@ -389,25 +392,23 @@ class FeatureSelector:
             raise NotFitException("The feature selector is not fit yet")
 
         if feature_names is not None:
-            if len(feature_names) != self._n_features:
-                raise ValueError(
-                    f"feature_names provided should contain {self._n_features} elements"
-                )
-            min_names = [feature_names[f] for f in self._selected_features["min"]]
-            mid_names = [feature_names[f] for f in self._selected_features["mid"]]
-            max_names = [feature_names[f] for f in self._selected_features["max"]]
+            selected_feature_names = self._get_selected_feature_names(feature_names)
+            return selected_feature_names
 
-            return SelectedFeatures(
-                min=min_names,
-                max=max_names,
-                mid=mid_names,
+        else:
+            return self._selected_features
+
+    def _get_selected_feature_names(self, feature_names: List[str]) -> SelectedFeatures:
+        if len(feature_names) != self._n_features:
+            raise ValueError(
+                f"feature_names provided should contain {self._n_features} elements"
             )
+        min_names = [feature_names[f] for f in self._selected_features["min"]]
+        mid_names = [feature_names[f] for f in self._selected_features["mid"]]
+        max_names = [feature_names[f] for f in self._selected_features["max"]]
 
-        return SelectedFeatures(
-            min=self._selected_features["min"][:],
-            max=self._selected_features["max"][:],
-            mid=self._selected_features["mid"][:],
-        )
+        selected_feature_names = SelectedFeatures(min=min_names, max=max_names, mid=mid_names, )
+        return selected_feature_names
 
     def get_params(self):
         return {

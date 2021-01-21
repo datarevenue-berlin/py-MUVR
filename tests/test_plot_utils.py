@@ -5,10 +5,10 @@ from omigami.feature_selector import FeatureSelector
 
 @pytest.fixture
 def fit_feature_selector(results):
-    fs = FeatureSelector(n_outer=5, metric="MISS", estimator="RFC")
+    fs = FeatureSelector(n_outer=3, metric="MISS", estimator="RFC")
     fs.results = results
     fs.is_fit = True
-    fs._selected_features = fs.post_processor.select_features(results)
+    fs._selected_features = fs._post_processor.select_features(results)
     return fs
 
 

@@ -46,7 +46,7 @@ def fit_feature_selector(results):
     fs = FeatureSelector(n_outer=5, metric="MISS", estimator="PLSC",)
     fs.is_fit = True
     fs.results = results
-    sel_feats = fs.post_processor.select_features(results)
+    sel_feats = fs._post_processor.select_features(results)
     fs._selected_features = sel_feats
     return fs
 
@@ -59,7 +59,7 @@ def test_permutation_test():
 
 
 def test_fit(fit_feature_selector):
-    n_permutations = 5
+    n_permutations = 2
     pt = permutation_test.PermutationTest(
         feature_selector=fit_feature_selector, n_permutations=n_permutations
     )

@@ -76,11 +76,11 @@ def test_run_outer_loop(fs):
     fs._create_outer_loop_results = Mock(
         spec=fs._create_outer_loop_results, return_value="outer_loop_res"
     )
-    fs.feature_evaluator.evaluate_features = Mock(
-        spec=fs.feature_evaluator.evaluate_features, return_value="res"
+    fs._feature_evaluator.evaluate_features = Mock(
+        spec=fs._feature_evaluator.evaluate_features, return_value="res"
     )
-    fs.post_processor.process_feature_elim_results = Mock(
-        fs.post_processor.process_feature_elim_results, return_value="processed_results"
+    fs._post_processor.process_feature_elim_results = Mock(
+        fs._post_processor.process_feature_elim_results, return_value="processed_results"
     )
     inner_results = ["res", "res"]
     features = [0, 1, 2]
@@ -92,7 +92,7 @@ def test_run_outer_loop(fs):
     data_splitter.iter_inner_splits.assert_called_with("outer_split")
     data_splitter.split_data.assert_called_with(input_data, 2, features)
     fs._remove_features.assert_called_once_with(features, inner_results)
-    fs.feature_evaluator.evaluate_features.assert_called_with("split", features)
+    fs._feature_evaluator.evaluate_features.assert_called_with("split", features)
     fs._create_outer_loop_results.assert_called_with(
         raw_results, input_data, "outer_split", data_splitter
     )
@@ -121,8 +121,8 @@ def test_create_outer_loop_results():
 
 def test_evaluate_min_mid_and_max_features(fs, dataset, rfe_raw_results):
     best_features = SelectedFeatures([1, 2], [1, 2, 3, 4], [1, 2, 3])
-    fs.feature_evaluator.evaluate_features = Mock(
-        spec=fs.feature_evaluator.evaluate_features, side_effect=["min", "mid", "max"]
+    fs._feature_evaluator.evaluate_features = Mock(
+        spec=fs._feature_evaluator.evaluate_features, side_effect=["min", "mid", "max"]
     )
     data_splitter = Mock(DataSplitter)
     data_splitter.split_data = Mock(spec=data_splitter.split_data, return_value="data")
@@ -135,7 +135,7 @@ def test_evaluate_min_mid_and_max_features(fs, dataset, rfe_raw_results):
     data_splitter.split_data.assert_called_with(
         dataset, "split", best_features["max"]
     )
-    assert fs.feature_evaluator.evaluate_features.call_count == 3
+    assert fs._feature_evaluator.evaluate_features.call_count == 3
 
 
 @pytest.mark.parametrize(
@@ -147,7 +147,7 @@ def test_deferred_fit(executor):
     y = np.array([np.random.choice([0, 1]) for _ in range(10)])
     lr = LinearRegression()
     fs = FeatureSelector(
-        n_outer=8, n_repetitions=8, random_state=0, estimator=lr, metric="MISS",
+        n_outer=3, n_repetitions=2, random_state=0, estimator=lr, metric="MISS",
     )
     fitted_fs = fs.fit(X, y, executor=executor)
     assert fitted_fs is fs
@@ -157,15 +157,15 @@ def test_deferred_fit(executor):
 
 def test_select_best_features(fs):
     fs._fetch_results = Mock(fs._fetch_results, return_value="results")
-    fs.post_processor.select_features = Mock(
-        fs.post_processor.select_features, return_value="features"
+    fs._post_processor.select_features = Mock(
+        fs._post_processor.select_features, return_value="features"
     )
 
     selected_features = fs._select_best_features("rep results")
 
     assert selected_features == "features"
     fs._fetch_results.assert_called_once_with("rep results")
-    fs.post_processor.select_features.assert_called_once_with("results")
+    fs._post_processor.select_features.assert_called_once_with("results")
 
 
 def test_get_selected_features(fs, mosquito):
