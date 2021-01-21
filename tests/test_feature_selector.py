@@ -50,7 +50,7 @@ def test_fit(fs):
     y = np.array([np.random.choice([0, 1]) for _ in range(10)])
     fitted_fs = fs.fit(X, y)
     assert fitted_fs is fs
-    assert fs.get_selected_features()
+    assert fs._selected_features
     assert fs.is_fit
 
 
@@ -151,7 +151,7 @@ def test_deferred_fit(executor):
     )
     fitted_fs = fs.fit(X, y, executor=executor)
     assert fitted_fs is fs
-    assert fs.get_selected_features()
+    assert fs._selected_features
     assert fs.is_fit
 
 
@@ -168,19 +168,19 @@ def test_select_best_features(fs):
     fs._post_processor.select_features.assert_called_once_with("results")
 
 
-def test_get_selected_features(fs, mosquito):
+def test_get_selected_feature_names(fs, mosquito):
     X = mosquito.X[:, 0:10]
     y = np.array([1] + [0, 1] * 14)
     fs.fit(X, y)
     fs._selected_features = SelectedFeatures([0], [0], [0])
-    selected_features = fs.get_selected_features()
-    assert selected_features["min"] == fs._selected_features["min"]
+    selected_features = fs._selected_features
     feature_names = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"]
-    assert len(feature_names) == X.shape[1]
-    selected_features_names = fs.get_selected_features(feature_names=feature_names)
+
+    selected_features_names = fs._get_selected_feature_names(feature_names=feature_names)
+
     assert len(selected_features_names["min"]) == len(selected_features["min"])
     with pytest.raises(ValueError):
-        fs.get_selected_features(feature_names=["only-one-name"])
+        fs._get_selected_feature_names(feature_names=["only-one-name"])
 
 
 def test_get_params(fs):
@@ -196,24 +196,19 @@ def test_get_params(fs):
     assert FeatureSelector(**params)
 
 
-def test_make_report(fs):
-    fs.get_selected_features = Mock(fs.get_selected_features, return_value="selected")
-    fs._print_report = Mock(fs._print_report)
-
-    fs.print_report(["feature_names"])
-
-    fs.get_selected_features.assert_called_once_with(["feature_names"])
-    fs._print_report.assert_called_once_with("selected")
-
-
-def test_get_features_and_scores(fs):
-    fs.get_selected_features = Mock(fs.get_selected_features, return_value="sel_feats")
-    fs.get_validation_curves = Mock(
-        fs.get_validation_curves, return_value={"total": [ScoreCurve(None, None)]}
+def test_get_feature_selection_results(fs):
+    fs._selected_features = [1, 2, 3]
+    fs.is_fit = True
+    fs._get_selected_feature_names = Mock(fs._get_selected_feature_names, return_value="sel_feat_names")
+    fs._get_validation_curves = Mock(
+        fs._get_validation_curves, return_value={"total": [ScoreCurve(None, None)]}
     )
-    fs_results = fs.get_feature_selection_results()
-    score_curve = fs_results.score_curve
+
+    fs_results = fs.get_feature_selection_results(["names"])
+
     assert isinstance(fs_results, FeatureSelectionResults)
-    assert isinstance(score_curve, ScoreCurve)
-    fs.get_selected_features.assert_called_once()
-    fs.get_validation_curves.assert_called_once()
+    assert isinstance(fs_results.score_curves["total"][0], ScoreCurve)
+    assert fs_results.selected_features == fs._selected_features
+    assert fs_results.selected_feature_names == "sel_feat_names"
+    fs._get_selected_feature_names.assert_called_once_with(["names"])
+    fs._get_validation_curves.assert_called_once()

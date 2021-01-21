@@ -149,14 +149,14 @@ class PermutationTest:
         model: str, feats_and_scores: FeatureSelectionResults
     ) -> float:
         selected_features = feats_and_scores.selected_features
-        score_curve = feats_and_scores.score_curve
+        total_score_curve = feats_and_scores.score_curves["total"][0]
         features = getattr(selected_features, model)
         n_feats = len(features)
         if model == "mid":
             # mid is the geometric mean, the score curve might not contain it
-            n_feats = min(score_curve.n_features, key=lambda x: abs(x - n_feats))
-        idx = score_curve.n_features.index(n_feats)
-        return score_curve.scores[idx]
+            n_feats = min(total_score_curve.n_features, key=lambda x: abs(x - n_feats))
+        idx = total_score_curve.n_features.index(n_feats)
+        return total_score_curve.scores[idx]
 
     @staticmethod
     def _rank_data(sample: float, population: Iterable):

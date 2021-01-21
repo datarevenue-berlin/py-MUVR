@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from omigami import FeatureSelector
 from omigami.data_structures import (
     FeatureEvaluationResults,
     FeatureRanks,
@@ -16,7 +17,7 @@ ASSETS_DIR = Path(__file__).parent / "assets"
 
 
 @pytest.fixture(scope="session")
-def results():
+def raw_results():
     return [
         [
             OuterLoopResults(
@@ -190,3 +191,13 @@ def freelive():
     y = df.YR.values
     groups = df.index
     return InputDataset(X=X, y=y, groups=groups)
+
+
+@pytest.fixture(scope="session")
+def fs_results(raw_results):
+    fs = FeatureSelector(n_outer=3, metric="MISS", estimator="RFC")
+    fs._raw_results = raw_results
+    fs.is_fit = True
+    fs._selected_features = fs._post_processor.select_features(raw_results)
+    fs_results = fs.get_feature_selection_results()
+    return fs_results

@@ -11,42 +11,47 @@ from omigami.data_structures import (
 
 
 @pytest.fixture
-def fit_permutation_test():
+def fit_permutation_test(raw_results):
 
     fs = FeatureSelector(n_outer=5, metric="MISS", estimator="PLSC",)
     pt = permutation_test.PermutationTest(feature_selector=fs, n_permutations=4)
 
     pt.res = FeatureSelectionResults(
+        raw_results,
         SelectedFeatures(min=[0, 1], max=[0, 1, 4, 3], mid=[0, 1, 4]),
-        ScoreCurve(n_features=[2, 3, 4, 5], scores=[4.0, 4.5, 4.0, 4.75]),
+        {"total": [ScoreCurve(n_features=[2, 3, 4, 5], scores=[4.0, 4.5, 4.0, 4.75])]},
     )
     pt.res_perm = [
         FeatureSelectionResults(
+            raw_results,
             SelectedFeatures(min=[0], max=[0, 1, 2], mid=[0, 1]),
-            ScoreCurve(n_features=[1, 2, 3], scores=[4.0, 4.5, 4.5]),
+            {"total": [ScoreCurve(n_features=[1, 2, 3], scores=[4.0, 4.5, 4.5])]},
         ),
         FeatureSelectionResults(
+            raw_results,
             SelectedFeatures(min=[0], max=[0, 1, 2], mid=[0, 1]),
-            ScoreCurve(n_features=[1, 2, 3], scores=[4.0, 4.5, 4.5]),
+            {"total": [ScoreCurve(n_features=[1, 2, 3], scores=[4.0, 4.5, 4.5])]},
         ),
         FeatureSelectionResults(
+            raw_results,
             SelectedFeatures(min=[0], max=[0, 1, 2], mid=[0, 1]),
-            ScoreCurve(n_features=[1, 2, 3], scores=[4.0, 4.6, 4.9]),
+            {"total": [ScoreCurve(n_features=[1, 2, 3], scores=[4.0, 4.6, 4.9])]},
         ),
         FeatureSelectionResults(
+            raw_results,
             SelectedFeatures(min=[0], max=[0, 1, 2], mid=[0, 1]),
-            ScoreCurve(n_features=[1, 2, 3], scores=[4.1, 4.6, 4.9]),
+            {"total": [ScoreCurve(n_features=[1, 2, 3], scores=[4.1, 4.6, 4.9])]},
         ),
     ]
     return pt
 
 
 @pytest.fixture
-def fit_feature_selector(results):
+def fit_feature_selector(raw_results):
     fs = FeatureSelector(n_outer=5, metric="MISS", estimator="PLSC",)
     fs.is_fit = True
-    fs.results = results
-    sel_feats = fs._post_processor.select_features(results)
+    fs._raw_results = raw_results
+    sel_feats = fs._post_processor.select_features(raw_results)
     fs._selected_features = sel_feats
     return fs
 

@@ -116,12 +116,11 @@ class FeatureSelector:
         self.n_repetitions = n_repetitions
         self.random_state = None if random_state is None else RandomState(random_state)
 
-        self._keep_fraction = 1 - features_dropout_rate
         self.is_fit = False
+        self._keep_fraction = 1 - features_dropout_rate
         self._n_features = None
         self._selected_features = None
-        self.outer_loop_aggregation = None
-        self.results = None
+        self._raw_results = None
         self._minimum_features = 1
 
         self._feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
@@ -329,8 +328,8 @@ class FeatureSelector:
     def _select_best_features(
         self, repetition_results: FeatureSelectionRawResults
     ) -> SelectedFeatures:
-        self.results = self._fetch_results(repetition_results)
-        selected_features = self._post_processor.select_features(self.results)
+        self._raw_results = self._fetch_results(repetition_results)
+        selected_features = self._post_processor.select_features(self._raw_results)
         return selected_features
 
     def _fetch_results(
@@ -357,16 +356,12 @@ class FeatureSelector:
                 fetched_results.append(ol_results)
         return fetched_results
 
-    def get_validation_curves(self) -> Dict[str, List]:
-        """
-        Refer to post_processor.PostProcessor.get_validation_curves for documentation
-        """
-        return self._post_processor.get_validation_curves(self.results)
-
-    def get_selected_features(
+    def get_feature_selection_results(
         self, feature_names: List[str] = None
-    ) -> SelectedFeatures:
-        """Retrieve the selected feature for the three models. Features are normally
+    ) -> FeatureSelectionResults:
+        """
+        TODO: update docstring
+        Retrieve the selected feature for the three models. Features are normally
         returned as 0-based integer indices representing the columns of the input
         predictor variables (X), however if a list of feature names is provided via
         `feature_names`, the feature names are returned instead.
@@ -387,18 +382,28 @@ class FeatureSelector:
         NotFitException
             if the `fit` method was not called successfully already
         """
-
         if not self.is_fit:
             raise NotFitException("The feature selector is not fit yet")
 
-        if feature_names is not None:
-            selected_feature_names = self._get_selected_feature_names(feature_names)
-            return selected_feature_names
+        return FeatureSelectionResults(
+            raw_results=self._raw_results,
+            selected_features=self._selected_features,
+            score_curves=self._get_validation_curves(),
+            selected_feature_names=self._get_selected_feature_names(feature_names)
+        )
 
-        else:
-            return self._selected_features
+    def _get_validation_curves(self) -> Dict[str, List]:
+        """
+        Refer to post_processor.PostProcessor.get_validation_curves for documentation
+        """
+        return self._post_processor.get_validation_curves(self._raw_results)
 
-    def _get_selected_feature_names(self, feature_names: List[str]) -> SelectedFeatures:
+    def _get_selected_feature_names(
+        self, feature_names: Union[None, List[str]]
+    ) -> Union[None, SelectedFeatures]:
+        if feature_names is None:
+            return feature_names
+
         if len(feature_names) != self._n_features:
             raise ValueError(
                 f"feature_names provided should contain {self._n_features} elements"
@@ -407,7 +412,11 @@ class FeatureSelector:
         mid_names = [feature_names[f] for f in self._selected_features["mid"]]
         max_names = [feature_names[f] for f in self._selected_features["max"]]
 
-        selected_feature_names = SelectedFeatures(min=min_names, max=max_names, mid=mid_names, )
+        selected_feature_names = SelectedFeatures(
+            min=min_names,
+            max=max_names,
+            mid=mid_names,
+        )
         return selected_feature_names
 
     def get_params(self):
@@ -426,28 +435,6 @@ class FeatureSelector:
             ),
         }
 
-    def print_report(self, feature_names: List[str]):
-        """
-        Prints a small report of the results obtained from the feature selection.
-
-        Parameters
-        ----------
-        feature_names: List[str]
-            List with the name of the features of the original data
-
-        """
-        selected_features = self.get_selected_features(feature_names)
-        self._print_report(selected_features)
-
-    @staticmethod
-    def _print_report(selected_features: SelectedFeatures):
-        print(f"Min features ({len(selected_features['min'])}): "
-              f"{', '.join(selected_features['min'])}\n")
-        print(f"Mid features ({len(selected_features['mid'])}): "
-              f"{', '.join(selected_features['mid'])}\n")
-        print(f"Max features ({len(selected_features['max'])}): "
-              f"{', '.join(selected_features['max'])}\n")
-
     def __repr__(self):
         fs = (
             f"FeatureSelector("
@@ -459,12 +446,6 @@ class FeatureSelector:
         )
 
         return fs
-
-    def get_feature_selection_results(self) -> FeatureSelectionResults:
-        return FeatureSelectionResults(
-            selected_features=self.get_selected_features(),
-            score_curve=self.get_validation_curves()["total"][0],
-        )
 
     @staticmethod
     def _make_progress_bar():
