@@ -10,6 +10,15 @@ from omigami.permutation_test import PermutationTest
 log = logging.getLogger(__name__)
 
 
+class PALETTE:
+    lightblue = "#deebf7"
+    blue = "#3182bd"
+    black = "black"
+    white = "white"
+    grey = "grey"
+    lightgrey = "#9facbd"
+
+
 def plot_validation_curves(
     feature_selector: FeatureSelector, **figure_kwargs
 ) -> Figure:
@@ -23,13 +32,13 @@ def plot_validation_curves(
     plt.figure(**figure_kwargs)
     for i, curve in enumerate(curves["outer_loops"]):
         label = "Outer loop average" if i == 0 else None
-        plt.semilogx(curve.n_features, curve.scores, c="#deebf7", label=label)
+        plt.semilogx(curve.n_features, curve.scores, c=PALETTE.lightblue, label=label)
     for i, curve in enumerate(curves["repetitions"]):
         label = "Repetition average" if i == 0 else None
-        plt.semilogx(curve.n_features, curve.scores, c="#3182bd", label=label)
+        plt.semilogx(curve.n_features, curve.scores, c=PALETTE.blue, label=label)
     for i, curve in enumerate(curves["total"]):
         label = "Total average" if i == 0 else None
-        plt.semilogx(curve.n_features, curve.scores, c="k", label=label)
+        plt.semilogx(curve.n_features, curve.scores, c=PALETTE.black, label=label)
 
     min_y, max_y = plt.gca().get_ylim()
     selected_features = feature_selector.get_selected_features()
@@ -40,7 +49,7 @@ def plot_validation_curves(
             min_y,
             max_y,
             linestyle="--",
-            colors="grey",
+            colors=PALETTE.grey,
             lw=2,
             label=attribute,
             zorder=100000,
@@ -87,19 +96,22 @@ def plot_feature_rank(
         nrows=1, ncols=2, sharey=True, **figure_kwargs
     )
 
-    color_notnan = "grey"
-    color_ranks = "#4e79a7"
-
     ax_notnan.xaxis.set_major_formatter(mtick.PercentFormatter())
     ax_notnan.set_ylabel("Feature")
     ax_notnan.set_xlabel("Percentage of times selected")
     ax_ranks.set_xlabel("Feature Rank")
 
-    ax_notnan.tick_params(axis="x")
-    ax_ranks.tick_params(axis="x")
+    for ax in [ax_notnan, ax_ranks]:
+        ax.grid(linestyle=":", zorder=0)
+        ax.tick_params(axis="x")
+        ax.xaxis.tick_top()
+        ax.xaxis.set_label_position("top")
 
-    bbox_props = {"color": color_ranks}
-    bbox_color = {"boxes": color_ranks, "medians": "black"}
+    bbox_props = {
+        "color": PALETTE.blue,
+        "alpha": 0.8,
+    }
+    bbox_color = {"boxes": PALETTE.blue, "medians": PALETTE.black}
 
     if feature_names is not None:
         feature_numbers = range(len(feature_names))
@@ -117,11 +129,14 @@ def plot_feature_rank(
     )
 
     (selected_ranks.notna().mean() * 100).plot.barh(
-        facecolor=color_notnan, ax=ax_notnan, edgecolor="black"
+        facecolor=PALETTE.lightgrey,
+        ax=ax_notnan,
+        edgecolor=PALETTE.black,
+        grid=True,
+        alpha=0.8,
     )
 
-    ax_notnan.invert_yaxis()  # being the y-axis, shared it will invert both
-    ax_notnan.grid(axis="x", zorder=-100)
+    ax_notnan.invert_yaxis()  # being the y-axis shared, it will invert both
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
 
@@ -142,7 +157,8 @@ def plot_permutation_scores(
         perm_scores,
         bins=bins,
         alpha=0.8,
-        edgecolor="white",
+        edgecolor=PALETTE.white,
+        facecolor=PALETTE.blue,
         label="Permutation Scores",
         zorder=10,
     )
@@ -150,7 +166,7 @@ def plot_permutation_scores(
         score,
         ymin=0,
         ymax=counts.max(),
-        color="k",
+        color=PALETTE.black,
         label="Feature Selection Score",
         zorder=20,
     )
