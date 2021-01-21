@@ -7,7 +7,7 @@ from omigami.data_structures import (
     ScoreCurve,
     FeatureEliminationResults,
     InnerLoopResults,
-    FeatureSelectionRawResults,
+    FeatureSelectionRawResults, FeatureSelectionResults,
 )
 from omigami.utils import (
     average_ranks,
@@ -184,8 +184,9 @@ class PostProcessor:
 
     def make_average_ranks_df(
         self,
-        raw_results: FeatureSelectionRawResults,
+        feature_selection_results: FeatureSelectionResults,
         n_features: int,
+        feature_names: List[str] = None,
         exclude_unused_features: bool = True
     ) -> pd.DataFrame:
 
@@ -194,12 +195,17 @@ class PostProcessor:
         )
 
         for feature_set in ["min", "mid", "max"]:
-            ranks = self._get_feature_ranks(raw_results, feature_set)
+            ranks = self._get_feature_ranks(
+                feature_selection_results.raw_results, feature_set
+            )
             res = pd.DataFrame(ranks).mean()
             results_df.loc[res.index, feature_set] = res.values
 
         if exclude_unused_features:
             results_df = results_df.dropna(how="all")
+
+        if feature_names is not None:
+            results_df.index = [feature_names[i] for i in results_df.index]
 
         return results_df
 

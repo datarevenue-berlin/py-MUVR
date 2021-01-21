@@ -3,6 +3,7 @@ import pytest
 from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
+import pandas as pd
 from sklearn.linear_model import LinearRegression
 from loky import get_reusable_executor
 from dask.distributed import Client
@@ -183,19 +184,6 @@ def test_get_selected_feature_names(fs, mosquito):
         fs._get_selected_feature_names(feature_names=["only-one-name"])
 
 
-def test_get_params(fs):
-    params = fs.get_params()
-    assert params["metric"] == "MISS"
-    assert params["random_state"] == 0
-    assert isinstance(params["estimator"], LinearRegression)
-    assert params["n_repetitions"] == 4
-    assert params["n_outer"] == 4
-    assert params["n_inner"] == 3
-    assert params["features_dropout_rate"] == 0.1
-    assert params["robust_minimum"] == 0.05
-    assert FeatureSelector(**params)
-
-
 def test_get_feature_selection_results(fs):
     fs._selected_features = [1, 2, 3]
     fs.is_fit = True
@@ -214,3 +202,28 @@ def test_get_feature_selection_results(fs):
     assert fs_results.selected_feature_names == "sel_feat_names"
     fs._get_selected_feature_names.assert_called_once_with(["names"])
     fs._get_validation_curves.assert_called_once()
+
+
+def test_export_average_feature_ranks(fs):
+    df = pd.DataFrame()
+    df.to_csv = Mock()
+    fs.get_average_ranks_df = Mock(return_value=df)
+
+    res = fs.export_average_feature_ranks("path", ["names"], True)
+
+    assert res is df
+    fs.get_average_ranks_df.assert_called_once_with(["names"], True)
+    df.to_csv.assert_called_once_with("path")
+
+
+def test_get_average_ranks_df(fs):
+    fs.get_feature_selection_results = Mock(return_value="fs_results")
+    fs._post_processor.make_average_ranks_df = Mock(return_value="ranks_df")
+
+    ranks_df = fs.get_average_ranks_df(["names"], True)
+
+    assert ranks_df == "ranks_df"
+    fs.get_feature_selection_results.assert_called_once()
+    fs._post_processor.make_average_ranks_df.assert_called_once_with(
+        "fs_results", fs._n_features, ["names"], True
+    )

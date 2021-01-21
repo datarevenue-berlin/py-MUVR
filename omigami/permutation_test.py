@@ -65,7 +65,7 @@ class PermutationTest:
             self._fs.fit(X, y, groups=groups)
         self.res = self._fs.get_feature_selection_results()
 
-        fs_perm = FeatureSelector(**self._fs.get_params())
+        fs_perm = self._copy_feature_selector(self._fs)
         self.res_perm = []
         for _ in progressbar.progressbar(range(self.n_permutations)):
             np.random.shuffle(y_idx)
@@ -162,6 +162,23 @@ class PermutationTest:
     def _rank_data(sample: float, population: Iterable):
         ranks = rankdata([sample] + list(population))
         return ranks[0], ranks[1:]
+
+    @staticmethod
+    def _copy_feature_selector(fs: FeatureSelector) -> FeatureSelector:
+        return FeatureSelector(
+            n_outer=fs.n_outer,
+            metric=fs.metric,
+            estimator=fs.estimator,
+            features_dropout_rate=fs.features_dropout_rate,
+            robust_minimum=fs.robust_minimum,
+            n_inner=fs.n_inner,
+            n_repetitions=fs.n_repetitions,
+            random_state=(
+                None
+                if fs.random_state is None
+                else fs.random_state.get_state()[1][0]
+            ),
+        )
 
     def __repr__(self):
         return f"PermutationTest(n_permutations={self.n_permutations})"

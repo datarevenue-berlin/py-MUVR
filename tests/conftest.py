@@ -199,5 +199,6 @@ def fs_results(raw_results):
     fs._raw_results = raw_results
     fs.is_fit = True
     fs._selected_features = fs._post_processor.select_features(raw_results)
-    fs_results = fs.get_feature_selection_results()
+    fs._n_features = 5
+    fs_results = fs.get_feature_selection_results(["A", "B", "C", "D", "E"])
     return fs_results

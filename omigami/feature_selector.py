@@ -5,6 +5,7 @@ from concurrent.futures import Executor, Future
 from typing import Union, List, Dict, Tuple
 
 import numpy as np
+import pandas as pd
 import progressbar
 from numpy.random import RandomState
 
@@ -190,7 +191,10 @@ class FeatureSelector:
             b.update(progress)
             for _ in range(self.n_repetitions):
                 data_splitter = DataSplitter(
-                    self.n_outer, self.n_inner, input_data, self.random_state,
+                    self.n_outer,
+                    self.n_inner,
+                    input_data,
+                    self.random_state,
                 )
 
                 outer_loop_results = []
@@ -234,7 +238,10 @@ class FeatureSelector:
         )
 
     def _run_outer_loop(
-        self, input_data: InputDataset, outer_split: Split, data_splitter: DataSplitter,
+        self,
+        input_data: InputDataset,
+        outer_split: Split,
+        data_splitter: DataSplitter,
     ) -> OuterLoopResults:
 
         feature_elimination_results = {}
@@ -360,12 +367,12 @@ class FeatureSelector:
         self, feature_names: List[str] = None
     ) -> FeatureSelectionResults:
         """
-        TODO: update docstring
-        Retrieve the selected feature for the three models. Features are normally
-        returned as 0-based integer indices representing the columns of the input
-        predictor variables (X), however if a list of feature names is provided via
-        `feature_names`, the feature names are returned instead.
-
+        Retrieve the feature selection results in a single data structure. This object
+        contains the attributes:
+        - raw_results: selection results before processing
+        - selected_features: 0-based integer indices for min, mid and max feature sets
+        - score_curves: validation curves of n_feats vs score
+        - selected_feature_names: list of feature names if the parameter is used.
 
         Parameters
         ----------
@@ -374,8 +381,8 @@ class FeatureSelector:
 
         Returns
         -------
-        SelectedFeatures
-            The features selected by the double CV loops
+        FeatureSelectionResults
+            The results obtained from running the algorithm
 
         Raises
         ------
@@ -389,13 +396,10 @@ class FeatureSelector:
             raw_results=self._raw_results,
             selected_features=self._selected_features,
             score_curves=self._get_validation_curves(),
-            selected_feature_names=self._get_selected_feature_names(feature_names)
+            selected_feature_names=self._get_selected_feature_names(feature_names),
         )
 
     def _get_validation_curves(self) -> Dict[str, List]:
-        """
-        Refer to post_processor.PostProcessor.get_validation_curves for documentation
-        """
         return self._post_processor.get_validation_curves(self._raw_results)
 
     def _get_selected_feature_names(
@@ -419,22 +423,6 @@ class FeatureSelector:
         )
         return selected_feature_names
 
-    def get_params(self):
-        return {
-            "n_outer": self.n_outer,
-            "metric": self.metric,
-            "estimator": self.estimator,
-            "features_dropout_rate": self.features_dropout_rate,
-            "robust_minimum": self.robust_minimum,
-            "n_inner": self.n_inner,
-            "n_repetitions": self.n_repetitions,
-            "random_state": (
-                None
-                if self.random_state is None
-                else self.random_state.get_state()[1][0]
-            ),
-        }
-
     def __repr__(self):
         fs = (
             f"FeatureSelector("
@@ -453,7 +441,61 @@ class FeatureSelector:
             return progressbar.NullBar
         return progressbar.ProgressBar
 
-    def export_average_feature_ranks(self, output_path: str):
-        # make df
-        # save to path as csv
-        pass
+    def export_average_feature_ranks(
+        self,
+        output_path: str,
+        feature_names: List[str] = None,
+        exclude_unused_features: bool = True,
+    ) -> pd.DataFrame:
+        """
+        Creates and saves dataframe from the feature selection results. This dataframe contains
+        the columns 'mid', 'mid', and 'max', the indices are the features and the values
+        are the average rank across repetitions and outer loops.
+
+        Parameters
+        ----------
+        output_path: str
+            Path where to save the csv dataframe
+        feature_names: List[str]
+            The name of every feature, by default None
+        exclude_unused_features: bool
+            Whether to remove the features that werent selected or not.
+
+        Returns
+        -------
+        pd.DataFrame:
+            Pandas dataframe containing the average feature ranks
+
+        """
+        ranks_df = self.get_average_ranks_df(feature_names, exclude_unused_features)
+
+        ranks_df.to_csv(output_path)
+        return ranks_df
+
+    def get_average_ranks_df(
+        self,
+        feature_names: Union[None, List[str]],
+        exclude_unused_features: bool = True,
+    ):
+        """
+        Creates a dataframe from the feature selection results. This dataframe contains
+        the columns 'mid', 'mid', and 'max', the indices are the features and the values
+        are the average rank across repetitions and outer loops.
+
+        Parameters
+        ----------
+        feature_names: List[str]
+            The name of every feature, by default None
+        exclude_unused_features: bool
+            Whether to remove the features that werent selected or not.
+
+        Returns
+        -------
+        pd.DataFrame:
+            Pandas dataframe containing the average feature ranks
+
+        """
+        results = self.get_feature_selection_results()
+        return self._post_processor.make_average_ranks_df(
+            results, self._n_features, feature_names, exclude_unused_features
+        )

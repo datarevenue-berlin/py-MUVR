@@ -63,6 +63,23 @@ def test_permutation_test():
     assert permutation_test.PermutationTest(feature_selector=fs, n_permutations=10)
 
 
+def test_copy_feature_selector(fit_feature_selector):
+    pt = permutation_test.PermutationTest(
+        fit_feature_selector, 2
+    )
+    fs_copy = pt._copy_feature_selector(fit_feature_selector)
+
+    assert fit_feature_selector is not fs_copy
+    assert fit_feature_selector.metric == fs_copy.metric
+    assert fit_feature_selector.random_state == fs_copy.random_state
+    assert fit_feature_selector.estimator == fs_copy.estimator
+    assert fit_feature_selector.n_repetitions == fs_copy.n_repetitions
+    assert fit_feature_selector.n_outer == fs_copy.n_outer
+    assert fit_feature_selector.n_inner == fs_copy.n_inner
+    assert fit_feature_selector.features_dropout_rate == fs_copy.features_dropout_rate
+    assert fit_feature_selector.robust_minimum == fs_copy.robust_minimum
+
+
 def test_fit(fit_feature_selector):
     n_permutations = 2
     pt = permutation_test.PermutationTest(

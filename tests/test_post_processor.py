@@ -186,26 +186,28 @@ def test_select_best_features(rfe_raw_results):
     assert sorted(selected_feats["max"]) == [1, 2, 3, 4]
 
 
-def test_make_average_ranks_dataframe(raw_results):
+def test_make_average_ranks_dataframe(fs_results):
     pp = PostProcessor(1)
     n_feats = 5
+    feature_names = "a, b, c, d, e".split(", ")
 
-    ranks_df = pp.make_average_ranks_df(raw_results, n_feats)
+    ranks_df = pp.make_average_ranks_df(fs_results, n_feats, feature_names)
 
     assert ranks_df.ndim
     assert len(ranks_df) == n_feats
+    assert set(ranks_df.index) == set(feature_names)
 
 
-def test_exclude_unused_features(raw_results):
+def test_exclude_unused_features(fs_results):
     pp = PostProcessor(1)
     n_feats = 5
     unused_feats = 10
 
     reduced_df = pp.make_average_ranks_df(
-        raw_results, unused_feats, exclude_unused_features=True
+        fs_results, unused_feats, exclude_unused_features=True
     )
     full_df = pp.make_average_ranks_df(
-        raw_results, unused_feats, exclude_unused_features=False
+        fs_results, unused_feats, exclude_unused_features=False
     )
 
     assert reduced_df.ndim
