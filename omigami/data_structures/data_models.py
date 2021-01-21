@@ -119,3 +119,6 @@ class FeatureSelectionResults:
     selected_features: SelectedFeatures
     score_curves: Dict[str, List[ScoreCurve]]
     selected_feature_names: SelectedFeatures = None
+
+    def __repr__(self):
+        return "FeatureSelectionResults"

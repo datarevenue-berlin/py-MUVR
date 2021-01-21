@@ -199,7 +199,9 @@ def test_get_params(fs):
 def test_get_feature_selection_results(fs):
     fs._selected_features = [1, 2, 3]
     fs.is_fit = True
-    fs._get_selected_feature_names = Mock(fs._get_selected_feature_names, return_value="sel_feat_names")
+    fs._get_selected_feature_names = Mock(
+        fs._get_selected_feature_names, return_value="sel_feat_names"
+    )
     fs._get_validation_curves = Mock(
         fs._get_validation_curves, return_value={"total": [ScoreCurve(None, None)]}
     )

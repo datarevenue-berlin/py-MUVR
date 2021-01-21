@@ -452,3 +452,8 @@ class FeatureSelector:
         if logging.getLogger(__name__).getEffectiveLevel() > logging.INFO:
             return progressbar.NullBar
         return progressbar.ProgressBar
+
+    def export_average_feature_ranks(self, output_path: str):
+        # make df
+        # save to path as csv
+        pass
