@@ -1,4 +1,4 @@
-# omigami
+# ![omigami](./omigami-gradient.png)
 #### Minimally biased features selection for untargeted metabolomics studies
 
 [![PyPI version shields.io](https://img.shields.io/pypi/v/omigami.svg)](https://pypi.python.org/pypi/omigami) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
