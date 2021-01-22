@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from concurrent.futures import Executor, Future
+from copy import deepcopy
 from typing import Union, List, Dict, Tuple
 
 import numpy as np
@@ -393,14 +394,11 @@ class FeatureSelector:
             raise NotFitException("The feature selector is not fit yet")
 
         return FeatureSelectionResults(
-            raw_results=self._raw_results,
-            selected_features=self._selected_features,
+            raw_results=deepcopy(self._raw_results),
+            selected_features=self.get_selected_features(),
             score_curves=self._get_validation_curves(),
-            selected_feature_names=self._get_selected_feature_names(feature_names),
+            selected_feature_names=self.get_selected_features(feature_names),
         )
-
-    def _get_validation_curves(self) -> Dict[str, List]:
-        return self._post_processor.get_validation_curves(self._raw_results)
 
     def _get_selected_feature_names(
         self, feature_names: Union[None, List[str]]
@@ -422,6 +420,35 @@ class FeatureSelector:
             mid=mid_names,
         )
         return selected_feature_names
+
+    def get_selected_features(self, feature_names: List[str] = None):
+        """Retrieve the selected feature for the three models. Features are normally
+        returned as 0-based integer indices representing the columns of the input
+        predictor variables (X), however if a list of feature names is provided via
+        `feature_names`, the feature names are returned instead.
+
+        Parameters
+        ----------
+        feature_names : List[str], optional
+            the name of every feature, by default None
+
+        Returns
+        -------
+        SelectedFeatures
+            The features selected by the double CV loops
+
+        Raises
+        ------
+        NotFitException
+            if the `fit` method was not called successfully already
+        """
+        if feature_names is None:
+            return deepcopy(self._selected_features)
+        else:
+            return self._get_selected_feature_names(feature_names)
+
+    def _get_validation_curves(self) -> Dict[str, List]:
+        return self._post_processor.get_validation_curves(self._raw_results)
 
     def __repr__(self):
         fs = (
@@ -474,7 +501,7 @@ class FeatureSelector:
 
     def get_average_ranks_df(
         self,
-        feature_names: Union[None, List[str]],
+        feature_names: List[str] = None,
         exclude_unused_features: bool = True,
     ):
         """

@@ -169,23 +169,9 @@ def test_select_best_features(fs):
     fs._post_processor.select_features.assert_called_once_with("results")
 
 
-def test_get_selected_feature_names(fs, mosquito):
-    X = mosquito.X[:, 0:10]
-    y = np.array([1] + [0, 1] * 14)
-    fs.fit(X, y)
-    fs._selected_features = SelectedFeatures([0], [0], [0])
-    selected_features = fs._selected_features
-    feature_names = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"]
-
-    selected_features_names = fs._get_selected_feature_names(feature_names=feature_names)
-
-    assert len(selected_features_names["min"]) == len(selected_features["min"])
-    with pytest.raises(ValueError):
-        fs._get_selected_feature_names(feature_names=["only-one-name"])
-
-
-def test_get_feature_selection_results(fs):
+def test_get_feature_selection_results(fs, raw_results):
     fs._selected_features = [1, 2, 3]
+    fs._raw_results = raw_results
     fs.is_fit = True
     fs._get_selected_feature_names = Mock(
         fs._get_selected_feature_names, return_value="sel_feat_names"
@@ -199,9 +185,36 @@ def test_get_feature_selection_results(fs):
     assert isinstance(fs_results, FeatureSelectionResults)
     assert isinstance(fs_results.score_curves["total"][0], ScoreCurve)
     assert fs_results.selected_features == fs._selected_features
+    assert fs_results.selected_features is not fs._selected_features
+    assert fs_results.raw_results == fs._raw_results
+    assert fs_results.raw_results is not fs._raw_results
     assert fs_results.selected_feature_names == "sel_feat_names"
     fs._get_selected_feature_names.assert_called_once_with(["names"])
     fs._get_validation_curves.assert_called_once()
+
+
+def test_get_selected_features(fs):
+    fs._selected_features = [1, 2, 3]
+
+    selected_features = fs.get_selected_features()
+
+    assert selected_features == fs._selected_features
+    assert selected_features is not fs._selected_features
+
+
+def test_get_selected_feature_names(fs, mosquito):
+    X = mosquito.X[:, 0:10]
+    y = np.array([1] + [0, 1] * 14)
+    fs.fit(X, y)
+    fs._selected_features = SelectedFeatures([0], [0], [0])
+    selected_features = fs._selected_features
+    feature_names = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"]
+
+    selected_features_names = fs._get_selected_feature_names(feature_names=feature_names)
+
+    assert len(selected_features_names["min"]) == len(selected_features["min"])
+    with pytest.raises(ValueError):
+        fs._get_selected_feature_names(feature_names=["only-one-name"])
 
 
 def test_export_average_feature_ranks(fs):
