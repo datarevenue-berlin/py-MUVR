@@ -150,6 +150,7 @@ Omigami provides some basic plotting utils to inspect the results of the feature
 
 - `plot_feature_rank`
 - `plot_validation_curves`
+- `plot_permutation_scores`
 
 ```python
 from omigami.plot_utils import plot_feature_rank
@@ -160,11 +161,16 @@ fig = plot_feature_rank(
 )
 ```
 
-and
-
 ```python
 from omigami.plot_utils import plot_validation_curves
 fig = plot_validation_curves(feature_selector)
+```
+
+and
+
+```python
+from omigami.plot_utils import plot_permutation_scores
+fig = plot_permutation_scores(permutation_test, "min")
 ```
 
 ## Parameters
