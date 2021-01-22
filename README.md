@@ -195,8 +195,8 @@ fig = plot_permutation_scores(permutation_test, "min")
   - several classification and regression scores from [scikit-learn](https://scikit-learn.org/stable/modules/model_evaluation.html) (refer to documentation)
   - custom functions
 - **features_dropout_rate**: Fraction of features that will be dropped in each elimination step (float)
-- robust_minimum (float): Maximum normalized-score value to be considered when computing the selected features
-- random_state (int): Pass an int for a reproducible output (default: `None`)
+- **robust_minimum** (float): Maximum normalized-score value to be considered when computing the selected features
+- **random_state** (int): Pass an int for a reproducible output (default: `None`)
 
 ## Further Reading
 
