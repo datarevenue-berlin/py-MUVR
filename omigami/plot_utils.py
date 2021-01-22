@@ -1,32 +1,44 @@
 import logging
-from typing import Iterable
+from typing import Iterable, Union
 from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
+from matplotlib.pyplot import Figure
 import matplotlib.ticker as mtick
 import pandas as pd
 from omigami.feature_selector import FeatureSelector
+from omigami.permutation_test import PermutationTest
 
 log = logging.getLogger(__name__)
 
 
-def plot_validation_curves(feature_selector: FeatureSelector, **figure_kwargs) -> Axes:
+class PALETTE:
+    lightblue = "#deebf7"
+    blue = "#3182bd"
+    black = "black"
+    white = "white"
+    grey = "grey"
+    lightgrey = "#9facbd"
+
+
+def plot_validation_curves(
+    feature_selector: FeatureSelector, **figure_kwargs
+) -> Figure:
     if not feature_selector.is_fit:
-        log.warning(  # pylint: disable=logging-not-lazy
+        log.warning(
             "Validation curves have not been generated. To be able to plot"
-            + " call `select_features` method first"
+            " call `select_features` method first"
         )
         return None
     curves = feature_selector.get_validation_curves()
     plt.figure(**figure_kwargs)
     for i, curve in enumerate(curves["outer_loops"]):
         label = "Outer loop average" if i == 0 else None
-        plt.semilogx(curve.n_features, curve.scores, c="#deebf7", label=label)
+        plt.semilogx(curve.n_features, curve.scores, c=PALETTE.lightblue, label=label)
     for i, curve in enumerate(curves["repetitions"]):
         label = "Repetition average" if i == 0 else None
-        plt.semilogx(curve.n_features, curve.scores, c="#3182bd", label=label)
+        plt.semilogx(curve.n_features, curve.scores, c=PALETTE.blue, label=label)
     for i, curve in enumerate(curves["total"]):
         label = "Total average" if i == 0 else None
-        plt.semilogx(curve.n_features, curve.scores, c="k", label=label)
+        plt.semilogx(curve.n_features, curve.scores, c=PALETTE.black, label=label)
 
     min_y, max_y = plt.gca().get_ylim()
     selected_features = feature_selector.get_selected_features()
@@ -37,7 +49,7 @@ def plot_validation_curves(feature_selector: FeatureSelector, **figure_kwargs) -
             min_y,
             max_y,
             linestyle="--",
-            colors="grey",
+            colors=PALETTE.grey,
             lw=2,
             label=attribute,
             zorder=100000,
@@ -56,7 +68,7 @@ def plot_feature_rank(
     feature_names: Iterable = None,
     show_outliers: bool = True,
     **figure_kwargs
-):
+) -> Figure:
     if model not in {"min", "max", "mid"}:
         raise ValueError("The model parameter must be one of 'min', 'max' or 'mid'.")
 
@@ -84,19 +96,22 @@ def plot_feature_rank(
         nrows=1, ncols=2, sharey=True, **figure_kwargs
     )
 
-    color_notnan = "grey"
-    color_ranks = "#4e79a7"
-
     ax_notnan.xaxis.set_major_formatter(mtick.PercentFormatter())
     ax_notnan.set_ylabel("Feature")
     ax_notnan.set_xlabel("Percentage of times selected")
     ax_ranks.set_xlabel("Feature Rank")
 
-    ax_notnan.tick_params(axis="x")
-    ax_ranks.tick_params(axis="x")
+    for ax in [ax_notnan, ax_ranks]:
+        ax.grid(linestyle=":", zorder=0)
+        ax.tick_params(axis="x")
+        ax.xaxis.tick_top()
+        ax.xaxis.set_label_position("top")
 
-    bbox_props = {"color": color_ranks}
-    bbox_color = {"boxes": color_ranks, "medians": "black"}
+    bbox_props = {
+        "color": PALETTE.blue,
+        "alpha": 0.8,
+    }
+    bbox_color = {"boxes": PALETTE.blue, "medians": PALETTE.black}
 
     if feature_names is not None:
         feature_numbers = range(len(feature_names))
@@ -114,12 +129,49 @@ def plot_feature_rank(
     )
 
     (selected_ranks.notna().mean() * 100).plot.barh(
-        facecolor=color_notnan, ax=ax_notnan, edgecolor="black"
+        facecolor=PALETTE.lightgrey,
+        ax=ax_notnan,
+        edgecolor=PALETTE.black,
+        grid=True,
+        alpha=0.8,
     )
 
-    ax_notnan.invert_yaxis()  # being the y-axis, shared it will invert both
-    ax_notnan.grid(axis="x", zorder=-100)
+    ax_notnan.invert_yaxis()  # being the y-axis shared, it will invert both
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
 
+    return fig
+
+
+def plot_permutation_scores(
+    permutation_test: PermutationTest,
+    model: str,
+    bins: Union[int, str, Iterable[float]] = "auto",
+    **fig_kwargs
+) -> Figure:
+    score, perm_scores = permutation_test.compute_permutation_scores(model)
+    p_value = permutation_test.compute_p_values(model, ranks=False)
+    fig, ax = plt.subplots(1, 1, **fig_kwargs)
+    ax.grid(linestyle=":", zorder=0)
+    counts, _, _ = ax.hist(
+        perm_scores,
+        bins=bins,
+        alpha=0.8,
+        edgecolor=PALETTE.white,
+        facecolor=PALETTE.blue,
+        label="Permutation Scores",
+        zorder=10,
+    )
+    ax.vlines(
+        score,
+        ymin=0,
+        ymax=counts.max(),
+        color=PALETTE.black,
+        label="Feature Selection Score",
+        zorder=20,
+    )
+    ax.set_ylabel("Number of Occurrences")
+    ax.set_xlabel("Score")
+    ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0)
+    ax.set_title("Feature selection p-value = %1.3g" % p_value)
     return fig
