@@ -1,14 +1,39 @@
-from omigami.plot_utils import plot_validation_curves
-from omigami.omigami import FeatureSelector
+from unittest.mock import Mock
+import pytest
+from omigami.plot_utils import (
+    plot_validation_curves,
+    plot_feature_rank,
+    plot_permutation_scores,
+)
+from omigami.permutation_test import PermutationTest
 
 
-def test_plot_validation_curves(results):
-    fs = FeatureSelector(n_outer=5, metric="MISS", estimator="RFC",)
-    fs.n_features = 10
-    fs.is_fit = True
-    fs.selected_features = {"min": (0, 1), "max": (0, 1), "mid": (0, 1)}
-    fs._results = results
-    sel_feats = fs._process_results(results)
-    fs._selected_features = sel_feats
-    ax = plot_validation_curves(fs)
+@pytest.fixture
+def permutation_test():
+    pt = Mock(PermutationTest)
+    pt.compute_permutation_scores = Mock(
+        spec=pt.compute_permutation_scores, return_value=(1, list(range(2, 1000)))
+    )
+    pt.compute_p_values = Mock(spec=pt.compute_p_values, return_value=0.01)
+    return pt
+
+
+def test_plot_validation_curves(fs_results):
+    ax = plot_validation_curves(fs_results)
     assert ax
+
+
+@pytest.mark.parametrize("model", ["min", "max", "mid"])
+def test_plot_feature_rank(fs_results, model):
+    fig = plot_feature_rank(fs_results, model)
+    assert fig
+
+
+def test_plot_feature_rank_error(fs_results):
+    with pytest.raises(ValueError):
+        fig = plot_feature_rank(fs_results, "yo")
+
+
+def test_plot_permutiation_scores(permutation_test):
+    fig = plot_permutation_scores(permutation_test, "min")
+    assert fig

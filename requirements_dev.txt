@@ -9,3 +9,7 @@ twine==1.12.1
 pytest==3.8.2
 pytest-runner==4.2
 pytest-cov==2.7.1
+
+dask[complete]==2.30.0
+loky==2.9.0
+black==20.8b1
