@@ -1,11 +1,12 @@
 import logging
-from typing import Iterable, Union
-from matplotlib import pyplot as plt
+from typing import List, Union, Iterable
 from matplotlib.pyplot import Figure
 import matplotlib.ticker as mtick
 import pandas as pd
-from omigami.feature_selector import FeatureSelector
 from omigami.permutation_test import PermutationTest
+from matplotlib import pyplot as plt
+
+from omigami.data_structures import FeatureSelectionResults
 
 log = logging.getLogger(__name__)
 
@@ -20,15 +21,9 @@ class PALETTE:
 
 
 def plot_validation_curves(
-    feature_selector: FeatureSelector, **figure_kwargs
-) -> Figure:
-    if not feature_selector.is_fit:
-        log.warning(
-            "Validation curves have not been generated. To be able to plot"
-            " call `select_features` method first"
-        )
-        return None
-    curves = feature_selector.get_validation_curves()
+    feature_selection_results: FeatureSelectionResults, **figure_kwargs
+) -> plt.Figure:
+    curves = feature_selection_results.score_curves
     plt.figure(**figure_kwargs)
     for i, curve in enumerate(curves["outer_loops"]):
         label = "Outer loop average" if i == 0 else None
@@ -41,7 +36,7 @@ def plot_validation_curves(
         plt.semilogx(curve.n_features, curve.scores, c=PALETTE.black, label=label)
 
     min_y, max_y = plt.gca().get_ylim()
-    selected_features = feature_selector.get_selected_features()
+    selected_features = feature_selection_results.selected_features
     for attribute in ["min", "max", "mid"]:
         n_feats = len(getattr(selected_features, attribute))
         plt.vlines(
@@ -63,9 +58,9 @@ def plot_validation_curves(
 
 
 def plot_feature_rank(
-    feature_selector: FeatureSelector,
+    feature_selection_results: FeatureSelectionResults,
     model: str,
-    feature_names: Iterable = None,
+    feature_names: List[str] = None,
     show_outliers: bool = True,
     **figure_kwargs
 ) -> Figure:
@@ -76,12 +71,12 @@ def plot_feature_rank(
     feats_attr = model
 
     ranks = []
-    for r in feature_selector.results:
+    for r in feature_selection_results.raw_results:
         for ol in r:
             ranks_raw_data = getattr(ol, eval_attr).ranks.get_data()
             ranks.append(ranks_raw_data)
 
-    selected_features = feature_selector.get_selected_features()
+    selected_features = feature_selection_results.selected_features
     best = getattr(selected_features, feats_attr)
     selected_ranks = pd.DataFrame(r for r in ranks)[best]
 
