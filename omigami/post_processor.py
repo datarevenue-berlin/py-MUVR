@@ -1,12 +1,13 @@
 from typing import List, Dict, Tuple
 from scipy.stats import gmean
 import numpy as np
+import pandas as pd
 from omigami.data_structures import (
     SelectedFeatures,
     ScoreCurve,
     FeatureEliminationResults,
     InnerLoopResults,
-    FeatureSelectionRawResults,
+    FeatureSelectionRawResults, FeatureSelectionResults,
 )
 from omigami.utils import (
     average_ranks,
@@ -180,3 +181,42 @@ class PostProcessor:
             n_feats = len(features)
             n_to_features[n_feats] = features
         return n_to_features
+
+    def make_average_ranks_df(
+        self,
+        feature_selection_results: FeatureSelectionResults,
+        n_features: int,
+        feature_names: List[str] = None,
+        exclude_unused_features: bool = True
+    ) -> pd.DataFrame:
+
+        results_df = pd.DataFrame(
+            index=np.arange(n_features), columns=["min", "mid", "max"]
+        )
+
+        for feature_set in ["min", "mid", "max"]:
+            ranks = self._get_feature_ranks(
+                feature_selection_results.raw_results, feature_set
+            )
+            res = pd.DataFrame(ranks).mean()
+            results_df.loc[res.index, feature_set] = res.values
+
+        if exclude_unused_features:
+            results_df = results_df.dropna(how="all")
+
+        if feature_names is not None:
+            results_df.index = [feature_names[i] for i in results_df.index]
+
+        return results_df
+
+    @staticmethod
+    def _get_feature_ranks(
+        raw_results: FeatureSelectionRawResults,
+        feature_set: str
+    ) -> List[Dict[int, float]]:
+        ranks = []
+        for r in raw_results:
+            for ol in r:
+                ranks_raw_data = getattr(ol, feature_set + "_eval").ranks.get_data()
+                ranks.append(ranks_raw_data)
+        return ranks
