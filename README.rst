@@ -121,7 +121,7 @@ Once the data is ready, we can instantiate the feature selector:
         from omigami.feature_selector import FeatureSelector
 
         feature_selector = FeatureSelector(
-            n_repetitions=10,
+            repetitions=10,
             n_outer=5,
             estimator="PLSC",  # partial least squares classifier
             metric="MISS",  # missclassifications
@@ -206,5 +206,3 @@ and
 
         from omigami.plot_utils import plot_validation_curves
         fig = plot_validation_curves(feature_selector)
-
-
