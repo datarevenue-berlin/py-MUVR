@@ -5,7 +5,7 @@
 import versioneer
 from setuptools import setup, find_packages
 
-with open("README.rst") as readme_file:
+with open("docs/readme.rst") as readme_file:
     readme = readme_file.read()
 
 with open("HISTORY.rst") as history_file:
@@ -47,7 +47,7 @@ setup(
     include_package_data=True,
     keywords="omigami",
     name="omigami",
-    packages=find_packages(include=["omigami"]),
+    packages=find_packages(exclude=["tests"]),
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,

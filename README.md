@@ -79,8 +79,8 @@ The feature selector returns 3 possible feature sets that can be inspected as:
 
 ```python
 min_feats = selected_features["min"]
-mid_feats = selected_features["min"]
-max_feats = selected_features["min"]
+mid_feats = selected_features["mid"]
+max_feats = selected_features["max"]
 ```
 
 - **`min_feats`**: The minimum number of features for which the model performs optimally.
