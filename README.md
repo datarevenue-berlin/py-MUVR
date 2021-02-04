@@ -1,28 +1,38 @@
 <img src="./omigami-gradient.png" width="50%">
 
-#### Minimally biased features selection for untargeted metabolomics studies
+#### Minimally biased features selection for omics studies
 
 [![PyPI version shields.io](https://img.shields.io/pypi/v/omigami.svg)](https://pypi.python.org/pypi/omigami) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+- ▶️ [Example Jupyter Notebook](https://github.com/datarevenue-berlin/omigami/blob/main/notebooks/MinimalExample.ipynb)
+- 📑 [Blog Post](https://datarevenue.com/en-blog/minimally-biased-feature-selection-untargeted-metabolomics)
+- 🎓 [Paper](https://doi.org/10.1093/bioinformatics/bty710)
 
 <!-- image:: https://img.shields.io/travis/datarevenue-berlin/omigami.svg :target: https://travis-ci.org/datarevenue-berlin/omigami -->
 
 <!-- image:: https://readthedocs.org/projects/omigami/badge/?version=latest :target: https://omigami.readthedocs.io/en/latest/?badge=latest :alt: Documentation Status -->
 
-Easy and powerful tool to select features in untargeted metabolomics studies – with less risk for bias. How?
-Omigami uses multivariate models to perform a recursive feature elimination within a repeated double cross-validation.
 
-## Install
+Multivariate recursive feature elimination within a repeated **double cross-validation** protects you against overfitting – and drastically reduces the number of false positive features in your results.
+
+## Installation
 
 ```sh
 pip install omigami
 ```
 
+## Acknowledgement
+
+This package is based on an algorithm first introduced by Carl Brunius in [Variable selection and validation in multivariate modelling (2019)](https://academic.oup.com/bioinformatics/article/35/6/972/5085367).
+
+**Citation**: Data Revenue, based on *Variable selection and validation in multivariate modelling (2019) [DOI:10.1093/bioinformatics/bty710](https://doi.org/10.1093/bioinformatics/bty710)*
+
 ## Motivation
 
-- It's hard to protect against selection bias on high-dimensional omics data ([Krawczuk and Łukaszuk, 2016](https://www.sciencedirect.com/science/article/pii/S0933365715001426)). Even common cross-validation has been shown to overfit.
-- Most feature selection techniques focus on finding the minimal set of strongest features. Omitting redundant variables that are however still relevant to understanding the biochemical systems.
-- There's no freely available and easy-to-use Python tool that implements a minimally biased repeated double cross validation.
-- A robust selection requires many (100 - 5.000) models to be trained. Running such a large number of models in reasonable time, requires non-trivial parallelization.
+- **Omics studies produce too many false positives**: It's hard to protect against selection bias on high-dimensional omics data ([Krawczuk and Łukaszuk, 2016](https://www.sciencedirect.com/science/article/pii/S0933365715001426)). Even common cross-validation has been shown to overfit.
+- **Redundant features are important for biological interpretation**: Most feature selection techniques focus on finding the minimal set of strongest features. Omitting redundant variables that are however still relevant to understanding the biochemical systems.
+- **Easy-to-use tool**: There's no freely available and easy-to-use Python tool that implements a minimally biased repeated double cross validation.
+- **Small runtime**: A robust selection requires many (100 - 5.000) models to be trained. Running such a large number of models in reasonable time, requires non-trivial parallelization.
 
 ## Features
 
@@ -198,12 +208,6 @@ fig = plot_permutation_scores(permutation_test, "min")
 - **robust_minimum** (float): Maximum normalized-score value to be considered when computing the selected features
 - **random_state** (int): Pass an int for a reproducible output (default: `None`)
 
-## Further Reading
-
-- [Omigami blog post](https://datarevenue.com/en-blog/minimally-biased-feature-selection-untargeted-metabolomics)
-- Original Paper: [Variable selection and validation in multivariate modelling](https://doi.org/10.1093/bioinformatics/bty710)
-- [Carl Brunius' R implementation](https://gitlab.com/CarlBrunius/MUVR)
-
 ## Contribute to Omigami
 
 1. Fork it (https://github.com/datarevenue-berlin/omigami/fork)
@@ -211,9 +215,6 @@ fig = plot_permutation_scores(permutation_test, "min")
 3. Commit your changes (git commit -am 'Add some fooBar')
 4. Push to the branch (git push origin feature/fooBar)
 5. Create a new Pull Request
-
-## Citation
-Data Revenue, based on *Variable selection and validation in multivariate modelling (2019) [DOI:10.1093/bioinformatics/bty710](https://doi.org/10.1093/bioinformatics/bty710)*
 
 ## License
 MIT license - free software.
