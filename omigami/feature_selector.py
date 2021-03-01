@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import logging
 from concurrent.futures import Executor, Future
+from copy import deepcopy
 from typing import Union, List, Dict, Tuple
 
 import numpy as np
+import pandas as pd
 import progressbar
 from numpy.random import RandomState
 
@@ -107,28 +109,30 @@ class FeatureSelector:
         n_repetitions: int = 8,
         random_state: int = None,
     ):
-        self.is_fit = False
-        self.n_features = None
-        self.random_state = None if random_state is None else RandomState(random_state)
         self.n_outer = n_outer
-        self.features_dropout_rate = features_dropout_rate
-        self.estimator = estimator
         self.metric = metric
+        self.estimator = estimator
+        self.features_dropout_rate = features_dropout_rate
         self.robust_minimum = robust_minimum
-        self._keep_fraction = 1 - features_dropout_rate
+        self.n_inner = self._set_n_inner(n_inner)
         self.n_repetitions = n_repetitions
-        self.feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
+        self.random_state = None if random_state is None else RandomState(random_state)
 
+        self.is_fit = False
+        self._keep_fraction = 1 - features_dropout_rate
+        self._n_features = None
+        self._selected_features = None
+        self._raw_results = None
+        self._minimum_features = 1
+
+        self._feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
+        self._post_processor = PostProcessor(robust_minimum)
+
+    def _set_n_inner(self, n_inner: Union[int, None]) -> int:
         if not n_inner:
             log.info("Parameter n_inner is not specified, setting it to n_outer - 1")
-            n_inner = n_outer - 1
-        self.n_inner = n_inner
-
-        self._selected_features = None
-        self.outer_loop_aggregation = None
-        self.results = None
-        self._minimum_features = 1
-        self.post_processor = PostProcessor(robust_minimum)
+            n_inner = self.n_outer - 1
+        return n_inner
 
     def fit(
         self,
@@ -171,7 +175,7 @@ class FeatureSelector:
         size, n_features = X.shape
         groups = self._get_groups(groups, size)
         input_data = InputDataset(X=X, y=y, groups=groups)
-        self.feature_evaluator.set_n_initial_features(n_features)
+        self._feature_evaluator.set_n_initial_features(n_features)
 
         log.info(
             f"Running {self.n_repetitions} repetitions and"
@@ -188,7 +192,10 @@ class FeatureSelector:
             b.update(progress)
             for _ in range(self.n_repetitions):
                 data_splitter = DataSplitter(
-                    self.n_outer, self.n_inner, input_data, self.random_state,
+                    self.n_outer,
+                    self.n_inner,
+                    input_data,
+                    self.random_state,
                 )
 
                 outer_loop_results = []
@@ -206,7 +213,8 @@ class FeatureSelector:
                 repetition_results.append(outer_loop_results)
 
         self._selected_features = self._select_best_features(repetition_results)
-        self.n_features = input_data.n_features
+        log.info("Finished feature selection.")
+        self._n_features = input_data.n_features
         self.is_fit = True
         return self
 
@@ -231,7 +239,10 @@ class FeatureSelector:
         )
 
     def _run_outer_loop(
-        self, input_data: InputDataset, outer_split: Split, data_splitter: DataSplitter,
+        self,
+        input_data: InputDataset,
+        outer_split: Split,
+        data_splitter: DataSplitter,
     ) -> OuterLoopResults:
 
         feature_elimination_results = {}
@@ -245,7 +256,7 @@ class FeatureSelector:
                     input_data, inner_split, feature_set
                 )
 
-                feature_evaluation_results = self.feature_evaluator.evaluate_features(
+                feature_evaluation_results = self._feature_evaluator.evaluate_features(
                     inner_loop_data, feature_set
                 )
 
@@ -282,7 +293,7 @@ class FeatureSelector:
         outer_split: Split,
         data_splitter: DataSplitter,
     ) -> OuterLoopResults:
-        feature_elimination_results = self.post_processor.process_feature_elim_results(
+        feature_elimination_results = self._post_processor.process_feature_elim_results(
             raw_feature_elim_results
         )
         min_eval, mid_eval, max_eval = self._evaluate_min_mid_and_max_features(
@@ -316,17 +327,17 @@ class FeatureSelector:
         data_mid_feats = data_splitter.split_data(input_data, split, mid_feats)
         data_max_feats = data_splitter.split_data(input_data, split, max_feats)
 
-        min_eval = self.feature_evaluator.evaluate_features(data_min_feats, min_feats)
-        mid_eval = self.feature_evaluator.evaluate_features(data_mid_feats, mid_feats)
-        max_eval = self.feature_evaluator.evaluate_features(data_max_feats, max_feats)
+        min_eval = self._feature_evaluator.evaluate_features(data_min_feats, min_feats)
+        mid_eval = self._feature_evaluator.evaluate_features(data_mid_feats, mid_feats)
+        max_eval = self._feature_evaluator.evaluate_features(data_max_feats, max_feats)
 
         return min_eval, mid_eval, max_eval
 
     def _select_best_features(
         self, repetition_results: FeatureSelectionRawResults
     ) -> SelectedFeatures:
-        self.results = self._fetch_results(repetition_results)
-        selected_features = self.post_processor.select_features(self.results)
+        self._raw_results = self._fetch_results(repetition_results)
+        selected_features = self._post_processor.select_features(self._raw_results)
         return selected_features
 
     def _fetch_results(
@@ -353,20 +364,68 @@ class FeatureSelector:
                 fetched_results.append(ol_results)
         return fetched_results
 
-    def get_validation_curves(self) -> Dict[str, List]:
-        """
-        Refer to post_processor.PostProcessor.get_validation_curves for documentation
-        """
-        return self.post_processor.get_validation_curves(self.results)
-
-    def get_selected_features(
+    def get_feature_selection_results(
         self, feature_names: List[str] = None
-    ) -> SelectedFeatures:
+    ) -> FeatureSelectionResults:
+        """
+        Retrieve the feature selection results in a single data structure. This object
+        contains the attributes:
+        - raw_results: selection results before processing
+        - selected_features: 0-based integer indices for min, mid and max feature sets
+        - score_curves: validation curves of n_feats vs score
+        - selected_feature_names: list of feature names if the parameter is used.
+
+        Parameters
+        ----------
+        feature_names : List[str], optional
+            the name of every feature, by default None
+
+        Returns
+        -------
+        FeatureSelectionResults
+            The results obtained from running the algorithm
+
+        Raises
+        ------
+        NotFitException
+            if the `fit` method was not called successfully already
+        """
+        if not self.is_fit:
+            raise NotFitException("The feature selector is not fit yet")
+
+        return FeatureSelectionResults(
+            raw_results=deepcopy(self._raw_results),
+            selected_features=self.get_selected_features(),
+            score_curves=self._get_validation_curves(),
+            selected_feature_names=self.get_selected_features(feature_names),
+        )
+
+    def _get_selected_feature_names(
+        self, feature_names: Union[None, List[str]]
+    ) -> Union[None, SelectedFeatures]:
+        if feature_names is None:
+            return feature_names
+
+        if len(feature_names) != self._n_features:
+            raise ValueError(
+                f"feature_names provided should contain {self._n_features} elements"
+            )
+        min_names = [feature_names[f] for f in self._selected_features["min"]]
+        mid_names = [feature_names[f] for f in self._selected_features["mid"]]
+        max_names = [feature_names[f] for f in self._selected_features["max"]]
+
+        selected_feature_names = SelectedFeatures(
+            min=min_names,
+            max=max_names,
+            mid=mid_names,
+        )
+        return selected_feature_names
+
+    def get_selected_features(self, feature_names: List[str] = None):
         """Retrieve the selected feature for the three models. Features are normally
         returned as 0-based integer indices representing the columns of the input
         predictor variables (X), however if a list of feature names is provided via
         `feature_names`, the feature names are returned instead.
-
 
         Parameters
         ----------
@@ -383,70 +442,13 @@ class FeatureSelector:
         NotFitException
             if the `fit` method was not called successfully already
         """
+        if feature_names is None:
+            return deepcopy(self._selected_features)
+        else:
+            return self._get_selected_feature_names(feature_names)
 
-        if not self.is_fit:
-            raise NotFitException("The feature selector is not fit yet")
-
-        if feature_names is not None:
-            if len(feature_names) != self.n_features:
-                raise ValueError(
-                    f"feature_names provided should contain {self.n_features} elements"
-                )
-            min_names = [feature_names[f] for f in self._selected_features["min"]]
-            mid_names = [feature_names[f] for f in self._selected_features["mid"]]
-            max_names = [feature_names[f] for f in self._selected_features["max"]]
-
-            return SelectedFeatures(min=min_names, max=max_names, mid=mid_names,)
-
-        return SelectedFeatures(
-            min=self._selected_features["min"][:],
-            max=self._selected_features["max"][:],
-            mid=self._selected_features["mid"][:],
-        )
-
-    def get_params(self):
-        return {
-            "n_outer": self.n_outer,
-            "metric": self.metric,
-            "estimator": self.estimator,
-            "features_dropout_rate": self.features_dropout_rate,
-            "robust_minimum": self.robust_minimum,
-            "n_inner": self.n_inner,
-            "n_repetitions": self.n_repetitions,
-            "random_state": (
-                None
-                if self.random_state is None
-                else self.random_state.get_state()[1][0]
-            ),
-        }
-
-    def print_report(self, feature_names: List[str]):
-        """
-        Prints a small report of the results obtained from the feature selection.
-
-        Parameters
-        ----------
-        feature_names: List[str]
-            List with the name of the features of the original data
-
-        """
-        selected_features = self.get_selected_features(feature_names)
-        self._print_report(selected_features)
-
-    @staticmethod
-    def _print_report(selected_features: SelectedFeatures):
-        print(
-            f"Min features ({len(selected_features['min'])}): "
-            f"{', '.join(selected_features['min'])}\n"
-        )
-        print(
-            f"Mid features ({len(selected_features['mid'])}): "
-            f"{', '.join(selected_features['mid'])}\n"
-        )
-        print(
-            f"Max features ({len(selected_features['max'])}): "
-            f"{', '.join(selected_features['max'])}\n"
-        )
+    def _get_validation_curves(self) -> Dict[str, List]:
+        return self._post_processor.get_validation_curves(self._raw_results)
 
     def __repr__(self):
         fs = (
@@ -460,14 +462,67 @@ class FeatureSelector:
 
         return fs
 
-    def get_feature_selection_results(self) -> FeatureSelectionResults:
-        return FeatureSelectionResults(
-            selected_features=self.get_selected_features(),
-            score_curve=self.get_validation_curves()["total"][0],
-        )
-
     @staticmethod
     def _make_progress_bar():
         if logging.getLogger(__name__).getEffectiveLevel() > logging.INFO:
             return progressbar.NullBar
         return progressbar.ProgressBar
+
+    def export_average_feature_ranks(
+        self,
+        output_path: str,
+        feature_names: List[str] = None,
+        exclude_unused_features: bool = True,
+    ) -> pd.DataFrame:
+        """
+        Creates and saves dataframe from the feature selection results. This dataframe contains
+        the columns 'mid', 'mid', and 'max', the indices are the features and the values
+        are the average rank across repetitions and outer loops.
+
+        Parameters
+        ----------
+        output_path: str
+            Path where to save the csv dataframe
+        feature_names: List[str]
+            The name of every feature, by default None
+        exclude_unused_features: bool
+            Whether to remove the features that werent selected or not.
+
+        Returns
+        -------
+        pd.DataFrame:
+            Pandas dataframe containing the average feature ranks
+
+        """
+        ranks_df = self.get_average_ranks_df(feature_names, exclude_unused_features)
+
+        ranks_df.to_csv(output_path)
+        return ranks_df
+
+    def get_average_ranks_df(
+        self,
+        feature_names: List[str] = None,
+        exclude_unused_features: bool = True,
+    ):
+        """
+        Creates a dataframe from the feature selection results. This dataframe contains
+        the columns 'mid', 'mid', and 'max', the indices are the features and the values
+        are the average rank across repetitions and outer loops.
+
+        Parameters
+        ----------
+        feature_names: List[str]
+            The name of every feature, by default None
+        exclude_unused_features: bool
+            Whether to remove the features that werent selected or not.
+
+        Returns
+        -------
+        pd.DataFrame:
+            Pandas dataframe containing the average feature ranks
+
+        """
+        results = self.get_feature_selection_results()
+        return self._post_processor.make_average_ranks_df(
+            results, self._n_features, feature_names, exclude_unused_features
+        )

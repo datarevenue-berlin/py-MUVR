@@ -1,0 +1,55 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+trigger: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+strategy:
+  matrix:
+    Python37:
+      python.version: '3.7'
+    Python38:
+      python.version: '3.8'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '$(python.version)'
+  displayName: 'Use Python $(python.version)'
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+    pip install -r requirements_dev.txt
+    pip install twine
+  displayName: 'Install dependencies'
+
+- script: |
+    pip install pytest pytest-azurepipelines==1.0.0rc5
+    pytest --cov=omigami tests/ --cov-report html --nunitxml test-output.xml -m 'not slow'
+  displayName: 'Run fast tests'
+
+- script: |
+    pytest --cov=omigami tests/ --cov-report html --nunitxml test-output.xml -m 'slow'
+  displayName: 'Run slow tests'
+  condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'main'))
+
+- script: |
+    make docs
+  displayName: 'Build documentation'
+
+# TODO: these next two are to push to RTD and pypi but the logic is a WIP
+- script: |
+    commitHash=${sourceVersion:0:7}
+    hasTag="$(git tag --contains $commitHash)"
+    echo "##vso[task.setvariable variable=hasTag]$hasTag"
+    echo $hasTag
+  env: {sourceVersion: $(Build.SourceVersion)}
+  displayName: Look for tag on commit
+
+- script: |
+    echo ${{  variables.hasTag  }}
+  condition: not(eq(variables.hasTag, ''))
+  displayName: 'Push to pypi.'

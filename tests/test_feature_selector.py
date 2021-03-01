@@ -3,6 +3,7 @@ import pytest
 from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
+import pandas as pd
 from sklearn.linear_model import LinearRegression
 from loky import get_reusable_executor
 from dask.distributed import Client
@@ -50,7 +51,7 @@ def test_fit(fs):
     y = np.array([np.random.choice([0, 1]) for _ in range(10)])
     fitted_fs = fs.fit(X, y)
     assert fitted_fs is fs
-    assert fs.get_selected_features()
+    assert fs._selected_features
     assert fs.is_fit
 
 
@@ -76,11 +77,11 @@ def test_run_outer_loop(fs):
     fs._create_outer_loop_results = Mock(
         spec=fs._create_outer_loop_results, return_value="outer_loop_res"
     )
-    fs.feature_evaluator.evaluate_features = Mock(
-        spec=fs.feature_evaluator.evaluate_features, return_value="res"
+    fs._feature_evaluator.evaluate_features = Mock(
+        spec=fs._feature_evaluator.evaluate_features, return_value="res"
     )
-    fs.post_processor.process_feature_elim_results = Mock(
-        fs.post_processor.process_feature_elim_results, return_value="processed_results"
+    fs._post_processor.process_feature_elim_results = Mock(
+        fs._post_processor.process_feature_elim_results, return_value="processed_results"
     )
     inner_results = ["res", "res"]
     features = [0, 1, 2]
@@ -92,7 +93,7 @@ def test_run_outer_loop(fs):
     data_splitter.iter_inner_splits.assert_called_with("outer_split")
     data_splitter.split_data.assert_called_with(input_data, 2, features)
     fs._remove_features.assert_called_once_with(features, inner_results)
-    fs.feature_evaluator.evaluate_features.assert_called_with("split", features)
+    fs._feature_evaluator.evaluate_features.assert_called_with("split", features)
     fs._create_outer_loop_results.assert_called_with(
         raw_results, input_data, "outer_split", data_splitter
     )
@@ -121,8 +122,8 @@ def test_create_outer_loop_results():
 
 def test_evaluate_min_mid_and_max_features(fs, dataset, rfe_raw_results):
     best_features = SelectedFeatures([1, 2], [1, 2, 3, 4], [1, 2, 3])
-    fs.feature_evaluator.evaluate_features = Mock(
-        spec=fs.feature_evaluator.evaluate_features, side_effect=["min", "mid", "max"]
+    fs._feature_evaluator.evaluate_features = Mock(
+        spec=fs._feature_evaluator.evaluate_features, side_effect=["min", "mid", "max"]
     )
     data_splitter = Mock(DataSplitter)
     data_splitter.split_data = Mock(spec=data_splitter.split_data, return_value="data")
@@ -135,7 +136,7 @@ def test_evaluate_min_mid_and_max_features(fs, dataset, rfe_raw_results):
     data_splitter.split_data.assert_called_with(
         dataset, "split", best_features["max"]
     )
-    assert fs.feature_evaluator.evaluate_features.call_count == 3
+    assert fs._feature_evaluator.evaluate_features.call_count == 3
 
 
 @pytest.mark.parametrize(
@@ -147,73 +148,95 @@ def test_deferred_fit(executor):
     y = np.array([np.random.choice([0, 1]) for _ in range(10)])
     lr = LinearRegression()
     fs = FeatureSelector(
-        n_outer=8, n_repetitions=8, random_state=0, estimator=lr, metric="MISS",
+        n_outer=3, n_repetitions=2, random_state=0, estimator=lr, metric="MISS",
     )
     fitted_fs = fs.fit(X, y, executor=executor)
     assert fitted_fs is fs
-    assert fs.get_selected_features()
+    assert fs._selected_features
     assert fs.is_fit
 
 
 def test_select_best_features(fs):
     fs._fetch_results = Mock(fs._fetch_results, return_value="results")
-    fs.post_processor.select_features = Mock(
-        fs.post_processor.select_features, return_value="features"
+    fs._post_processor.select_features = Mock(
+        fs._post_processor.select_features, return_value="features"
     )
 
     selected_features = fs._select_best_features("rep results")
 
     assert selected_features == "features"
     fs._fetch_results.assert_called_once_with("rep results")
-    fs.post_processor.select_features.assert_called_once_with("results")
+    fs._post_processor.select_features.assert_called_once_with("results")
 
 
-def test_get_selected_features(fs, mosquito):
+def test_get_feature_selection_results(fs, raw_results):
+    fs._selected_features = [1, 2, 3]
+    fs._raw_results = raw_results
+    fs.is_fit = True
+    fs._get_selected_feature_names = Mock(
+        fs._get_selected_feature_names, return_value="sel_feat_names"
+    )
+    fs._get_validation_curves = Mock(
+        fs._get_validation_curves, return_value={"total": [ScoreCurve(None, None)]}
+    )
+
+    fs_results = fs.get_feature_selection_results(["names"])
+
+    assert isinstance(fs_results, FeatureSelectionResults)
+    assert isinstance(fs_results.score_curves["total"][0], ScoreCurve)
+    assert fs_results.selected_features == fs._selected_features
+    assert fs_results.selected_features is not fs._selected_features
+    assert fs_results.raw_results == fs._raw_results
+    assert fs_results.raw_results is not fs._raw_results
+    assert fs_results.selected_feature_names == "sel_feat_names"
+    fs._get_selected_feature_names.assert_called_once_with(["names"])
+    fs._get_validation_curves.assert_called_once()
+
+
+def test_get_selected_features(fs):
+    fs._selected_features = [1, 2, 3]
+
+    selected_features = fs.get_selected_features()
+
+    assert selected_features == fs._selected_features
+    assert selected_features is not fs._selected_features
+
+
+def test_get_selected_feature_names(fs, mosquito):
     X = mosquito.X[:, 0:10]
     y = np.array([1] + [0, 1] * 14)
     fs.fit(X, y)
     fs._selected_features = SelectedFeatures([0], [0], [0])
-    selected_features = fs.get_selected_features()
-    assert selected_features["min"] == fs._selected_features["min"]
+    selected_features = fs._selected_features
     feature_names = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"]
-    assert len(feature_names) == X.shape[1]
-    selected_features_names = fs.get_selected_features(feature_names=feature_names)
+
+    selected_features_names = fs._get_selected_feature_names(feature_names=feature_names)
+
     assert len(selected_features_names["min"]) == len(selected_features["min"])
     with pytest.raises(ValueError):
-        fs.get_selected_features(feature_names=["only-one-name"])
+        fs._get_selected_feature_names(feature_names=["only-one-name"])
 
 
-def test_get_params(fs):
-    params = fs.get_params()
-    assert params["metric"] == "MISS"
-    assert params["random_state"] == 0
-    assert isinstance(params["estimator"], LinearRegression)
-    assert params["n_repetitions"] == 4
-    assert params["n_outer"] == 4
-    assert params["n_inner"] == 3
-    assert params["features_dropout_rate"] == 0.1
-    assert params["robust_minimum"] == 0.05
-    assert FeatureSelector(**params)
+def test_export_average_feature_ranks(fs):
+    df = pd.DataFrame()
+    df.to_csv = Mock()
+    fs.get_average_ranks_df = Mock(return_value=df)
+
+    res = fs.export_average_feature_ranks("path", ["names"], True)
+
+    assert res is df
+    fs.get_average_ranks_df.assert_called_once_with(["names"], True)
+    df.to_csv.assert_called_once_with("path")
 
 
-def test_make_report(fs):
-    fs.get_selected_features = Mock(fs.get_selected_features, return_value="selected")
-    fs._print_report = Mock(fs._print_report)
+def test_get_average_ranks_df(fs):
+    fs.get_feature_selection_results = Mock(return_value="fs_results")
+    fs._post_processor.make_average_ranks_df = Mock(return_value="ranks_df")
 
-    fs.print_report(["feature_names"])
+    ranks_df = fs.get_average_ranks_df(["names"], True)
 
-    fs.get_selected_features.assert_called_once_with(["feature_names"])
-    fs._print_report.assert_called_once_with("selected")
-
-
-def test_get_features_and_scores(fs):
-    fs.get_selected_features = Mock(fs.get_selected_features, return_value="sel_feats")
-    fs.get_validation_curves = Mock(
-        fs.get_validation_curves, return_value={"total": [ScoreCurve(None, None)]}
+    assert ranks_df == "ranks_df"
+    fs.get_feature_selection_results.assert_called_once()
+    fs._post_processor.make_average_ranks_df.assert_called_once_with(
+        "fs_results", fs._n_features, ["names"], True
     )
-    fs_results = fs.get_feature_selection_results()
-    score_curve = fs_results.score_curve
-    assert isinstance(fs_results, FeatureSelectionResults)
-    assert isinstance(score_curve, ScoreCurve)
-    fs.get_selected_features.assert_called_once()
-    fs.get_validation_curves.assert_called_once()

@@ -183,9 +183,9 @@ def test_select_best_features(rfe_raw_results):
 
     selected_feats = pp._select_best_outer_features(rfe_raw_results, avg_scores)
 
-    assert sorted(selected_feats.min_feats) == [2, 4]
-    assert sorted(selected_feats.mid_feats) == [2, 3, 4]
-    assert sorted(selected_feats.max_feats) == [1, 2, 3, 4]
+    assert sorted(selected_feats["min"]) == [2, 4]
+    assert sorted(selected_feats["mid"]) == [2, 3, 4]
+    assert sorted(selected_feats["max"]) == [1, 2, 3, 4]
 
 
 def test_get_all_feature_sets(results):
@@ -203,3 +203,43 @@ def test_get_all_feature_models(results):
     models = pp.get_all_feature_sets(results, "min")
     return len(models) == 4
     assert isinstance(models[0], Estimator)
+
+
+def test_make_average_ranks_dataframe(fs_results):
+    pp = PostProcessor(1)
+    n_feats = 5
+    feature_names = "a, b, c, d, e".split(", ")
+
+    ranks_df = pp.make_average_ranks_df(fs_results, n_feats, feature_names)
+
+    assert ranks_df.ndim
+    assert len(ranks_df) == n_feats
+    assert set(ranks_df.index) == set(feature_names)
+
+
+def test_exclude_unused_features(fs_results):
+    pp = PostProcessor(1)
+    n_feats = 5
+    unused_feats = 10
+
+    reduced_df = pp.make_average_ranks_df(
+        fs_results, unused_feats, exclude_unused_features=True
+    )
+    full_df = pp.make_average_ranks_df(
+        fs_results, unused_feats, exclude_unused_features=False
+    )
+
+    assert reduced_df.ndim
+    assert full_df.ndim
+    assert len(reduced_df) == n_feats
+    assert len(full_df) == unused_feats
+
+
+def test_get_feature_ranks(raw_results):
+    pp = PostProcessor(1)
+
+    min_ranks = pp._get_feature_ranks(raw_results, "min")
+    max_ranks = pp._get_feature_ranks(raw_results, "max")
+
+    assert len(min_ranks) == len(max_ranks)
+    assert isinstance(min_ranks[0], dict)

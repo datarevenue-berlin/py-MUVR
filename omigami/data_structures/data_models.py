@@ -115,5 +115,10 @@ FeatureSelectionRawResults = List[List[Union[OuterLoopResults, Future]]]
 
 @dataclass
 class FeatureSelectionResults:
+    raw_results: FeatureSelectionRawResults
     selected_features: SelectedFeatures
-    score_curve: ScoreCurve
+    score_curves: Dict[str, List[ScoreCurve]]
+    selected_feature_names: SelectedFeatures = None
+
+    def __repr__(self):
+        return "FeatureSelectionResults"
