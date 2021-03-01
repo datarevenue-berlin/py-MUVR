@@ -8,27 +8,33 @@ from omigami.models import ScikitLearnEstimator
 @pytest.fixture
 def fitted_selector(dataset):
     return FeatureSelector(
-        n_outer=3, n_repetitions=2, metric="MISS", estimator="PLSC", random_state=0,
+        n_outer=3,
+        n_repetitions=2,
+        metric="MISS",
+        estimator="PLSC",
+        random_state=0,
     ).fit(dataset.X, dataset.y)
 
 
-def test_consensus_model(fitted_selector):
+def test_consensus_model_init(fitted_selector):
     fs = FeatureSelector(
-        n_outer=3, n_repetitions=2, metric="MISS", estimator="PLSC", random_state=0,
+        n_outer=3,
+        n_repetitions=2,
+        metric="MISS",
+        estimator="PLSC",
+        random_state=0,
     )
     with pytest.raises(NotFitException):
-        cm = ConsensusModel(fs, "min", "classification")
+        _ = ConsensusModel(fs, "min")
     with pytest.raises(ValueError):
-        cm = ConsensusModel(fitted_selector, "yo", "classification")
-    with pytest.raises(ValueError):
-        cm = ConsensusModel(fitted_selector, "min", "yo")
-    assert ConsensusModel(fitted_selector, "min", "classification")
-    assert ConsensusModel(fitted_selector, "max", "classification")
-    assert ConsensusModel(fitted_selector, "mid", "classification")
+        _ = ConsensusModel(fitted_selector, "yo")
+    assert ConsensusModel(fitted_selector, "min")
+    assert ConsensusModel(fitted_selector, "max")
+    assert ConsensusModel(fitted_selector, "mid")
 
 
 def test_predict(fitted_selector, dataset):
-    cm = ConsensusModel(fitted_selector, "min", "classification")
+    cm = ConsensusModel(fitted_selector, "min")
     y_pred = cm.predict(dataset.X)
     assert y_pred.shape == dataset.y.shape
     assert y_pred.size == dataset.y.size
@@ -36,17 +42,22 @@ def test_predict(fitted_selector, dataset):
 
 
 def test_extract_evaluators(fitted_selector):
-    cm = ConsensusModel(fitted_selector, "min", "classification")
-    models = cm._extract_evaluators(fitted_selector, "min")
-    for model in models:
+    cm = ConsensusModel(fitted_selector, "min")
+    for model in cm._models:
         assert isinstance(model, ScikitLearnEstimator)
 
 
 def test_extract_feature_sets(fitted_selector):
-    cm = ConsensusModel(fitted_selector, "min", "classification")
-    feature_sets = cm._extract_feature_sets(fitted_selector, "min")
-    assert len(feature_sets) == fitted_selector.n_repetitions * fitted_selector.n_outer
-    for features in feature_sets:
-        assert len(features) <= fitted_selector.n_features
-        assert max(features) <= fitted_selector.n_features - 1
+    cm = ConsensusModel(fitted_selector, "min")
+    assert (
+        len(cm._feature_sets) == fitted_selector.n_repetitions * fitted_selector.n_outer
+    )
+    for features in cm._feature_sets:
+        assert len(features) <= fitted_selector._n_features
+        assert max(features) <= fitted_selector._n_features - 1
         assert min(features) >= 0
+
+
+def test_predict_with_regressor():
+    # TODO: implement
+    assert False

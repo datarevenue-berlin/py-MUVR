@@ -129,6 +129,13 @@ class FeatureSelector:
         self._feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
         self._post_processor = PostProcessor(robust_minimum)
 
+    @property
+    def raw_results(self):
+        if self.is_fit:
+            return self._raw_results
+        else:
+            raise NotFitException("The feature selector is not fit yet")
+
     def _set_n_inner(self, n_inner: Union[int, None]) -> int:
         if not n_inner:
             log.info("Parameter n_inner is not specified, setting it to n_outer - 1")
@@ -527,15 +534,3 @@ class FeatureSelector:
         return self._post_processor.make_average_ranks_df(
             results, self._n_features, feature_names, exclude_unused_features
         )
-
-    def get_all_feature_sets(self, feature_set_label: str) -> List[List[int]]:
-        attr_name = feature_set_label + "_eval"
-        flat_results = [r for repetition in self._raw_results for r in repetition]
-        ranks = [getattr(result, attr_name).ranks for result in flat_results]
-        feature_sets = [list(r.get_data().keys()) for r in ranks]
-        return feature_sets
-
-    def get_all_feature_models(self, feature_set_label: str) -> List[Estimator]:
-        flat_results = [r for repetition in self._raw_results for r in repetition]
-        attr_name = feature_set_label + "_eval"
-        return [getattr(r, attr_name).model for result in flat_results]
