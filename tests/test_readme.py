@@ -31,8 +31,9 @@ def readme_string():
 
 
 @pytest.mark.skip(os.getenv("CI", "False").title())
+@pytest.mark.slow
 def test_readme_code_examples(data, readme_string):
-    """ this tests checks that every (almost) python snippet in the README
+    """this tests checks that every (almost) python snippet in the README
     would run sequentially without raising errors"""
     python_snippets = PYTHON_SNIPPET_REGEX.findall(readme_string)
     for snippet in python_snippets:
