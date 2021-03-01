@@ -8,6 +8,11 @@ class Estimator(ABC):
     def feature_importances(self):
         pass
 
+    @property
+    @abstractmethod
+    def _estimator_type(self):
+        pass
+
     @abstractmethod
     def set_random_state(self, random_state: RandomState):
         pass
@@ -23,5 +28,3 @@ class Estimator(ABC):
     @abstractmethod
     def predict(self, X):
         pass
-
-

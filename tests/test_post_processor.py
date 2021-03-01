@@ -188,23 +188,6 @@ def test_select_best_features(rfe_raw_results):
     assert sorted(selected_feats["max"]) == [1, 2, 3, 4]
 
 
-def test_get_all_feature_sets(results):
-    pp = PostProcessor(None)
-    feature_sets = pp.get_all_feature_sets(results, "min")
-    feature_sets_counts = collections.Counter(tuple(sorted(fs)) for fs in feature_sets)
-    assert feature_sets
-    assert len(feature_sets) == 4
-    assert feature_sets_counts[(0, 1)] == 3
-    assert feature_sets_counts[(0, 1, 3, 4)] == 1
-
-
-def test_get_all_feature_models(results):
-    pp = PostProcessor(None)
-    models = pp.get_all_feature_sets(results, "min")
-    return len(models) == 4
-    assert isinstance(models[0], Estimator)
-
-
 def test_make_average_ranks_dataframe(fs_results):
     pp = PostProcessor(1)
     n_feats = 5

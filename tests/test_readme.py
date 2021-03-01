@@ -30,7 +30,7 @@ def readme_string():
     return readme
 
 
-@pytest.mark.slow
+@pytest.mark.skip(os.getenv("CI", "False").title())
 def test_readme_code_examples(data, readme_string):
     """ this tests checks that every (almost) python snippet in the README
     would run sequentially without raising errors"""

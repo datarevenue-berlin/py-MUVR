@@ -4,6 +4,9 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/python
 trigger: none
 
+variables:
+  CI: 'true'
+
 pool:
   vmImage: 'ubuntu-latest'
 strategy:
