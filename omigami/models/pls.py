@@ -56,6 +56,7 @@ class PLSClassifier(PLSRegression):
 
     encoder = None
     feature_importances_ = None
+    _estimator_type = "classifier"
 
     def fit(self, X: NumpyArray, Y: NumpyArray):
         if self.n_components > X.shape[1]:

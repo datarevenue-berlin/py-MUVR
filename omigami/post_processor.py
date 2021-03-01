@@ -7,7 +7,8 @@ from omigami.data_structures import (
     ScoreCurve,
     FeatureEliminationResults,
     InnerLoopResults,
-    FeatureSelectionRawResults, FeatureSelectionResults,
+    FeatureSelectionRawResults,
+    FeatureSelectionResults,
 )
 from omigami.utils import (
     average_ranks,
@@ -187,7 +188,7 @@ class PostProcessor:
         feature_selection_results: FeatureSelectionResults,
         n_features: int,
         feature_names: List[str] = None,
-        exclude_unused_features: bool = True
+        exclude_unused_features: bool = True,
     ) -> pd.DataFrame:
 
         results_df = pd.DataFrame(
@@ -211,8 +212,7 @@ class PostProcessor:
 
     @staticmethod
     def _get_feature_ranks(
-        raw_results: FeatureSelectionRawResults,
-        feature_set: str
+        raw_results: FeatureSelectionRawResults, feature_set: str
     ) -> List[Dict[int, float]]:
         ranks = []
         for r in raw_results:

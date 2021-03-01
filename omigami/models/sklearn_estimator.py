@@ -35,6 +35,10 @@ class ScikitLearnEstimator(Estimator):
         self.set_random_state(random_state)
 
     @property
+    def _estimator_type(self):
+        return self._estimator._estimator_type
+
+    @property
     def feature_importances(self):
         feature_importances = self._get_feature_importances(self._estimator)
         if feature_importances is None:

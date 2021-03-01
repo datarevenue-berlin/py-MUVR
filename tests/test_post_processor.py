@@ -1,8 +1,10 @@
 import pytest
 
+import collections
 from omigami.post_processor import PostProcessor
 from omigami.feature_evaluator import FeatureEvaluationResults
 from omigami.data_structures import FeatureRanks, ScoreCurve, OuterLoopResults
+from omigami.models import Estimator
 
 
 @pytest.fixture
@@ -13,19 +15,19 @@ def outer_loop_results():
             min_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[1, 2], ranks=[1, 2], n_feats=5),
-                model="model"
+                model="model",
             ),
             max_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(
                     features=[1, 2, 3, 4], ranks=[2, 1, 3, 4], n_feats=5
                 ),
-                model="model"
+                model="model",
             ),
             mid_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[1, 2, 3], ranks=[1, 2, 3], n_feats=5),
-                model="model"
+                model="model",
             ),
         ),
         OuterLoopResults(
@@ -33,19 +35,19 @@ def outer_loop_results():
             min_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[1, 2], ranks=[1.5, 1.5], n_feats=5),
-                model="model"
+                model="model",
             ),
             max_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(
                     features=[0, 1, 2, 3], ranks=[1, 2, 3, 4], n_feats=5
                 ),
-                model="model"
+                model="model",
             ),
             mid_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[0, 1, 2], ranks=[3, 1, 2], n_feats=5),
-                model="model"
+                model="model",
             ),
         ),
     ]
@@ -59,19 +61,19 @@ def outer_loop_results2():
             min_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[2, 3], ranks=[1, 2], n_feats=5),
-                model="model"
+                model="model",
             ),
             max_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(
                     features=[0, 1, 2, 3], ranks=[3, 1, 2, 4], n_feats=5
                 ),
-                model="model"
+                model="model",
             ),
             mid_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[0, 1, 2], ranks=[3, 1, 2], n_feats=5),
-                model="model"
+                model="model",
             ),
         ),
         OuterLoopResults(
@@ -79,19 +81,19 @@ def outer_loop_results2():
             min_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[0, 1], ranks=[1, 2], n_feats=5),
-                model="model"
+                model="model",
             ),
             max_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(
                     features=[0, 1, 2, 4], ranks=[4, 3, 1, 2], n_feats=5
                 ),
-                model="model"
+                model="model",
             ),
             mid_eval=FeatureEvaluationResults(
                 test_score=0,
                 ranks=FeatureRanks(features=[1, 2, 3], ranks=[3, 1, 2], n_feats=5),
-                model="model"
+                model="model",
             ),
         ),
     ]

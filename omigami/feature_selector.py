@@ -25,6 +25,7 @@ from omigami.data_structures import (
 )
 from omigami.feature_evaluator import FeatureEvaluator
 from omigami.data_splitter import DataSplitter
+from omigami.models import Estimator
 from omigami.post_processor import PostProcessor
 from omigami.utils import get_best_n_features, average_ranks
 from omigami.exceptions import NotFitException
@@ -127,6 +128,13 @@ class FeatureSelector:
 
         self._feature_evaluator = FeatureEvaluator(estimator, metric, random_state)
         self._post_processor = PostProcessor(robust_minimum)
+
+    @property
+    def raw_results(self):
+        if self.is_fit:
+            return self._raw_results
+        else:
+            raise NotFitException("The feature selector is not fit yet")
 
     def _set_n_inner(self, n_inner: Union[int, None]) -> int:
         if not n_inner:
