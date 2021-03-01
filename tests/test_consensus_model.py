@@ -1,4 +1,7 @@
 import pytest
+
+import numpy as np
+
 from omigami.exceptions import NotFitException
 from omigami.consensus_model import ConsensusModel
 from omigami.feature_selector import FeatureSelector
@@ -37,7 +40,6 @@ def test_predict(fitted_selector, dataset):
     cm = ConsensusModel(fitted_selector, "min")
     y_pred = cm.predict(dataset.X)
     assert y_pred.shape == dataset.y.shape
-    assert y_pred.size == dataset.y.size
     assert set(y_pred.tolist()) == set(dataset.y.tolist())
 
 
@@ -58,6 +60,18 @@ def test_extract_feature_sets(fitted_selector):
         assert min(features) >= 0
 
 
-def test_predict_with_regressor():
-    # TODO: implement
-    assert False
+def test_predict_with_regressor(freelive):
+    fs = FeatureSelector(
+        n_outer=3,
+        n_repetitions=2,
+        metric="neg_mean_squared_error",
+        estimator="PLSR",
+        random_state=0,
+    ).fit(freelive.X[:, :100], freelive.y)
+    cm = ConsensusModel(fs, "mid")
+
+    y_pred = cm.predict(freelive.X[:, :200])
+
+    assert y_pred.shape == freelive.y.shape
+    assert all(y_pred >= 0)
+    assert np.floor(y_pred.mean()) == np.floor(freelive.y.mean())

@@ -109,5 +109,5 @@ class ConsensusModel:
         """
         y_preds = self._ensemble_predict(X)
         if is_classifier(self._models[0]):
-            return np.mode(mode(y_preds, axis=0)).ravel()
+            return mode(y_preds, axis=0)[0].ravel()
         return y_preds.mean(axis=0)
