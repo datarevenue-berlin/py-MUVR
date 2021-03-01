@@ -25,6 +25,7 @@ from omigami.data_structures import (
 )
 from omigami.feature_evaluator import FeatureEvaluator
 from omigami.data_splitter import DataSplitter
+from omigami.models import Estimator
 from omigami.post_processor import PostProcessor
 from omigami.utils import get_best_n_features, average_ranks
 from omigami.exceptions import NotFitException
@@ -526,3 +527,15 @@ class FeatureSelector:
         return self._post_processor.make_average_ranks_df(
             results, self._n_features, feature_names, exclude_unused_features
         )
+
+    def get_all_feature_sets(self, feature_set_label: str) -> List[List[int]]:
+        attr_name = feature_set_label + "_eval"
+        flat_results = [r for repetition in self._raw_results for r in repetition]
+        ranks = [getattr(result, attr_name).ranks for result in flat_results]
+        feature_sets = [list(r.get_data().keys()) for r in ranks]
+        return feature_sets
+
+    def get_all_feature_models(self, feature_set_label: str) -> List[Estimator]:
+        flat_results = [r for repetition in self._raw_results for r in repetition]
+        attr_name = feature_set_label + "_eval"
+        return [getattr(r, attr_name).model for result in flat_results]

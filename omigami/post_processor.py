@@ -7,9 +7,9 @@ from omigami.data_structures import (
     ScoreCurve,
     FeatureEliminationResults,
     InnerLoopResults,
-    FeatureSelectionRawResults, FeatureSelectionResults,
+    FeatureSelectionRawResults,
+    FeatureSelectionResults,
 )
-from omigami.models import Estimator
 from omigami.utils import (
     average_ranks,
     average_scores,
@@ -188,7 +188,7 @@ class PostProcessor:
         feature_selection_results: FeatureSelectionResults,
         n_features: int,
         feature_names: List[str] = None,
-        exclude_unused_features: bool = True
+        exclude_unused_features: bool = True,
     ) -> pd.DataFrame:
 
         results_df = pd.DataFrame(
@@ -212,8 +212,7 @@ class PostProcessor:
 
     @staticmethod
     def _get_feature_ranks(
-        raw_results: FeatureSelectionRawResults,
-        feature_set: str
+        raw_results: FeatureSelectionRawResults, feature_set: str
     ) -> List[Dict[int, float]]:
         ranks = []
         for r in raw_results:
@@ -221,27 +220,3 @@ class PostProcessor:
                 ranks_raw_data = getattr(ol, feature_set + "_eval").ranks.get_data()
                 ranks.append(ranks_raw_data)
         return ranks
-
-    @staticmethod
-    def get_all_feature_sets(
-        results: FeatureSelectionResults, feature_set_label: str
-    ) -> List[List[int]]:
-        if feature_set_label == "min":
-            ranks = [r.min_eval.ranks for repetition in results for r in repetition]
-        if feature_set_label == "mid":
-            ranks = [r.mid_eval.ranks for repetition in results for r in repetition]
-        if feature_set_label == "max":
-            ranks = [r.max_eval.ranks for repetition in results for r in repetition]
-        feature_sets = [list(r.get_data().keys()) for r in ranks]
-        return feature_sets
-
-    @staticmethod
-    def get_all_feature_models(
-        results: FeatureSelectionResults, feature_set_label: str
-    ) -> List[Estimator]:
-        if feature_set_label == "min":
-            return [r.min_eval.model for repetition in results for r in repetition]
-        if feature_set_label == "mid":
-            return [r.mid_eval.model for repetition in results for r in repetition]
-        if feature_set_label == "max":
-            return [r.max_eval.model for repetition in results for r in repetition]

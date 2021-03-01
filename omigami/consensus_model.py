@@ -113,18 +113,15 @@ class ConsensusModel:
             return mode(y_preds, axis=0).mode.ravel()
         return y_preds.mean(axis=0)
 
+    # TODO: passthrough can probably remove
     @staticmethod
     def _extract_evaluators(
         feature_selector: FeatureSelector, feature_set_label: str
     ) -> List[Estimator]:
-        return feature_selector.post_processor.get_all_feature_models(
-            feature_selector.results, feature_set_label
-        )
+        return feature_selector.get_all_feature_models(feature_set_label)
 
     @staticmethod
     def _extract_feature_sets(
         feature_selector: FeatureSelector, feature_set_label: str
     ) -> List[List[int]]:
-        return feature_selector.post_processor.get_all_feature_sets(
-            feature_selector.results, feature_set_label
-        )
+        return feature_selector.get_all_feature_sets(feature_set_label)
