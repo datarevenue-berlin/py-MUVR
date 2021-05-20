@@ -2,6 +2,6 @@
 Usage
 =====
 
-To use omigami in a project::
+To use pymuvr in a project::
 
-    import omigami
+    import pymuvr

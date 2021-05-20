@@ -1,4 +1,4 @@
-Welcome to omigami's documentation!
+Welcome to pymuvr's documentation!
 ======================================
 
 .. toctree::
