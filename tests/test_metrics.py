@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-from omigami.models.sklearn_metrics import SKLEARN_METRICS
-from omigami.models.metrics import make_metric, _make_metric_from_string, miss_score
+from pymuvr.models.sklearn_metrics import SKLEARN_METRICS
+from pymuvr.models.metrics import make_metric, _make_metric_from_string, miss_score
 
 
 def test_make_metric():

@@ -2,7 +2,7 @@ from typing import List, Dict, Tuple
 from scipy.stats import gmean
 import numpy as np
 import pandas as pd
-from omigami.data_structures import (
+from pymuvr.data_structures import (
     SelectedFeatures,
     ScoreCurve,
     FeatureEliminationResults,
@@ -10,7 +10,7 @@ from omigami.data_structures import (
     FeatureSelectionRawResults,
     FeatureSelectionResults,
 )
-from omigami.utils import (
+from pymuvr.utils import (
     average_ranks,
     average_scores,
     normalize_score,

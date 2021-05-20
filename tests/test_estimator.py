@@ -6,8 +6,8 @@ from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC, SVR
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.exceptions import NotFittedError
-from omigami.models.estimator import Estimator
-from omigami.models import make_estimator
+from pymuvr.models.estimator import Estimator
+from pymuvr.models import make_estimator
 
 models = [
     "RFC",
@@ -44,7 +44,8 @@ def test_estimator_fit(est, dataset):
 
 
 @pytest.mark.parametrize(
-    "est", models,
+    "est",
+    models,
 )
 def test_estimator_predict(est, dataset):
     estimator = make_estimator(est, 0)
@@ -53,7 +54,8 @@ def test_estimator_predict(est, dataset):
 
 
 @pytest.mark.parametrize(
-    "est", models,
+    "est",
+    models,
 )
 def test_estimator_predict(est, dataset):
     estimator = make_estimator(est, 0).fit(dataset.X, dataset.y)

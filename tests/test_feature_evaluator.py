@@ -3,15 +3,19 @@ import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC
-from omigami.data_structures import FeatureRanks
-from omigami.feature_evaluator import FeatureEvaluator
-from omigami.models.sklearn_estimator import ScikitLearnEstimator
-from omigami.data_splitter import DataSplitter
+from pymuvr.data_structures import FeatureRanks
+from pymuvr.feature_evaluator import FeatureEvaluator
+from pymuvr.models.sklearn_estimator import ScikitLearnEstimator
+from pymuvr.data_splitter import DataSplitter
 
 
 @pytest.fixture
 def feature_evaluator():
-    fe = FeatureEvaluator(estimator="RFC", metric="MISS", random_state=0,)
+    fe = FeatureEvaluator(
+        estimator="RFC",
+        metric="MISS",
+        random_state=0,
+    )
     fe.set_n_initial_features(12)
     return fe
 
@@ -27,7 +31,11 @@ def test_evaluate_features(dataset):
     pipeline = Pipeline(
         [("normalizer", Normalizer()), ("model", SVC(kernel="linear", random_state=0))]
     )
-    fe = FeatureEvaluator(estimator=pipeline, metric="MISS", random_state=0,)
+    fe = FeatureEvaluator(
+        estimator=pipeline,
+        metric="MISS",
+        random_state=0,
+    )
     fe.set_n_initial_features(12)
     ds = DataSplitter(n_outer=5, n_inner=4, random_state=0, input_data=dataset)
     split = ds.iter_outer_splits().__next__()

@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-from omigami.data_structures import InputDataset, Split
-from omigami.data_splitter import DataSplitter
+from pymuvr.data_structures import InputDataset, Split
+from pymuvr.data_splitter import DataSplitter
 
 
 @pytest.fixture

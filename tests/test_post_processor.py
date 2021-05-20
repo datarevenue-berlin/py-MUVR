@@ -1,10 +1,10 @@
 import pytest
 
 import collections
-from omigami.post_processor import PostProcessor
-from omigami.feature_evaluator import FeatureEvaluationResults
-from omigami.data_structures import FeatureRanks, ScoreCurve, OuterLoopResults
-from omigami.models import Estimator
+from pymuvr.post_processor import PostProcessor
+from pymuvr.feature_evaluator import FeatureEvaluationResults
+from pymuvr.data_structures import FeatureRanks, ScoreCurve, OuterLoopResults
+from pymuvr.models import Estimator
 
 
 @pytest.fixture

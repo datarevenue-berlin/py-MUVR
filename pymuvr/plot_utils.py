@@ -3,10 +3,10 @@ from typing import List, Union, Iterable
 from matplotlib.pyplot import Figure
 import matplotlib.ticker as mtick
 import pandas as pd
-from omigami.permutation_test import PermutationTest
+from pymuvr.permutation_test import PermutationTest
 from matplotlib import pyplot as plt
 
-from omigami.data_structures import FeatureSelectionResults
+from pymuvr.data_structures import FeatureSelectionResults
 
 log = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ def plot_feature_rank(
     model: str,
     feature_names: List[str] = None,
     show_outliers: bool = True,
-    **figure_kwargs
+    **figure_kwargs,
 ) -> Figure:
     if model not in {"min", "max", "mid"}:
         raise ValueError("The model parameter must be one of 'min', 'max' or 'mid'.")
@@ -142,7 +142,7 @@ def plot_permutation_scores(
     permutation_test: PermutationTest,
     model: str,
     bins: Union[int, str, Iterable[float]] = "auto",
-    **fig_kwargs
+    **fig_kwargs,
 ) -> Figure:
     score, perm_scores = permutation_test.compute_permutation_scores(model)
     p_value = permutation_test.compute_p_values(model, ranks=False)

@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from omigami.models import sklearn_metrics
+from pymuvr.models import sklearn_metrics
 
 
 regression_true = np.array([1, 2, 3, 4, 5])
@@ -13,7 +13,10 @@ binary_classification_pred = np.array([1, 0, 1, 0, 1, 1])
 
 @pytest.mark.parametrize(
     ("y_pred", "y_true", "res"),
-    [(regression_pred, regression_true, -3), (regression_true, regression_true, 1),],
+    [
+        (regression_pred, regression_true, -3),
+        (regression_true, regression_true, 1),
+    ],
 )
 def test_explained_variance(y_pred, y_true, res):
     metric = sklearn_metrics.SKLEARN_METRICS["explained_variance"]
@@ -23,7 +26,10 @@ def test_explained_variance(y_pred, y_true, res):
 
 @pytest.mark.parametrize(
     ("y_pred", "y_true", "res"),
-    [(regression_pred, regression_true, -3), (regression_true, regression_true, 1),],
+    [
+        (regression_pred, regression_true, -3),
+        (regression_true, regression_true, 1),
+    ],
 )
 def test_r2(y_pred, y_true, res):
     metric = sklearn_metrics.SKLEARN_METRICS["r2"]
@@ -33,7 +39,10 @@ def test_r2(y_pred, y_true, res):
 
 @pytest.mark.parametrize(
     ("y_pred", "y_true", "res"),
-    [(regression_pred, regression_true, -4), (regression_true, regression_true, 0),],
+    [
+        (regression_pred, regression_true, -4),
+        (regression_true, regression_true, 0),
+    ],
 )
 def test_max_error(y_pred, y_true, res):
     metric = sklearn_metrics.SKLEARN_METRICS["max_error"]
@@ -43,7 +52,10 @@ def test_max_error(y_pred, y_true, res):
 
 @pytest.mark.parametrize(
     ("y_pred", "y_true", "res"),
-    [(regression_pred, regression_true, -2), (regression_true, regression_true, 0),],
+    [
+        (regression_pred, regression_true, -2),
+        (regression_true, regression_true, 0),
+    ],
 )
 def test_neg_median_absolute_error(y_pred, y_true, res):
     metric = sklearn_metrics.SKLEARN_METRICS["neg_median_absolute_error"]
@@ -66,7 +78,10 @@ def test_neg_mean_absolute_error(y_pred, y_true, res):
 
 @pytest.mark.parametrize(
     ("y_pred", "y_true", "res"),
-    [(regression_pred, regression_true, -8), (regression_true, regression_true, 0),],
+    [
+        (regression_pred, regression_true, -8),
+        (regression_true, regression_true, 0),
+    ],
 )
 def test_neg_mean_squared_error(y_pred, y_true, res):
     metric = sklearn_metrics.SKLEARN_METRICS["neg_mean_squared_error"]

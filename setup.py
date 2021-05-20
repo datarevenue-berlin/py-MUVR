@@ -23,7 +23,7 @@ test_requirements = [
 
 setup(
     author="Data Revenue GmbH",
-    author_email="giulio@datarevenue.com",
+    author_email="carlos@datarevenue.com",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Developers",
@@ -45,13 +45,13 @@ setup(
     license="MIT license",
     long_description=readme + "\n\n" + history,
     include_package_data=True,
-    keywords="omigami",
-    name="omigami",
+    keywords="muvr",
+    name="pymuvr",
     packages=find_packages(exclude=["tests"]),
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
-    url="https://github.com/datarevenue-berlin/omigami",
+    url="https://github.com/datarevenue-berlin/pymuvr",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     zip_safe=False,

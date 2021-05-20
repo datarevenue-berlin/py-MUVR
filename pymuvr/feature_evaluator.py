@@ -1,6 +1,6 @@
 from typing import Union, List
 from scipy.stats import rankdata
-from omigami.data_structures import (
+from pymuvr.data_structures import (
     MetricFunction,
     RandomState,
     NumpyArray,
@@ -8,8 +8,8 @@ from omigami.data_structures import (
     FeatureRanks,
     TrainTestData,
 )
-from omigami.models.metrics import make_metric
-from omigami.models import make_estimator, Estimator
+from pymuvr.models.metrics import make_metric
+from pymuvr.models import make_estimator, Estimator
 
 
 class FeatureEvaluator:
@@ -26,6 +26,7 @@ class FeatureEvaluator:
     random_state: Union[int, RandomState]
         A random state instance to control reproducibility
     """
+
     def __init__(
         self,
         estimator: Estimator,

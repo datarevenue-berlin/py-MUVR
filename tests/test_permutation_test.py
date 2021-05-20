@@ -1,9 +1,9 @@
 import pytest
 from sklearn import datasets
-from omigami import permutation_test
-from omigami.feature_selector import FeatureSelector
-from omigami.utils import compute_t_student_p_value
-from omigami.data_structures import (
+from pymuvr import permutation_test
+from pymuvr.feature_selector import FeatureSelector
+from pymuvr.utils import compute_t_student_p_value
+from pymuvr.data_structures import (
     SelectedFeatures,
     ScoreCurve,
     FeatureSelectionResults,
@@ -13,7 +13,11 @@ from omigami.data_structures import (
 @pytest.fixture
 def fit_permutation_test(raw_results):
 
-    fs = FeatureSelector(n_outer=5, metric="MISS", estimator="PLSC",)
+    fs = FeatureSelector(
+        n_outer=5,
+        metric="MISS",
+        estimator="PLSC",
+    )
     pt = permutation_test.PermutationTest(feature_selector=fs, n_permutations=4)
 
     pt.res = FeatureSelectionResults(
@@ -48,7 +52,11 @@ def fit_permutation_test(raw_results):
 
 @pytest.fixture
 def fit_feature_selector(raw_results):
-    fs = FeatureSelector(n_outer=5, metric="MISS", estimator="PLSC",)
+    fs = FeatureSelector(
+        n_outer=5,
+        metric="MISS",
+        estimator="PLSC",
+    )
     fs.is_fit = True
     fs._raw_results = raw_results
     sel_feats = fs._post_processor.select_features(raw_results)
@@ -64,9 +72,7 @@ def test_permutation_test():
 
 
 def test_copy_feature_selector(fit_feature_selector):
-    pt = permutation_test.PermutationTest(
-        fit_feature_selector, 2
-    )
+    pt = permutation_test.PermutationTest(fit_feature_selector, 2)
     fs_copy = pt._copy_feature_selector(fit_feature_selector)
 
     assert fit_feature_selector is not fs_copy

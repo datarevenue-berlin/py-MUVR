@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from omigami.data_structures.data_types import RandomState
+from pymuvr.data_structures.data_types import RandomState
 
 
 class Estimator(ABC):

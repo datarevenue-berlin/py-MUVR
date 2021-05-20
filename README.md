@@ -1,5 +1,3 @@
-<img src="./omigami-gradient.png" width="50%">
-
 #### Minimally biased features selection for omics studies
 
 [![PyPI version shields.io](https://img.shields.io/pypi/v/omigami.svg)](https://pypi.python.org/pypi/omigami) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -18,7 +16,7 @@ Multivariate recursive feature elimination within a repeated **double cross-vali
 ## Installation
 
 ```sh
-pip install omigami
+pip install pymuvr
 ```
 
 ## Acknowledgement
@@ -66,7 +64,7 @@ y = data["target"].values
 Once the data is ready, we can get a feature selector, fit it and look at the selected features:
 
 ```python
-from omigami.feature_selector import FeatureSelector
+from pymuvr.feature_selector import FeatureSelector
 feature_selector = FeatureSelector(
     n_repetitions=10,
     n_outer=5,
@@ -145,7 +143,7 @@ feature_selector.fit(X, y, executor=executor)
 To test the significance of the selected features, Omigami implements as class to perform a permutation test for the feature selection
 
 ```python
-from omigami.permutation_test import PermutationTest
+from pymuvr.permutation_test import PermutationTest
 
 permutation_test = PermutationTest(feature_selector, n_permutations=10)
 permutation_test.fit(X, y)
@@ -163,7 +161,7 @@ Omigami provides some basic plotting utils to inspect the results of the feature
 - `plot_permutation_scores`
 
 ```python
-from omigami.plot_utils import plot_feature_rank
+from pymuvr.plot_utils import plot_feature_rank
 
 feature_selection_results = feature_selector.get_feature_selection_results(feature_names)
 fig = plot_feature_rank(
@@ -174,7 +172,7 @@ fig = plot_feature_rank(
 ```
 
 ```python
-from omigami.plot_utils import plot_validation_curves
+from pymuvr.plot_utils import plot_validation_curves
 
 fig = plot_validation_curves(feature_selection_results)
 ```
@@ -182,7 +180,7 @@ fig = plot_validation_curves(feature_selection_results)
 and
 
 ```python
-from omigami.plot_utils import plot_permutation_scores
+from pymuvr.plot_utils import plot_permutation_scores
 
 fig = plot_permutation_scores(permutation_test, "min")
 ```

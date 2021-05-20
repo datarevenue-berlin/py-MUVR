@@ -2,10 +2,10 @@ import pytest
 
 import numpy as np
 
-from omigami.exceptions import NotFitException
-from omigami.consensus_model import ConsensusModel
-from omigami.feature_selector import FeatureSelector
-from omigami.models import ScikitLearnEstimator
+from pymuvr.exceptions import NotFitException
+from pymuvr.consensus_model import ConsensusModel
+from pymuvr.feature_selector import FeatureSelector
+from pymuvr.models import ScikitLearnEstimator
 
 
 @pytest.fixture
