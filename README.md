@@ -99,7 +99,7 @@ max_feats = selected_features["max"]
 
 ### Parallelization
 
-The feature selection can be time consuming. To speed it up, Omigami gives the option of executing the various CV loops in parallel using an [Executor object](https://docs.python.org/3/library/concurrent.futures.html) which
+The feature selection can be time consuming. To speed it up, PyMUVR gives the option of executing the various CV loops in parallel using an [Executor object](https://docs.python.org/3/library/concurrent.futures.html) which
 should be passed as keyword parameter to the fit method.
 
 So far, [dask](https://distributed.readthedocs.io/en/1.10.2/executor.html),
@@ -140,7 +140,7 @@ feature_selector.fit(X, y, executor=executor)
 
 ## Permutation Test
 
-To test the significance of the selected features, Omigami implements as class to perform a permutation test for the feature selection
+To test the significance of the selected features, PyMUVR implements as class to perform a permutation test for the feature selection
 
 ```python
 from pymuvr.permutation_test import PermutationTest
@@ -154,7 +154,7 @@ print("p-value of the 'min' feature set: %s" % p_value)
 
 ## Visualization
 
-Omigami provides some basic plotting utils to inspect the results of the feature selection. In particular, it provides two main methods:
+PyMUVR provides some basic plotting utils to inspect the results of the feature selection. In particular, it provides two main methods:
 
 - `plot_feature_rank`
 - `plot_validation_curves`
@@ -206,7 +206,7 @@ fig = plot_permutation_scores(permutation_test, "min")
 - **robust_minimum** (float): Maximum normalized-score value to be considered when computing the selected features
 - **random_state** (int): Pass an int for a reproducible output (default: `None`)
 
-## Contribute to Omigami
+## Contribute to PyMUVR
 
 1. Fork it (https://github.com/datarevenue-berlin/omigami/fork)
 2. Create your feature branch (git checkout -b feature/fooBar)
