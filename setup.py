@@ -51,7 +51,7 @@ setup(
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
-    url="https://github.com/datarevenue-berlin/pymuvr",
+    url="https://github.com/datarevenue-berlin/pyMUVR",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     zip_safe=False,
