@@ -10,7 +10,7 @@ import pandas as pd
 import progressbar
 from numpy.random import RandomState
 
-from omigami.data_structures import (
+from pymuvr.data_structures import (
     InputDataset,
     SelectedFeatures,
     OuterLoopResults,
@@ -23,13 +23,13 @@ from omigami.data_structures import (
     FeatureSelectionRawResults,
     FeatureSelectionResults,
 )
-from omigami.feature_evaluator import FeatureEvaluator
-from omigami.data_splitter import DataSplitter
-from omigami.models import Estimator
-from omigami.post_processor import PostProcessor
-from omigami.utils import get_best_n_features, average_ranks
-from omigami.exceptions import NotFitException
-from omigami.sync_executor import SyncExecutor
+from pymuvr.feature_evaluator import FeatureEvaluator
+from pymuvr.data_splitter import DataSplitter
+from pymuvr.models import Estimator
+from pymuvr.post_processor import PostProcessor
+from pymuvr.utils import get_best_n_features, average_ranks
+from pymuvr.exceptions import NotFitException
+from pymuvr.sync_executor import SyncExecutor
 
 
 Repetition = List[Union[OuterLoopResults, Future]]

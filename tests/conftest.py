@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from omigami import FeatureSelector
-from omigami.data_structures import (
+from pymuvr import FeatureSelector
+from pymuvr.data_structures import (
     FeatureEvaluationResults,
     FeatureRanks,
     InputDataset,

@@ -3,7 +3,7 @@ from typing import Union
 import numpy as np
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.preprocessing import OneHotEncoder
-from omigami.data_structures.data_types import NumpyArray
+from pymuvr.data_structures.data_types import NumpyArray
 
 
 log = logging.getLogger(__name__)

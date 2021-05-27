@@ -4,9 +4,9 @@ import numpy as np
 from scipy.stats import mode
 from sklearn.base import is_classifier
 
-from omigami.feature_selector import FeatureSelector
-from omigami.data_structures.data_types import NumpyArray
-from omigami.models import Estimator
+from pymuvr.feature_selector import FeatureSelector
+from pymuvr.data_structures.data_types import NumpyArray
+from pymuvr.models import Estimator
 
 
 class ConsensusModel:

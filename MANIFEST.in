@@ -9,4 +9,4 @@ recursive-exclude * *.py[co]
 
 recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
 include versioneer.py
-include omigami/_version.py
+include pymuvr/_version.py

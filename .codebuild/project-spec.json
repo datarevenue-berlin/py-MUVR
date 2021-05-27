@@ -1,8 +1,8 @@
 {
-    "name": "omigami",
+    "name": "pymuvr",
     "source": {
         "type": "GITHUB",
-        "location": "https://github.com/datarevenue-berlin/omigami.git",
+        "location": "https://github.com/datarevenue-berlin/pymuvr.git",
         "gitCloneDepth": 1,
         "gitSubmodulesConfig": {
             "fetchSubmodules": false

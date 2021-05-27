@@ -1,8 +1,8 @@
 import pytest
 import logging
 import numpy as np
-from omigami import utils
-from omigami.data_structures import FeatureRanks
+from pymuvr import utils
+from pymuvr.data_structures import FeatureRanks
 
 
 @pytest.fixture
@@ -41,7 +41,13 @@ def test_average_ranks():
 
 
 @pytest.mark.parametrize(
-    "n, best", [(1, [5]), (2, [5, 0]), (3, [5, 0, 1]), (4, [5, 0, 1, 4]),]
+    "n, best",
+    [
+        (1, [5]),
+        (2, [5, 0]),
+        (3, [5, 0, 1]),
+        (4, [5, 0, 1, 4]),
+    ],
 )
 def test_get_best_ranks(n, best):
     ranks = FeatureRanks(features=[5, 0, 1, 4], ranks=[1, 2, 3, 4], n_feats=10)
@@ -69,24 +75,22 @@ def test_compute_t_student_p_value():
 
 
 def test_mute_loggers():
-    @utils.mute_loggers(loggers=["omigami.feature_selector"])
+    @utils.mute_loggers(loggers=["pymuvr.feature_selector"])
     def test_function(logger_name):
         return logging.getLogger(logger_name).getEffectiveLevel()
 
-    @utils.mute_loggers(loggers=["omigami.feature_selector"])
+    @utils.mute_loggers(loggers=["pymuvr.feature_selector"])
     def test_bad_function(logger_name):
         raise RuntimeError("exception")
 
-    assert test_function("omigami.models.pls") == logging.INFO
-    assert test_function("omigami.feature_selector") == logging.WARN
-    assert logging.getLogger("omigami.models.pls").getEffectiveLevel() == logging.INFO
+    assert test_function("pymuvr.models.pls") == logging.INFO
+    assert test_function("pymuvr.feature_selector") == logging.WARN
+    assert logging.getLogger("pymuvr.models.pls").getEffectiveLevel() == logging.INFO
     assert (
-        logging.getLogger("omigami.feature_selector").getEffectiveLevel()
-        == logging.INFO
+        logging.getLogger("pymuvr.feature_selector").getEffectiveLevel() == logging.INFO
     )
     with pytest.raises(RuntimeError):
-        test_bad_function("omigami.feature_selector")
+        test_bad_function("pymuvr.feature_selector")
     assert (
-        logging.getLogger("omigami.feature_selector").getEffectiveLevel()
-        == logging.INFO
+        logging.getLogger("pymuvr.feature_selector").getEffectiveLevel() == logging.INFO
     )

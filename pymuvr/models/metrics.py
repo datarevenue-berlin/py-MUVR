@@ -1,6 +1,6 @@
 from typing import Union
-from omigami.data_structures import MetricFunction, NumpyArray
-from omigami.models.sklearn_metrics import SKLEARN_METRICS
+from pymuvr.data_structures import MetricFunction, NumpyArray
+from pymuvr.models.sklearn_metrics import SKLEARN_METRICS
 
 
 def make_metric(metric: Union[str, MetricFunction]) -> MetricFunction:

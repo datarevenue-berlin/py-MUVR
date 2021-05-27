@@ -1,11 +1,14 @@
 from unittest.mock import Mock
 import pytest
-from omigami.plot_utils import (
+from distributed import Client
+
+from pymuvr import FeatureSelector
+from pymuvr.plot_utils import (
     plot_validation_curves,
     plot_feature_rank,
     plot_permutation_scores,
 )
-from omigami.permutation_test import PermutationTest
+from pymuvr.permutation_test import PermutationTest
 
 
 @pytest.fixture

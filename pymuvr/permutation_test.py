@@ -4,16 +4,16 @@ from concurrent.futures import Executor
 import numpy as np
 from scipy.stats import rankdata, normaltest
 import progressbar
-from omigami.utils import compute_t_student_p_value, mute_loggers
-from omigami.data_structures.data_types import NumpyArray
-from omigami.data_structures.data_models import FeatureSelectionResults
-from omigami.feature_selector import FeatureSelector
+from pymuvr.utils import compute_t_student_p_value, mute_loggers
+from pymuvr.data_structures.data_types import NumpyArray
+from pymuvr.data_structures.data_models import FeatureSelectionResults
+from pymuvr.feature_selector import FeatureSelector
 
 logger = logging.getLogger(__name__)
 
 
 class PermutationTest:
-    """"Implements a permutation test of the omigami feature selection.
+    """ "Implements a permutation test of the pymuvr feature selection.
     The tests fits the input `feature_selector` `n_permutations` times.
     The target `y` is scrambled at every iteration so that the original
     feature selection results can be contrasted against the results of the
@@ -50,7 +50,7 @@ class PermutationTest:
         self.res = None
         self.res_perm = None
 
-    @mute_loggers(loggers=["omigami.feature_selector", "omigami.models.pls"])
+    @mute_loggers(loggers=["pymuvr.feature_selector", "pymuvr.models.pls"])
     def fit(
         self,
         X: NumpyArray,
@@ -174,9 +174,7 @@ class PermutationTest:
             n_inner=fs.n_inner,
             n_repetitions=fs.n_repetitions,
             random_state=(
-                None
-                if fs.random_state is None
-                else fs.random_state.get_state()[1][0]
+                None if fs.random_state is None else fs.random_state.get_state()[1][0]
             ),
         )
 

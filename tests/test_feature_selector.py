@@ -8,14 +8,14 @@ from sklearn.linear_model import LinearRegression
 from loky import get_reusable_executor
 from dask.distributed import Client
 
-from omigami.data_structures import (
+from pymuvr.data_structures import (
     InputDataset,
     SelectedFeatures,
     FeatureSelectionResults,
     ScoreCurve,
 )
-from omigami.data_splitter import DataSplitter
-from omigami.feature_selector import FeatureSelector
+from pymuvr.data_splitter import DataSplitter
+from pymuvr.feature_selector import FeatureSelector
 
 
 @pytest.fixture()
@@ -81,7 +81,8 @@ def test_run_outer_loop(fs):
         spec=fs._feature_evaluator.evaluate_features, return_value="res"
     )
     fs._post_processor.process_feature_elim_results = Mock(
-        fs._post_processor.process_feature_elim_results, return_value="processed_results"
+        fs._post_processor.process_feature_elim_results,
+        return_value="processed_results",
     )
     inner_results = ["res", "res"]
     features = [0, 1, 2]
@@ -133,9 +134,7 @@ def test_evaluate_min_mid_and_max_features(fs, dataset, rfe_raw_results):
     )
 
     assert res == ("min", "mid", "max")
-    data_splitter.split_data.assert_called_with(
-        dataset, "split", best_features["max"]
-    )
+    data_splitter.split_data.assert_called_with(dataset, "split", best_features["max"])
     assert fs._feature_evaluator.evaluate_features.call_count == 3
 
 
@@ -148,7 +147,11 @@ def test_deferred_fit(executor):
     y = np.array([np.random.choice([0, 1]) for _ in range(10)])
     lr = LinearRegression()
     fs = FeatureSelector(
-        n_outer=3, n_repetitions=2, random_state=0, estimator=lr, metric="MISS",
+        n_outer=3,
+        n_repetitions=2,
+        random_state=0,
+        estimator=lr,
+        metric="MISS",
     )
     fitted_fs = fs.fit(X, y, executor=executor)
     assert fitted_fs is fs
@@ -210,7 +213,9 @@ def test_get_selected_feature_names(fs, mosquito):
     selected_features = fs._selected_features
     feature_names = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"]
 
-    selected_features_names = fs._get_selected_feature_names(feature_names=feature_names)
+    selected_features_names = fs._get_selected_feature_names(
+        feature_names=feature_names
+    )
 
     assert len(selected_features_names["min"]) == len(selected_features["min"])
     with pytest.raises(ValueError):

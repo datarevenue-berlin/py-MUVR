@@ -1,6 +1,6 @@
 from typing import Union, Dict, List, Iterable
 
-from omigami.data_structures import (
+from pymuvr.data_structures import (
     RandomState,
     InputDataset,
     Split,

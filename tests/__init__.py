@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-"""Unit test package for omigami."""
+"""Unit test package for pymuvr."""

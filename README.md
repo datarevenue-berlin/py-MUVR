@@ -1,5 +1,3 @@
-<img src="./omigami-gradient.png" width="50%">
-
 #### Minimally biased features selection for omics studies
 
 [![PyPI version shields.io](https://img.shields.io/pypi/v/omigami.svg)](https://pypi.python.org/pypi/omigami) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -18,7 +16,7 @@ Multivariate recursive feature elimination within a repeated **double cross-vali
 ## Installation
 
 ```sh
-pip install omigami
+pip install pymuvr
 ```
 
 ## Acknowledgement
@@ -66,7 +64,7 @@ y = data["target"].values
 Once the data is ready, we can get a feature selector, fit it and look at the selected features:
 
 ```python
-from omigami.feature_selector import FeatureSelector
+from pymuvr.feature_selector import FeatureSelector
 feature_selector = FeatureSelector(
     n_repetitions=10,
     n_outer=5,
@@ -101,7 +99,7 @@ max_feats = selected_features["max"]
 
 ### Parallelization
 
-The feature selection can be time consuming. To speed it up, Omigami gives the option of executing the various CV loops in parallel using an [Executor object](https://docs.python.org/3/library/concurrent.futures.html) which
+The feature selection can be time consuming. To speed it up, PyMUVR gives the option of executing the various CV loops in parallel using an [Executor object](https://docs.python.org/3/library/concurrent.futures.html) which
 should be passed as keyword parameter to the fit method.
 
 So far, [dask](https://distributed.readthedocs.io/en/1.10.2/executor.html),
@@ -142,10 +140,10 @@ feature_selector.fit(X, y, executor=executor)
 
 ## Permutation Test
 
-To test the significance of the selected features, Omigami implements as class to perform a permutation test for the feature selection
+To test the significance of the selected features, PyMUVR implements as class to perform a permutation test for the feature selection
 
 ```python
-from omigami.permutation_test import PermutationTest
+from pymuvr.permutation_test import PermutationTest
 
 permutation_test = PermutationTest(feature_selector, n_permutations=10)
 permutation_test.fit(X, y)
@@ -156,14 +154,14 @@ print("p-value of the 'min' feature set: %s" % p_value)
 
 ## Visualization
 
-Omigami provides some basic plotting utils to inspect the results of the feature selection. In particular, it provides two main methods:
+PyMUVR provides some basic plotting utils to inspect the results of the feature selection. In particular, it provides two main methods:
 
 - `plot_feature_rank`
 - `plot_validation_curves`
 - `plot_permutation_scores`
 
 ```python
-from omigami.plot_utils import plot_feature_rank
+from pymuvr.plot_utils import plot_feature_rank
 
 feature_selection_results = feature_selector.get_feature_selection_results(feature_names)
 fig = plot_feature_rank(
@@ -174,7 +172,7 @@ fig = plot_feature_rank(
 ```
 
 ```python
-from omigami.plot_utils import plot_validation_curves
+from pymuvr.plot_utils import plot_validation_curves
 
 fig = plot_validation_curves(feature_selection_results)
 ```
@@ -182,7 +180,7 @@ fig = plot_validation_curves(feature_selection_results)
 and
 
 ```python
-from omigami.plot_utils import plot_permutation_scores
+from pymuvr.plot_utils import plot_permutation_scores
 
 fig = plot_permutation_scores(permutation_test, "min")
 ```
@@ -208,7 +206,7 @@ fig = plot_permutation_scores(permutation_test, "min")
 - **robust_minimum** (float): Maximum normalized-score value to be considered when computing the selected features
 - **random_state** (int): Pass an int for a reproducible output (default: `None`)
 
-## Contribute to Omigami
+## Contribute to PyMUVR
 
 1. Fork it (https://github.com/datarevenue-berlin/omigami/fork)
 2. Create your feature branch (git checkout -b feature/fooBar)
