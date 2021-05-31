@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from sklearn.model_selection import train_test_split
-from pymuvr.models.pls import PLSClassifier, PLSRegressor
+from pymuv.models.pls import PLSClassifier, PLSRegressor
 from sklearn.cross_decomposition import PLSRegression
 
 

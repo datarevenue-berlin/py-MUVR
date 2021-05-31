@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from pymuvr.models import make_estimator
+from pymuv.models import make_estimator
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer

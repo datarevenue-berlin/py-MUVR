@@ -16,7 +16,7 @@ Multivariate recursive feature elimination within a repeated **double cross-vali
 ## Installation
 
 ```sh
-pip install pymuvr
+pip install pymuv
 ```
 
 ## Acknowledgement
@@ -64,7 +64,7 @@ y = data["target"].values
 Once the data is ready, we can get a feature selector, fit it and look at the selected features:
 
 ```python
-from pymuvr.feature_selector import FeatureSelector
+from pymuv.feature_selector import FeatureSelector
 feature_selector = FeatureSelector(
     n_repetitions=10,
     n_outer=5,
@@ -99,7 +99,7 @@ max_feats = selected_features["max"]
 
 ### Parallelization
 
-The feature selection can be time consuming. To speed it up, PyMUVR gives the option of executing the various CV loops in parallel using an [Executor object](https://docs.python.org/3/library/concurrent.futures.html) which
+The feature selection can be time consuming. To speed it up, PyMUV gives the option of executing the various CV loops in parallel using an [Executor object](https://docs.python.org/3/library/concurrent.futures.html) which
 should be passed as keyword parameter to the fit method.
 
 So far, [dask](https://distributed.readthedocs.io/en/1.10.2/executor.html),
@@ -140,10 +140,10 @@ feature_selector.fit(X, y, executor=executor)
 
 ## Permutation Test
 
-To test the significance of the selected features, PyMUVR implements as class to perform a permutation test for the feature selection
+To test the significance of the selected features, PyMUV implements as class to perform a permutation test for the feature selection
 
 ```python
-from pymuvr.permutation_test import PermutationTest
+from pymuv.permutation_test import PermutationTest
 
 permutation_test = PermutationTest(feature_selector, n_permutations=10)
 permutation_test.fit(X, y)
@@ -154,14 +154,14 @@ print("p-value of the 'min' feature set: %s" % p_value)
 
 ## Visualization
 
-PyMUVR provides some basic plotting utils to inspect the results of the feature selection. In particular, it provides two main methods:
+PyMUV provides some basic plotting utils to inspect the results of the feature selection. In particular, it provides two main methods:
 
 - `plot_feature_rank`
 - `plot_validation_curves`
 - `plot_permutation_scores`
 
 ```python
-from pymuvr.plot_utils import plot_feature_rank
+from pymuv.plot_utils import plot_feature_rank
 
 feature_selection_results = feature_selector.get_feature_selection_results(feature_names)
 fig = plot_feature_rank(
@@ -172,7 +172,7 @@ fig = plot_feature_rank(
 ```
 
 ```python
-from pymuvr.plot_utils import plot_validation_curves
+from pymuv.plot_utils import plot_validation_curves
 
 fig = plot_validation_curves(feature_selection_results)
 ```
@@ -180,7 +180,7 @@ fig = plot_validation_curves(feature_selection_results)
 and
 
 ```python
-from pymuvr.plot_utils import plot_permutation_scores
+from pymuv.plot_utils import plot_permutation_scores
 
 fig = plot_permutation_scores(permutation_test, "min")
 ```
@@ -206,7 +206,7 @@ fig = plot_permutation_scores(permutation_test, "min")
 - **robust_minimum** (float): Maximum normalized-score value to be considered when computing the selected features
 - **random_state** (int): Pass an int for a reproducible output (default: `None`)
 
-## Contribute to PyMUVR
+## Contribute to PyMUV
 
 1. Fork it (https://github.com/datarevenue-berlin/omigami/fork)
 2. Create your feature branch (git checkout -b feature/fooBar)

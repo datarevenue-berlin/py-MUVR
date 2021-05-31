@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-from pymuvr.data_structures import InputDataset, Split
-from pymuvr.data_splitter import DataSplitter
+from pymuv.data_structures import InputDataset, Split
+from pymuv.data_splitter import DataSplitter
 
 
 @pytest.fixture

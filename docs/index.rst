@@ -1,4 +1,4 @@
-Welcome to pymuvr's documentation!
+Welcome to pymuv's documentation!
 ======================================
 
 .. toctree::

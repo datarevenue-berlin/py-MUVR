@@ -8,14 +8,14 @@ from sklearn.linear_model import LinearRegression
 from loky import get_reusable_executor
 from dask.distributed import Client
 
-from pymuvr.data_structures import (
+from pymuv.data_structures import (
     InputDataset,
     SelectedFeatures,
     FeatureSelectionResults,
     ScoreCurve,
 )
-from pymuvr.data_splitter import DataSplitter
-from pymuvr.feature_selector import FeatureSelector
+from pymuv.data_splitter import DataSplitter
+from pymuv.feature_selector import FeatureSelector
 
 
 @pytest.fixture()

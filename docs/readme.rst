@@ -2,4 +2,4 @@
 Readme
 ======
 
-The package README is available on the `landing page of the repository  <https://github.com/datarevenue-berlin/pymuvr>`_
+The package README is available on the `landing page of the repository  <https://github.com/datarevenue-berlin/pymuv>`_

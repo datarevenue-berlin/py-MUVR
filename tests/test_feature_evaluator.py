@@ -3,10 +3,10 @@ import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC
-from pymuvr.data_structures import FeatureRanks
-from pymuvr.feature_evaluator import FeatureEvaluator
-from pymuvr.models.sklearn_estimator import ScikitLearnEstimator
-from pymuvr.data_splitter import DataSplitter
+from pymuv.data_structures import FeatureRanks
+from pymuv.feature_evaluator import FeatureEvaluator
+from pymuv.models.sklearn_estimator import ScikitLearnEstimator
+from pymuv.data_splitter import DataSplitter
 
 
 @pytest.fixture
