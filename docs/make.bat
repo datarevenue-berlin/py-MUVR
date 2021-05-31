@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=pymuvr
+set SPHINXPROJ=pymuv
 
 if "%1" == "" goto help
 

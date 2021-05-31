@@ -5,10 +5,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
 
-from pymuvr.data_structures import RandomState
-from pymuvr.models.estimator import Estimator
-from pymuvr.models.pls import PLSClassifier, PLSRegressor
-from pymuvr.models.sklearn_estimator import ScikitLearnPipeline, ScikitLearnEstimator
+from pymuv.data_structures import RandomState
+from pymuv.models.estimator import Estimator
+from pymuv.models.pls import PLSClassifier, PLSRegressor
+from pymuv.models.sklearn_estimator import ScikitLearnPipeline, ScikitLearnEstimator
 
 
 class ESTIMATORS:

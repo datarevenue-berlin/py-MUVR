@@ -1,10 +1,10 @@
-from pymuvr.data_structures.data_types import (
+from pymuv.data_structures.data_types import (
     NumpyArray,
     MetricFunction,
     InputEstimator,
     RandomState,
 )
-from pymuvr.data_structures.data_models import (
+from pymuv.data_structures.data_models import (
     Split,
     InputDataset,
     TrainTestData,

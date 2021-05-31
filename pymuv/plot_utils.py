@@ -3,10 +3,10 @@ from typing import List, Union, Iterable
 from matplotlib.pyplot import Figure
 import matplotlib.ticker as mtick
 import pandas as pd
-from pymuvr.permutation_test import PermutationTest
+from pymuv.permutation_test import PermutationTest
 from matplotlib import pyplot as plt
 
-from pymuvr.data_structures import FeatureSelectionResults
+from pymuv.data_structures import FeatureSelectionResults
 
 log = logging.getLogger(__name__)
 

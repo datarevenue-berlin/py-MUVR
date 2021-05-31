@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from pymuvr.models import sklearn_metrics
+from pymuv.models import sklearn_metrics
 
 
 regression_true = np.array([1, 2, 3, 4, 5])

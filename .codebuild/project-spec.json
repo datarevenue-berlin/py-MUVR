@@ -1,8 +1,8 @@
 {
-    "name": "pymuvr",
+    "name": "pymuv",
     "source": {
         "type": "GITHUB",
-        "location": "https://github.com/datarevenue-berlin/pymuvr.git",
+        "location": "https://github.com/datarevenue-berlin/pymuv.git",
         "gitCloneDepth": 1,
         "gitSubmodulesConfig": {
             "fetchSubmodules": false

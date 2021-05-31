@@ -1,8 +1,8 @@
 import pytest
 import logging
 import numpy as np
-from pymuvr import utils
-from pymuvr.data_structures import FeatureRanks
+from pymuv import utils
+from pymuv.data_structures import FeatureRanks
 
 
 @pytest.fixture
@@ -75,22 +75,22 @@ def test_compute_t_student_p_value():
 
 
 def test_mute_loggers():
-    @utils.mute_loggers(loggers=["pymuvr.feature_selector"])
+    @utils.mute_loggers(loggers=["pymuv.feature_selector"])
     def test_function(logger_name):
         return logging.getLogger(logger_name).getEffectiveLevel()
 
-    @utils.mute_loggers(loggers=["pymuvr.feature_selector"])
+    @utils.mute_loggers(loggers=["pymuv.feature_selector"])
     def test_bad_function(logger_name):
         raise RuntimeError("exception")
 
-    assert test_function("pymuvr.models.pls") == logging.INFO
-    assert test_function("pymuvr.feature_selector") == logging.WARN
-    assert logging.getLogger("pymuvr.models.pls").getEffectiveLevel() == logging.INFO
+    assert test_function("pymuv.models.pls") == logging.INFO
+    assert test_function("pymuv.feature_selector") == logging.WARN
+    assert logging.getLogger("pymuv.models.pls").getEffectiveLevel() == logging.INFO
     assert (
-        logging.getLogger("pymuvr.feature_selector").getEffectiveLevel() == logging.INFO
+        logging.getLogger("pymuv.feature_selector").getEffectiveLevel() == logging.INFO
     )
     with pytest.raises(RuntimeError):
-        test_bad_function("pymuvr.feature_selector")
+        test_bad_function("pymuv.feature_selector")
     assert (
-        logging.getLogger("pymuvr.feature_selector").getEffectiveLevel() == logging.INFO
+        logging.getLogger("pymuv.feature_selector").getEffectiveLevel() == logging.INFO
     )

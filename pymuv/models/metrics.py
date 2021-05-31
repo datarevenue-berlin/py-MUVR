@@ -1,6 +1,6 @@
 from typing import Union
-from pymuvr.data_structures import MetricFunction, NumpyArray
-from pymuvr.models.sklearn_metrics import SKLEARN_METRICS
+from pymuv.data_structures import MetricFunction, NumpyArray
+from pymuv.models.sklearn_metrics import SKLEARN_METRICS
 
 
 def make_metric(metric: Union[str, MetricFunction]) -> MetricFunction:

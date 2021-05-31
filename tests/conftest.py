@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from pymuvr import FeatureSelector
-from pymuvr.data_structures import (
+from pymuv import FeatureSelector
+from pymuv.data_structures import (
     FeatureEvaluationResults,
     FeatureRanks,
     InputDataset,

@@ -1,6 +1,6 @@
 import pytest
 from concurrent.futures import Future
-from pymuvr.sync_executor import SyncExecutor
+from pymuv.sync_executor import SyncExecutor
 
 
 def square(x):

@@ -1,4 +1,4 @@
-from pymuvr.data_structures import SelectedFeatures
+from pymuv.data_structures import SelectedFeatures
 
 
 def test_n_features(dataset):

@@ -1,10 +1,10 @@
 import pytest
 
 import collections
-from pymuvr.post_processor import PostProcessor
-from pymuvr.feature_evaluator import FeatureEvaluationResults
-from pymuvr.data_structures import FeatureRanks, ScoreCurve, OuterLoopResults
-from pymuvr.models import Estimator
+from pymuv.post_processor import PostProcessor
+from pymuv.feature_evaluator import FeatureEvaluationResults
+from pymuv.data_structures import FeatureRanks, ScoreCurve, OuterLoopResults
+from pymuv.models import Estimator
 
 
 @pytest.fixture

@@ -1,9 +1,9 @@
 import pytest
 from sklearn import datasets
-from pymuvr import permutation_test
-from pymuvr.feature_selector import FeatureSelector
-from pymuvr.utils import compute_t_student_p_value
-from pymuvr.data_structures import (
+from pymuv import permutation_test
+from pymuv.feature_selector import FeatureSelector
+from pymuv.utils import compute_t_student_p_value
+from pymuv.data_structures import (
     SelectedFeatures,
     ScoreCurve,
     FeatureSelectionResults,

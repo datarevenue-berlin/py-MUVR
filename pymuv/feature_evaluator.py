@@ -1,6 +1,6 @@
 from typing import Union, List
 from scipy.stats import rankdata
-from pymuvr.data_structures import (
+from pymuv.data_structures import (
     MetricFunction,
     RandomState,
     NumpyArray,
@@ -8,8 +8,8 @@ from pymuvr.data_structures import (
     FeatureRanks,
     TrainTestData,
 )
-from pymuvr.models.metrics import make_metric
-from pymuvr.models import make_estimator, Estimator
+from pymuv.models.metrics import make_metric
+from pymuv.models import make_estimator, Estimator
 
 
 class FeatureEvaluator:
