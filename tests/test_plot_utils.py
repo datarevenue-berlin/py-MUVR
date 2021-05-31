@@ -2,13 +2,13 @@ from unittest.mock import Mock
 import pytest
 from distributed import Client
 
-from pymuv import FeatureSelector
-from pymuv.plot_utils import (
+from py_muvr import FeatureSelector
+from py_muvr.plot_utils import (
     plot_validation_curves,
     plot_feature_rank,
     plot_permutation_scores,
 )
-from pymuv.permutation_test import PermutationTest
+from py_muvr.permutation_test import PermutationTest
 
 
 @pytest.fixture

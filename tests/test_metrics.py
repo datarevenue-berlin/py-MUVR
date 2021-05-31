@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-from pymuv.models.sklearn_metrics import SKLEARN_METRICS
-from pymuv.models.metrics import make_metric, _make_metric_from_string, miss_score
+from py_muvr.models.sklearn_metrics import SKLEARN_METRICS
+from py_muvr.models.metrics import make_metric, _make_metric_from_string, miss_score
 
 
 def test_make_metric():

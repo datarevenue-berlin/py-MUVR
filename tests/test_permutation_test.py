@@ -1,9 +1,9 @@
 import pytest
 from sklearn import datasets
-from pymuv import permutation_test
-from pymuv.feature_selector import FeatureSelector
-from pymuv.utils import compute_t_student_p_value
-from pymuv.data_structures import (
+from py_muvr import permutation_test
+from py_muvr.feature_selector import FeatureSelector
+from py_muvr.utils import compute_t_student_p_value
+from py_muvr.data_structures import (
     SelectedFeatures,
     ScoreCurve,
     FeatureSelectionResults,
@@ -12,7 +12,6 @@ from pymuv.data_structures import (
 
 @pytest.fixture
 def fit_permutation_test(raw_results):
-
     fs = FeatureSelector(
         n_outer=5,
         metric="MISS",

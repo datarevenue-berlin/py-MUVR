@@ -4,9 +4,9 @@ import numpy as np
 from scipy.stats import mode
 from sklearn.base import is_classifier
 
-from pymuv.feature_selector import FeatureSelector
-from pymuv.data_structures.data_types import NumpyArray
-from pymuv.models import Estimator
+from py_muvr.feature_selector import FeatureSelector
+from py_muvr.data_structures.data_types import NumpyArray
+from py_muvr.models import Estimator
 
 
 class ConsensusModel:
