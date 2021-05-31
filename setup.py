@@ -46,7 +46,7 @@ setup(
     long_description=readme + "\n\n" + history,
     include_package_data=True,
     keywords="muvr, muv",
-    name="py_muvr",
+    name="py-muvr",
     packages=find_packages(exclude=["tests"]),
     setup_requires=setup_requirements,
     test_suite="tests",
