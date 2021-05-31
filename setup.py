@@ -45,7 +45,7 @@ setup(
     license="MIT license",
     long_description=readme + "\n\n" + history,
     include_package_data=True,
-    keywords="muvr",
+    keywords="muvr, muv",
     name="pymuv",
     packages=find_packages(exclude=["tests"]),
     setup_requires=setup_requirements,
