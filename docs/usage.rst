@@ -2,6 +2,6 @@
 Usage
 =====
 
-To use pymuv in a project::
+To use py_muvr in a project::
 
-    import pymuv
+    import py_muvr

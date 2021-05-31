@@ -2,9 +2,9 @@ import numpy as np
 from sklearn import clone
 from sklearn.base import BaseEstimator
 
-from pymuv.data_structures import RandomState
-from pymuv.models.estimator import Estimator
-from pymuv.data_structures.data_types import NumpyArray
+from py_muvr.data_structures import RandomState
+from py_muvr.models.estimator import Estimator
+from py_muvr.data_structures.data_types import NumpyArray
 
 
 class ScikitLearnEstimator(Estimator):

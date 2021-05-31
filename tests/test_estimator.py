@@ -6,8 +6,8 @@ from sklearn.preprocessing import Normalizer
 from sklearn.svm import SVC, SVR
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.exceptions import NotFittedError
-from pymuv.models.estimator import Estimator
-from pymuv.models import make_estimator
+from py_muvr.models.estimator import Estimator
+from py_muvr.models import make_estimator
 
 models = [
     "RFC",

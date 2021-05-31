@@ -10,7 +10,7 @@ import pandas as pd
 import progressbar
 from numpy.random import RandomState
 
-from pymuv.data_structures import (
+from py_muvr.data_structures import (
     InputDataset,
     SelectedFeatures,
     OuterLoopResults,
@@ -23,14 +23,13 @@ from pymuv.data_structures import (
     FeatureSelectionRawResults,
     FeatureSelectionResults,
 )
-from pymuv.feature_evaluator import FeatureEvaluator
-from pymuv.data_splitter import DataSplitter
-from pymuv.models import Estimator
-from pymuv.post_processor import PostProcessor
-from pymuv.utils import get_best_n_features, average_ranks
-from pymuv.exceptions import NotFitException
-from pymuv.sync_executor import SyncExecutor
-
+from py_muvr.feature_evaluator import FeatureEvaluator
+from py_muvr.data_splitter import DataSplitter
+from py_muvr.models import Estimator
+from py_muvr.post_processor import PostProcessor
+from py_muvr.utils import get_best_n_features, average_ranks
+from py_muvr.exceptions import NotFitException
+from py_muvr.sync_executor import SyncExecutor
 
 Repetition = List[Union[OuterLoopResults, Future]]
 log = logging.getLogger(__name__)

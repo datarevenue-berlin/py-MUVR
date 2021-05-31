@@ -31,11 +31,11 @@ steps:
 
 - script: |
     pip install pytest pytest-azurepipelines==1.0.0rc5
-    pytest --cov=pymuv tests/ --cov-report html --nunitxml test-output.xml -m 'not slow'
+    pytest --cov=py_muvr tests/ --cov-report html --nunitxml test-output.xml -m 'not slow'
   displayName: 'Run fast tests'
 
 - script: |
-    pytest --cov=pymuv tests/ --cov-report html --nunitxml test-output.xml -m 'slow'
+      pytest --cov=py_muvr tests/ --cov-report html --nunitxml test-output.xml -m 'slow'
   displayName: 'Run slow tests'
   condition: and(succeeded(), eq(variables['System.PullRequest.TargetBranch'], 'main'))
 

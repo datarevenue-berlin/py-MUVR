@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 import numpy as np
 import scipy.stats
-from pymuv.data_structures import FeatureRanks
+from py_muvr.data_structures import FeatureRanks
 
 
 def average_scores(scores: List[Dict]) -> Dict[int, float]:

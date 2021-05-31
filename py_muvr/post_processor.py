@@ -2,7 +2,7 @@ from typing import List, Dict, Tuple
 from scipy.stats import gmean
 import numpy as np
 import pandas as pd
-from pymuv.data_structures import (
+from py_muvr.data_structures import (
     SelectedFeatures,
     ScoreCurve,
     FeatureEliminationResults,
@@ -10,7 +10,7 @@ from pymuv.data_structures import (
     FeatureSelectionRawResults,
     FeatureSelectionResults,
 )
-from pymuv.utils import (
+from py_muvr.utils import (
     average_ranks,
     average_scores,
     normalize_score,

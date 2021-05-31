@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from pymuv.data_structures.data_types import RandomState
+from py_muvr.data_structures.data_types import RandomState
 
 
 class Estimator(ABC):

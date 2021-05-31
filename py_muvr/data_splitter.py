@@ -1,6 +1,6 @@
 from typing import Union, Dict, List, Iterable
 
-from pymuv.data_structures import (
+from py_muvr.data_structures import (
     RandomState,
     InputDataset,
     Split,

@@ -2,10 +2,10 @@ import pytest
 
 import numpy as np
 
-from pymuv.exceptions import NotFitException
-from pymuv.consensus_model import ConsensusModel
-from pymuv.feature_selector import FeatureSelector
-from pymuv.models import ScikitLearnEstimator
+from py_muvr.exceptions import NotFitException
+from py_muvr.consensus_model import ConsensusModel
+from py_muvr.feature_selector import FeatureSelector
+from py_muvr.models import ScikitLearnEstimator
 
 
 @pytest.fixture

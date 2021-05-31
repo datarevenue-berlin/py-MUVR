@@ -4,14 +4,13 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from pymuv import FeatureSelector
-from pymuv.data_structures import (
+from py_muvr import FeatureSelector
+from py_muvr.data_structures import (
     FeatureEvaluationResults,
     FeatureRanks,
     InputDataset,
     OuterLoopResults,
 )
-
 
 ASSETS_DIR = Path(__file__).parent / "assets"
 

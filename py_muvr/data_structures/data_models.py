@@ -3,8 +3,8 @@ from __future__ import annotations
 from concurrent.futures._base import Future
 from typing import Iterable, List, Dict, Union, Tuple
 from dataclasses import dataclass
-from pymuv.data_structures import NumpyArray
-from pymuv.models.estimator import Estimator
+from py_muvr.data_structures import NumpyArray
+from py_muvr.models.estimator import Estimator
 
 
 @dataclass
