@@ -37,5 +37,7 @@ def test_feature_selection_artificial_data_plsc(artificial_data, estimator):
     fitted_fs = fs.fit(X, y)
     selected_features = fitted_fs._selected_features
 
-    assert selected_features["min"] == [0, 1]  # first two features
-    assert selected_features["max"] == [0, 3]  # thirds and fourth feature
+    assert set(selected_features["min"]) == set([0, 1])  # first two features
+    assert set(selected_features["max"]) == set(
+        [0, 1, 2, 3]
+    )  # thirds and fourth feature
