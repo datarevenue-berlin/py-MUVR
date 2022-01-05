@@ -1,6 +1,6 @@
 #### Minimally biased features selection for omics studies
 
-[![PyPI version shields.io](https://img.shields.io/pypi/v/omigami.svg)](https://pypi.python.org/pypi/omigami) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PyPI version shields.io](https://img.shields.io/pypi/v/py-muvr.svg)](https://pypi.python.org/pypi/py-muvr) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 - ▶️ [Example Jupyter Notebook](https://github.com/datarevenue-berlin/omigami/blob/main/notebooks/MinimalExample.ipynb)
 - 📑 [Blog Post](https://datarevenue.com/en-blog/minimally-biased-feature-selection-untargeted-metabolomics)
